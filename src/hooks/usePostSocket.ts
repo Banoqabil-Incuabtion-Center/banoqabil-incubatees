@@ -5,7 +5,7 @@ import { useAuthStore } from './store/authStore';
 
 export const usePostSocket = () => {
     const { on, isConnected } = useSocket();
-    const { addPost, updatePost, deletePost, incrementLike, decrementLike } = usePostStore();
+    const { addPost, updatePost, deletePost, updatePostLikeCount } = usePostStore();
     const { user } = useAuthStore();
 
     useEffect(() => {
@@ -30,18 +30,12 @@ export const usePostSocket = () => {
 
         const unsubLikeAdded = on('like:added', (payload: any) => {
             console.log("Socket: like:added", payload);
-            // Only increment if it's not the current user (to avoid double-counting optimistic updates)
-            if (payload.userId !== user?._id) {
-                incrementLike(payload.postId);
-            }
+            updatePostLikeCount(payload.postId, payload.likeCount);
         });
 
         const unsubLikeRemoved = on('like:removed', (payload: any) => {
             console.log("Socket: like:removed", payload);
-            // Only decrement if it's not the current user
-            if (payload.userId !== user?._id) {
-                decrementLike(payload.postId);
-            }
+            updatePostLikeCount(payload.postId, payload.likeCount);
         });
 
         return () => {
@@ -51,5 +45,5 @@ export const usePostSocket = () => {
             unsubLikeAdded?.();
             unsubLikeRemoved?.();
         }
-    }, [isConnected, on, addPost, updatePost, deletePost, incrementLike, decrementLike, user?._id]);
+    }, [isConnected, on, addPost, updatePost, deletePost, updatePostLikeCount, user?._id]);
 };

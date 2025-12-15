@@ -467,6 +467,9 @@ const Posts = () => {
                 authorName={post.user?.name}
                 authorId={post.user?._id}
                 authorAvatar={post.user?.avatar}
+                likeCount={post.likeCount}
+                commentCount={post.commentCount}
+                userLiked={post.userLiked}
                 onDelete={handleDelete}
                 onEdit={handleEdit}
               />

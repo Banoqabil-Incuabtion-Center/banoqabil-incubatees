@@ -10,7 +10,7 @@ interface PostState {
     hasMoreUser: boolean;
     pageAdmin: number;
     pageUser: number;
-    
+
     fetchPosts: (page: number, limit: number, type: 'admin' | 'user') => Promise<void>;
     clearPosts: (type: 'admin' | 'user') => void;
     addPost: (post: Post, type: 'admin' | 'user') => void;
@@ -19,6 +19,9 @@ interface PostState {
     setLike: (postId: string, liked: boolean, count: number) => void;
     incrementLike: (postId: string) => void;
     decrementLike: (postId: string) => void;
+    updatePostLikeCount: (postId: string, count: number) => void;
+    incrementComment: (postId: string) => void;
+    decrementComment: (postId: string) => void;
 }
 
 export const usePostStore = create<PostState>((set, get) => ({
@@ -32,22 +35,22 @@ export const usePostStore = create<PostState>((set, get) => ({
 
     fetchPosts: async (page, limit, type) => {
         const state = get();
-        
+
         // Prevent duplicate fetches
         if (state.loading) {
             console.log('Already fetching, skipping...');
             return;
         }
-        
+
         set({ loading: true });
-        
+
         try {
             const res = type === 'admin'
                 ? await postRepo.getAllPosts(page, limit)
                 : await postRepo.getAllUsersPosts(page, limit);
-            
+
             const newPosts = res.posts || res.data || [];
-            
+
             if (type === 'admin') {
                 set({
                     adminPosts: page === 1 ? newPosts : [...state.adminPosts, ...newPosts],
@@ -86,10 +89,10 @@ export const usePostStore = create<PostState>((set, get) => ({
     },
 
     updatePost: (updatedPost) => set((state) => ({
-        adminPosts: state.adminPosts.map((p) => 
+        adminPosts: state.adminPosts.map((p) =>
             p._id === updatedPost._id ? { ...p, ...updatedPost } : p
         ),
-        userPosts: state.userPosts.map((p) => 
+        userPosts: state.userPosts.map((p) =>
             p._id === updatedPost._id ? { ...p, ...updatedPost } : p
         )
     })),
@@ -100,29 +103,57 @@ export const usePostStore = create<PostState>((set, get) => ({
     })),
 
     setLike: (postId, liked, count) => set((state) => ({
-        adminPosts: state.adminPosts.map((p) => 
+        adminPosts: state.adminPosts.map((p) =>
             p._id === postId ? { ...p, userLiked: liked, likeCount: count } : p
         ),
-        userPosts: state.userPosts.map((p) => 
+        userPosts: state.userPosts.map((p) =>
             p._id === postId ? { ...p, userLiked: liked, likeCount: count } : p
         )
     })),
 
     incrementLike: (postId) => set((state) => ({
-        adminPosts: state.adminPosts.map((p) => 
+        adminPosts: state.adminPosts.map((p) =>
             p._id === postId ? { ...p, likeCount: (p.likeCount || 0) + 1 } : p
         ),
-        userPosts: state.userPosts.map((p) => 
+        userPosts: state.userPosts.map((p) =>
             p._id === postId ? { ...p, likeCount: (p.likeCount || 0) + 1 } : p
         )
     })),
 
     decrementLike: (postId) => set((state) => ({
-        adminPosts: state.adminPosts.map((p) => 
+        adminPosts: state.adminPosts.map((p) =>
             p._id === postId ? { ...p, likeCount: Math.max(0, (p.likeCount || 0) - 1) } : p
         ),
-        userPosts: state.userPosts.map((p) => 
+        userPosts: state.userPosts.map((p) =>
             p._id === postId ? { ...p, likeCount: Math.max(0, (p.likeCount || 0) - 1) } : p
+        )
+
+    })),
+
+    updatePostLikeCount: (postId, count) => set((state) => ({
+        adminPosts: state.adminPosts.map((p) =>
+            p._id === postId ? { ...p, likeCount: count } : p
+        ),
+        userPosts: state.userPosts.map((p) =>
+            p._id === postId ? { ...p, likeCount: count } : p
+        )
+    })),
+
+    incrementComment: (postId) => set((state) => ({
+        adminPosts: state.adminPosts.map((p) =>
+            p._id === postId ? { ...p, commentCount: (p.commentCount || 0) + 1 } : p
+        ),
+        userPosts: state.userPosts.map((p) =>
+            p._id === postId ? { ...p, commentCount: (p.commentCount || 0) + 1 } : p
+        )
+    })),
+
+    decrementComment: (postId) => set((state) => ({
+        adminPosts: state.adminPosts.map((p) =>
+            p._id === postId ? { ...p, commentCount: Math.max(0, (p.commentCount || 0) - 1) } : p
+        ),
+        userPosts: state.userPosts.map((p) =>
+            p._id === postId ? { ...p, commentCount: Math.max(0, (p.commentCount || 0) - 1) } : p
         )
     }))
 }));

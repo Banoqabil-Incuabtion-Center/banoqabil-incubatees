@@ -11,7 +11,7 @@ export class PostRepo {
 
   // Get all user posts with pagination
   async getAllUsersPosts(page: number = 1, limit: number = 10) {
-    const response = await api.get("/api/user/getuserpost", {
+    const response = await api.get("/api/user/getuserpost/stats", {
       params: { page, limit },
     });
     return response.data;

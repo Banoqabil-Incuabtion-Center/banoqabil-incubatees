@@ -38,8 +38,6 @@ export const CommentsSection: React.FC<CommentsSectionProps> = ({ postId }) => {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const initialFetchDone = useRef(false);
 
-  const observer = useRef<IntersectionObserver | null>(null);
-
   // Initial fetch - only run once when component mounts
   useEffect(() => {
     if (!initialFetchDone.current) {
@@ -47,23 +45,6 @@ export const CommentsSection: React.FC<CommentsSectionProps> = ({ postId }) => {
       fetchComments(1);
     }
   }, []);
-
-  const lastCommentRef = useCallback(
-    (node: HTMLDivElement | null) => {
-      if (isLoadingMore) return;
-      if (observer.current) observer.current.disconnect();
-
-      observer.current = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting && hasMore) {
-          setIsLoadingMore(true);
-          fetchComments(page + 1, true).finally(() => setIsLoadingMore(false));
-        }
-      });
-
-      if (node) observer.current.observe(node);
-    },
-    [isLoadingMore, hasMore, fetchComments, page]
-  );
 
   const handleAddComment = async () => {
     if (!content.trim()) return;
@@ -102,7 +83,7 @@ export const CommentsSection: React.FC<CommentsSectionProps> = ({ postId }) => {
   return (
     <div className="space-y-4 pt-2">
       {/* Connection Status & Comment Count */}
-      <div className="flex items-center justify-between">
+      {/* <div className="flex items-center justify-between">
         {total > 0 && (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <MessageSquare className="w-4 h-4" />
@@ -123,7 +104,7 @@ export const CommentsSection: React.FC<CommentsSectionProps> = ({ postId }) => {
             </>
           )}
         </div>
-      </div>
+      </div> */}
 
       {/* Add Comment Input */}
       <div className="flex gap-3 items-start">
@@ -175,36 +156,41 @@ export const CommentsSection: React.FC<CommentsSectionProps> = ({ postId }) => {
             </div>
           ) : (
             <>
-              {comments.map((comment, index) => {
-                const isLast = index === comments.length - 1;
-                return (
-                  <div
-                    key={comment._id}
-                    ref={isLast ? lastCommentRef : null}
-                  >
-                    <CommentItem
-                      comment={comment}
-                      onReply={handleReply}
-                      onEdit={handleEdit}
-                      onDelete={handleDelete}
-                      onLike={toggleLike}
-                    />
-                  </div>
-                );
-              })}
-
-              {/* Loading more indicator */}
-              {isLoadingMore && (
-                <div className="flex justify-center py-4">
-                  <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+              {comments.map((comment) => (
+                <div key={comment._id}>
+                  <CommentItem
+                    comment={comment}
+                    onReply={handleReply}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                    onLike={toggleLike}
+                  />
                 </div>
-              )}
+              ))}
 
-              {/* No more comments */}
-              {!hasMore && comments.length > 0 && (
-                <p className="text-center text-sm text-muted-foreground">
-                  {/* No more comments to load */}
-                </p>
+              {/* View More Button */}
+              {hasMore && (
+                <div className="flex justify-start pt-2 pb-4">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setIsLoadingMore(true);
+                      fetchComments(page + 1, true).finally(() => setIsLoadingMore(false));
+                    }}
+                    disabled={isLoadingMore}
+                    className=" text-xs hover:text-foreground"
+                  >
+                    {isLoadingMore ? (
+                      <>
+                        <Loader2 className="w-3 h-3 mr-2 animate-spin" />
+                        Loading...
+                      </>
+                    ) : (
+                      "View more comments"
+                    )}
+                  </Button>
+                </div>
               )}
             </>
           )}

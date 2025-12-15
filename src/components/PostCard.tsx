@@ -68,6 +68,9 @@ interface PostCardProps {
   isAdmin?: boolean;
   onDelete?: (postId: string) => void;
   onEdit?: (postId: string, data: any) => void;
+  likeCount?: number;
+  commentCount?: number;
+  userLiked?: boolean;
 }
 
 export const PostCard = ({
@@ -83,17 +86,29 @@ export const PostCard = ({
   isAdmin = false,
   onDelete,
   onEdit,
+  likeCount: initialLikeCount = 0,
+  commentCount: initialCommentCount = 0,
+  userLiked: initialUserLiked = false,
 }: PostCardProps) => {
   const { user, isAuthenticated } = useAuthStore();
   const { isConnected, on } = useSocket(postId);
 
+
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [showComments, setShowComments] = useState(false);
-  const [liked, setLiked] = useState(false);
-  const [likeCount, setLikeCount] = useState(0);
-  const [commentCount, setCommentCount] = useState(0);
+  const [liked, setLiked] = useState(initialUserLiked);
+  const [likeCount, setLikeCount] = useState(initialLikeCount);
+  const [commentCount, setCommentCount] = useState(initialCommentCount);
   const [isLiking, setIsLiking] = useState(false);
+
+  useEffect(() => {
+    setLikeCount(initialLikeCount);
+  }, [initialLikeCount]);
+
+  useEffect(() => {
+    setCommentCount(initialCommentCount);
+  }, [initialCommentCount]);
 
   const [editForm, setEditForm] = useState({
     title,
@@ -157,33 +172,8 @@ export const PostCard = ({
     }
   }, [postId]);
 
-  // Listen for real-time like updates
-  useEffect(() => {
-    if (!isConnected) return;
 
-    const unsubLikeAdded = on('like:added', (payload: any) => {
-      if (payload.postId === postId) {
-        setLikeCount(payload.likeCount);
-        if (payload.userId === user?._id) {
-          setLiked(true);
-        }
-      }
-    });
 
-    const unsubLikeRemoved = on('like:removed', (payload: any) => {
-      if (payload.postId === postId) {
-        setLikeCount(payload.likeCount);
-        if (payload.userId === user?._id) {
-          setLiked(false);
-        }
-      }
-    });
-
-    return () => {
-      unsubLikeAdded?.();
-      unsubLikeRemoved?.();
-    };
-  }, [isConnected, on, postId, user?._id]);
 
   const formatTimeAgo = (dateString: string) => {
     const seconds = Math.floor((Date.now() - new Date(dateString).getTime()) / 1000);
@@ -484,33 +474,33 @@ export const PostCard = ({
           )}
 
           {/* Action Buttons */}
-          <div className="flex items-center justify-between pt-2">
-            <div className="flex gap-2 w-full">
+          <div className="flex pt-2">
+            <div className="flex items-center gap-2 w-full">
               <Button
                 variant="ghost"
                 size="sm"
-                className={`flex-1 gap-2 hover:bg-red-50 dark:hover:bg-red-950/20 ${liked ? 'text-red-500' : ''}`}
+                className={`flex hover:bg-red-50  ${liked ? 'text-red-500' : ''}`}
                 onClick={handleLike}
                 disabled={false}
               >
                 <Heart
                   className={`w-4 h-4 transition-all ${liked ? "fill-current scale-110" : ""}`}
                 />
-                <span className="text-xs font-medium">
-                  {likeCount > 0 ? likeCount : "Like"}
-                </span>
+
+                {likeCount > 0 ? likeCount : ""}
+
               </Button>
 
               <Button
                 variant="ghost"
                 size="sm"
-                className="flex-1 gap-2 hover:bg-blue-50 dark:hover:bg-blue-950/20"
+                className="hover:bg-blue-50"
                 onClick={() => setShowComments(!showComments)}
               >
                 <MessageSquare className={`w-4 h-4 ${showComments ? "text-blue-600" : ""}`} />
-                <span className="text-xs font-medium">
-                  {commentCount > 0 ? `${commentCount} ` : ""}Comments
-                </span>
+
+                {commentCount > 0 ? commentCount : ""}
+
               </Button>
             </div>
           </div>

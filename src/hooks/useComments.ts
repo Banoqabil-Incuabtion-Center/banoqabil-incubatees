@@ -7,8 +7,11 @@ import { useSocket } from './useSocket';
 import { CommentTree, CommentCreatedPayload, CommentUpdatedPayload, CommentDeletedPayload } from '@/types/comment';
 import { CommentLikeAddedPayload, CommentLikeRemovedPayload } from '@/types/like';
 
+import { usePostStore } from './store/usePostStore';
+
 export const useComments = (postId: string) => {
     const { comments: allComments, setComments, addComment, addReply, updateComment, deleteComment, setCommentLike, replaceComment } = useCommentStore();
+    const { incrementComment, decrementComment } = usePostStore();
     const { user } = useAuthStore(); // Need user for optimistic updates
     const comments = allComments[postId] || [];
     const [loading, setLoading] = useState(false);
@@ -42,8 +45,8 @@ export const useComments = (postId: string) => {
 
         try {
             loadingRef.current = true;
-            setLoading(true);
-            const res = await commentRepo.getCommentsByPost(postId, pageNum, 10);
+            if (!append) setLoading(true);
+            const res = await commentRepo.getCommentsByPost(postId, pageNum, 5);
 
             if (append) {
                 // Get current comments from store at fetch time
@@ -184,6 +187,7 @@ export const useComments = (postId: string) => {
 
         addComment(postId, tempComment);
         setTotal(prev => prev + 1);
+        incrementComment(postId);
 
         try {
             const res = await commentRepo.createComment(postId, content);
@@ -197,9 +201,10 @@ export const useComments = (postId: string) => {
             // Revert
             deleteComment(postId, tempId);
             setTotal(prev => Math.max(0, prev - 1));
+            decrementComment(postId);
             throw error;
         }
-    }, [postId, addComment, replaceComment, deleteComment, user]);
+    }, [postId, addComment, replaceComment, deleteComment, user, incrementComment, decrementComment]);
 
     const replyCommentHandler = useCallback(async (parentId: string, content: string) => {
         if (!user) return;
@@ -223,6 +228,7 @@ export const useComments = (postId: string) => {
 
         addReply(postId, parentId, tempReply);
         setTotal(prev => prev + 1);
+        incrementComment(postId);
 
         try {
             const res = await commentRepo.createComment(postId, content, parentId);
@@ -235,9 +241,10 @@ export const useComments = (postId: string) => {
             // Revert
             deleteComment(postId, tempId);
             setTotal(prev => Math.max(0, prev - 1));
+            decrementComment(postId);
             throw error;
         }
-    }, [postId, addReply, replaceComment, deleteComment, user]);
+    }, [postId, addReply, replaceComment, deleteComment, user, incrementComment, decrementComment]);
 
     const updateCommentHandler = useCallback(async (id: string, content: string) => {
         const res = await commentRepo.updateComment(id, content);
@@ -253,8 +260,9 @@ export const useComments = (postId: string) => {
         // Remove from store immediately
         deleteComment(postId, id);
         setTotal(prev => Math.max(0, prev - 1));
+        decrementComment(postId);
         return res;
-    }, [postId, deleteComment]);
+    }, [postId, deleteComment, decrementComment]);
 
     return {
         comments,
