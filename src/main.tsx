@@ -4,7 +4,27 @@ import App from './App.tsx'
 import './index.css'
 
 
+
 import { registerSW } from 'virtual:pwa-register'
+
+// FORCE UNREGISTER OLD ONESIGNAL WORKERS (Self-Healing Fix)
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(registrations => {
+    for (const registration of registrations) {
+      const scriptURL = registration.active?.scriptURL || '';
+      if (scriptURL.includes('OneSignal') || scriptURL.includes('OneSignalSDK')) {
+        console.log('Found zombie OneSignal worker, killing it...', registration);
+        registration.unregister().then(boolean => {
+          if (boolean) {
+            console.log('Successfully unregistered old worker.');
+            window.location.reload(); // Reload to take effect immediately
+          }
+        });
+      }
+    }
+  });
+}
+
 
 const updateSW = registerSW({
   onNeedRefresh() {
