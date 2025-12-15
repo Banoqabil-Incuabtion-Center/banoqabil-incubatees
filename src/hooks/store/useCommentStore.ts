@@ -9,6 +9,7 @@ interface CommentState {
     updateComment: (postId: string, commentId: string, updatedComment: Partial<CommentTree>) => void;
     deleteComment: (postId: string, commentId: string) => void;
     setCommentLike: (postId: string, commentId: string, liked: boolean, count: number) => void;
+    replaceComment: (postId: string, tempId: string, newComment: CommentTree) => void;
 }
 
 // Helper functions
@@ -81,10 +82,31 @@ export const useCommentStore = create<CommentState>((set) => ({
             [postId]: removeCommentFromTree(state.comments[postId] || [], commentId)
         }
     })),
-    setCommentLike: (postId, commentId, liked, count) => set((state) => ({
+    setCommentLike: (postId, commentId, liked, count) => {
+        console.log(`[Store] setCommentLike: post=${postId} comment=${commentId} liked=${liked}`);
+        set((state) => ({
+            comments: {
+                ...state.comments,
+                [postId]: updateCommentInTree(state.comments[postId] || [], commentId, { userLiked: liked, likeCount: count })
+            }
+        }));
+    },
+    replaceComment: (postId, tempId, newComment) => set((state) => ({
         comments: {
             ...state.comments,
-            [postId]: updateCommentInTree(state.comments[postId] || [], commentId, { userLiked: liked, likeCount: count })
+            [postId]: replaceCommentInTree(state.comments[postId] || [], tempId, newComment)
         }
     }))
 }));
+
+const replaceCommentInTree = (comments: CommentTree[], tempId: string, newComment: CommentTree): CommentTree[] => {
+    return comments.map(comment => {
+        if (comment._id === tempId) {
+            return newComment; // Replace entirely
+        }
+        if (comment.replies?.length) {
+            return { ...comment, replies: replaceCommentInTree(comment.replies, tempId, newComment) };
+        }
+        return comment;
+    });
+};

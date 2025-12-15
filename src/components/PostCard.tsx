@@ -112,6 +112,24 @@ export const PostCard = ({
     return url?.match(/\.(mp4|webm|mov|mkv)$/i);
   };
 
+  const getOptimizedImageUrl = (url: string) => {
+    if (!url) return "";
+    // Check if it's a Cloudinary URL
+    if (url.includes("cloudinary.com")) {
+      // If it's a video, don't optimize as image
+      if (isVideo(url)) return url;
+
+      // Inject optimization params if not already present
+      // w_800: resize width to 800px
+      // f_auto: auto format (webp/avif)
+      // q_auto: auto quality
+      if (!url.includes("f_auto,q_auto")) {
+        return url.replace("/upload/", "/upload/w_800,f_auto,q_auto/");
+      }
+    }
+    return url;
+  };
+
   // Fetch initial like status and comment count
   useEffect(() => {
     const fetchLikes = async () => {
@@ -220,21 +238,22 @@ export const PostCard = ({
 
   const handleLike = async () => {
     if (!isAuthenticated) return;
-    if (isLiking) return;
+
+    // Optimistic update immediately
+    const previousLiked = liked;
+    const previousCount = likeCount;
+
+    const newLikedState = !liked;
+    setLiked(newLikedState);
+    setLikeCount(prev => newLikedState ? prev + 1 : Math.max(0, prev - 1));
 
     try {
-      setIsLiking(true);
-      const newLikedState = !liked;
-      setLiked(newLikedState);
-      setLikeCount(prev => newLikedState ? prev + 1 : Math.max(0, prev - 1));
-
       await likeRepo.toggleLike(postId);
     } catch (error) {
-      setLiked(!liked);
-      setLikeCount(prev => !liked ? prev - 1 : prev + 1);
+      // Revert if failed
+      setLiked(previousLiked);
+      setLikeCount(previousCount);
       console.error("Failed to toggle like:", error);
-    } finally {
-      setIsLiking(false);
     }
   };
 
@@ -434,9 +453,10 @@ export const PostCard = ({
                 />
               ) : (
                 <img
-                  src={image}
+                  src={getOptimizedImageUrl(image)}
                   alt={title}
                   className="w-full h-full object-cover"
+                  loading="lazy"
                 />
               )}
             </div>
@@ -471,7 +491,7 @@ export const PostCard = ({
                 size="sm"
                 className={`flex-1 gap-2 hover:bg-red-50 dark:hover:bg-red-950/20 ${liked ? 'text-red-500' : ''}`}
                 onClick={handleLike}
-                disabled={isLiking}
+                disabled={false}
               >
                 <Heart
                   className={`w-4 h-4 transition-all ${liked ? "fill-current scale-110" : ""}`}

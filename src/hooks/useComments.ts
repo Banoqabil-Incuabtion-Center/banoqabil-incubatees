@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useCommentStore } from './store/useCommentStore';
+import { useAuthStore } from './store/authStore';
 import { commentRepo } from '@/repositories/commentRepo';
 import { likeRepo } from '@/repositories/likeRepo';
 import { useSocket } from './useSocket';
@@ -7,7 +8,8 @@ import { CommentTree, CommentCreatedPayload, CommentUpdatedPayload, CommentDelet
 import { CommentLikeAddedPayload, CommentLikeRemovedPayload } from '@/types/like';
 
 export const useComments = (postId: string) => {
-    const { comments: allComments, setComments, addComment, addReply, updateComment, deleteComment, setCommentLike } = useCommentStore();
+    const { comments: allComments, setComments, addComment, addReply, updateComment, deleteComment, setCommentLike, replaceComment } = useCommentStore();
+    const { user } = useAuthStore(); // Need user for optimistic updates
     const comments = allComments[postId] || [];
     const [loading, setLoading] = useState(false);
     const [hasMore, setHasMore] = useState(true);
@@ -74,7 +76,14 @@ export const useComments = (postId: string) => {
 
         const unsubCreated = on('comment:created', (payload: CommentCreatedPayload) => {
             console.log('Socket: comment:created', payload);
-            // Check if this comment already exists (we added it locally)
+
+            // Ignore events initiated by the current user to prevent duplication
+            // (we handle these optmistically + via API response)
+            if (user?._id && payload.comment.user._id === user._id) {
+                return;
+            }
+
+            // Check if this comment already exists (for other cases)
             const currentComments = useCommentStore.getState().comments[postId] || [];
             const exists = currentComments.some(c => c._id === payload.comment._id);
             if (!exists) {
@@ -119,33 +128,116 @@ export const useComments = (postId: string) => {
     }, [isConnected, on, postId, addComment, addReply, updateComment, deleteComment, setCommentLike]);
 
     const toggleLike = useCallback(async (commentId: string) => {
+        // Find comment to get current state
+        const findComment = (items: CommentTree[]): CommentTree | undefined => {
+            for (const item of items) {
+                if (item._id === commentId) return item;
+                if (item.replies) {
+                    const found = findComment(item.replies);
+                    if (found) return found;
+                }
+            }
+        };
+        const comment = findComment(comments);
+        if (!comment) return;
+
+        const originalLiked = comment.userLiked;
+        const originalCount = comment.likeCount;
+        const newLiked = !originalLiked;
+        const newCount = newLiked ? originalCount + 1 : Math.max(0, originalCount - 1);
+
+        // Optimistic update
+        setCommentLike(postId, commentId, newLiked, newCount);
+
         try {
             const res = await likeRepo.toggleCommentLike(commentId);
-            setCommentLike(postId, commentId, res.liked, res.likeCount);
+            // Verify server state matches optimistic
+            if (res.liked !== newLiked || res.likeCount !== newCount) {
+                setCommentLike(postId, commentId, res.liked, res.likeCount);
+            }
         } catch (error) {
             console.error('Failed to toggle comment like:', error);
+            // Revert
+            setCommentLike(postId, commentId, originalLiked, originalCount);
         }
-    }, [postId, setCommentLike]);
+    }, [postId, comments, setCommentLike]);
 
     const createCommentHandler = useCallback(async (content: string) => {
-        const res = await commentRepo.createComment(postId, content);
-        // Add to store immediately for the current user
-        if (res?.comment) {
-            addComment(postId, { ...res.comment, replies: [] } as CommentTree);
-            setTotal(prev => prev + 1);
+        if (!user) return;
+
+        // Optimistic update
+        const tempId = `temp-${Date.now()}`;
+        const tempComment: CommentTree = {
+            _id: tempId,
+            content,
+            user: user,
+            post: postId,
+            createdAt: new Date().toISOString(),
+            updatedAt: null,
+            deletedAt: null,
+            likeCount: 0,
+            userLiked: false,
+            replies: [],
+            depth: 0,
+            parentComment: null
+        };
+
+        addComment(postId, tempComment);
+        setTotal(prev => prev + 1);
+
+        try {
+            const res = await commentRepo.createComment(postId, content);
+            if (res?.comment) {
+                // Replace temp comment with real one
+                replaceComment(postId, tempId, { ...res.comment, replies: [] });
+            }
+            return res;
+        } catch (error) {
+            console.error("Failed to create comment", error);
+            // Revert
+            deleteComment(postId, tempId);
+            setTotal(prev => Math.max(0, prev - 1));
+            throw error;
         }
-        return res;
-    }, [postId, addComment]);
+    }, [postId, addComment, replaceComment, deleteComment, user]);
 
     const replyCommentHandler = useCallback(async (parentId: string, content: string) => {
-        const res = await commentRepo.createComment(postId, content, parentId);
-        // Add reply to store immediately for the current user
-        if (res?.comment) {
-            addReply(postId, parentId, { ...res.comment, replies: [] } as CommentTree);
-            setTotal(prev => prev + 1);
+        if (!user) return;
+
+        // Optimistic update
+        const tempId = `temp-${Date.now()}`;
+        const tempReply: CommentTree = {
+            _id: tempId,
+            content,
+            user: user,
+            post: postId,
+            createdAt: new Date().toISOString(),
+            updatedAt: null,
+            deletedAt: null,
+            likeCount: 0,
+            userLiked: false,
+            replies: [],
+            depth: 0, // Should be calculated but 0 is fine for display until real data
+            parentComment: parentId
+        };
+
+        addReply(postId, parentId, tempReply);
+        setTotal(prev => prev + 1);
+
+        try {
+            const res = await commentRepo.createComment(postId, content, parentId);
+            if (res?.comment) {
+                replaceComment(postId, tempId, { ...res.comment, replies: [] });
+            }
+            return res;
+        } catch (error) {
+            console.error("Failed to reply", error);
+            // Revert
+            deleteComment(postId, tempId);
+            setTotal(prev => Math.max(0, prev - 1));
+            throw error;
         }
-        return res;
-    }, [postId, addReply]);
+    }, [postId, addReply, replaceComment, deleteComment, user]);
 
     const updateCommentHandler = useCallback(async (id: string, content: string) => {
         const res = await commentRepo.updateComment(id, content);
