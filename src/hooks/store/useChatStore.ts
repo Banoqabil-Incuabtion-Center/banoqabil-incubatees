@@ -145,34 +145,41 @@ export const useChatStore = create<ChatState>((set, get) => ({
             // For now, let's add it directly to store as well
             const newMessage = response.data;
 
-            // Need to ensure sender is populated or handled correctly in UI
-            // Backend returns the message object. Helper to format if needed.
+            // Ensure defaults
+            if (!newMessage.seenBy) newMessage.seenBy = [];
 
-            const currentMessages = get().messages;
-            set({
-                messages: [...currentMessages, newMessage],
-                isSendingMessage: false
+            set((state) => {
+                const currentMessages = state.messages;
+                // Avoid duplicates if socket already added it
+                if (currentMessages.some(m => m._id === newMessage._id)) {
+                    return { isSendingMessage: false };
+                }
+
+                return {
+                    messages: [...currentMessages, newMessage],
+                    isSendingMessage: false
+                };
             });
 
             // Also update conversation last message if it exists in list
-            let conversations = get().conversations.map(c => {
-                // Assuming we can identify the conversation. 
-                // Ideally backend returns the conversation ID, but let's check participants
-                const isParticipant = c.participants.some(p => p._id === receiverId);
-                if (isParticipant) {
-                    return { ...c, lastMessage: newMessage, updatedAt: newMessage.createdAt };
-                }
-                return c;
-            });
+            set((state) => {
+                const conversations = state.conversations.map(c => {
+                    const isParticipant = c.participants.some(p => p._id === receiverId);
+                    if (isParticipant) {
+                        return { ...c, lastMessage: newMessage, updatedAt: newMessage.createdAt };
+                    }
+                    return c;
+                });
 
-            // Sort to move this conversation to top
-            conversations.sort((a, b) => {
-                const aTime = a.lastMessage?.createdAt || a.updatedAt;
-                const bTime = b.lastMessage?.createdAt || b.updatedAt;
-                return new Date(bTime).getTime() - new Date(aTime).getTime();
-            });
+                // Sort to move this conversation to top
+                conversations.sort((a, b) => {
+                    const aTime = a.lastMessage?.createdAt || a.updatedAt;
+                    const bTime = b.lastMessage?.createdAt || b.updatedAt;
+                    return new Date(bTime).getTime() - new Date(aTime).getTime();
+                });
 
-            set({ conversations });
+                return { conversations };
+            });
 
         } catch (error) {
             console.error('Error sending message:', error);
@@ -185,45 +192,81 @@ export const useChatStore = create<ChatState>((set, get) => ({
     },
 
     addMessage: (message: Message) => {
-        const { activeUserId, messages, conversations } = get();
+        // Ensure defaults
+        if (!message.seenBy) message.seenBy = [];
 
-        // If message belongs to active chat, add it
-        // Check if sender is activeUser OR if user is sender (loopback)
-        const isRelevantToActiveChat =
-            (typeof message.sender === 'object' ? message.sender._id : message.sender) === activeUserId ||
-            (message.conversationId === (get().activeConversation?._id)); // This might need refinement
+        const activeUserIdState = get().activeUserId; // keep using get() for simple read access if needed, or pass via closure if inside functional set
 
-        // Actually, simpler logic: check if the other party in the message is the activeUserId
+        set((state) => {
+            const { activeUserId, messages, conversations } = state;
+            const updates: Partial<ChatState> = {};
 
-        // For simplicity, just append if it matches activeUserId
-        // We need to know who the message is FROM.
-        const senderId = typeof message.sender === 'object' ? message.sender._id : message.sender;
+            // Check if sender is activeUser OR if user is sender (loopback)
+            const senderId = typeof message.sender === 'object' ? (message.sender as any)._id : message.sender;
 
-        if (senderId === activeUserId || (senderId !== activeUserId && get().activeUserId === senderId)) {
-            // Wait, if I received a message from activeUserId:
+            // Logic:
+            // 1. If currently chatting with the SENDER of the message -> append
+            // 2. If currently chatting with the RECEIVER (myself, from another tab) -> append
+            // Basically if conversationId matches active conversation (if we had it populated), or if sender/receiver matches activeUserId.
+
+            // Current simplified logic: If activeUserId matches senderId, or if *I* sent it (senderId == myId) and activeUserId matches receiver? 
+            // Ideally we should match by conversationId if possible, but we don't always have activeConversation populated.
+            // Relying on activeUserId:
+            // If I am chatting with User A (activeUserId = A)
+            // and I receive a message FROM A -> Show it.
+            // OR I sent a message TO A (from another tab) -> Show it.
+
+            // We need to know my own ID to confirm "I sent it TO A".
+            // But we don't have my ID easily here without get(). (It's not in store state directly explicitly as 'me').
+            // However, checks:
+
             if (senderId === activeUserId) {
-                set({ messages: [...messages, message] });
+                // Message FROM the person I'm chatting with
+                if (!messages.some(m => m._id === message._id)) {
+                    updates.messages = [...messages, message];
+                }
+            } else {
+                // Check if it's a message I SENT to the active user (from another device)
+                // OR if it simply belongs to the current conversation context.
+
+                // Fallback: Check against activeConversation directly (most reliable)
+                const activeConv = state.activeConversation;
+
+                // If we have an active conversation and the message belongs to it
+                if (activeConv && activeConv._id === message.conversationId) {
+                    if (!messages.some(m => m._id === message._id)) {
+                        updates.messages = [...messages, message];
+                    }
+                } else {
+                    // Fallback 2: Check conversation list (old logic)
+                    const conversationWithActiveUser = conversations.find(c => c.participants.some(p => p._id === activeUserId));
+                    if (conversationWithActiveUser && conversationWithActiveUser._id === message.conversationId) {
+                        if (!messages.some(m => m._id === message._id)) {
+                            updates.messages = [...messages, message];
+                        }
+                    }
+                }
             }
-        }
 
-        // Always update conversation list last message and move it to top
-        // If conversation doesn't exist in list (new chat started by someone else), fetch conversations?
-        // Or just update existing.
-        const updatedConversations = conversations.map(c => {
-            if (c._id === message.conversationId) {
-                return { ...c, lastMessage: message, updatedAt: message.createdAt };
-            }
-            return c;
+            // Always update conversation list last message and move it to top
+            const updatedConversations = conversations.map(c => {
+                if (c._id === message.conversationId) {
+                    return { ...c, lastMessage: message, updatedAt: message.createdAt };
+                }
+                return c;
+            });
+
+            // Sort by updatedAt
+            updatedConversations.sort((a, b) => {
+                const aTime = a.lastMessage?.createdAt || a.updatedAt;
+                const bTime = b.lastMessage?.createdAt || b.updatedAt;
+                return new Date(bTime).getTime() - new Date(aTime).getTime();
+            });
+
+            updates.conversations = updatedConversations;
+
+            return updates;
         });
-
-        // Sort by updatedAt to move conversation with new message to top
-        updatedConversations.sort((a, b) => {
-            const aTime = a.lastMessage?.createdAt || a.updatedAt;
-            const bTime = b.lastMessage?.createdAt || b.updatedAt;
-            return new Date(bTime).getTime() - new Date(aTime).getTime();
-        });
-
-        set({ conversations: updatedConversations });
     },
 
     updateTypingStatus: (userId, isTyping) => {
@@ -232,8 +275,24 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
     markMessageAsRead: async (conversationId, readerId) => {
         try {
-            // Optimistic update first
-            const { messages, conversations } = get();
+            // Optimistic/Immediate update to UI to prevent waiting for API
+            set((state) => ({
+                messages: state.messages.map(msg => {
+                    if (msg.conversationId === conversationId && !msg.seenBy.includes(readerId)) {
+                        return { ...msg, seenBy: [...msg.seenBy, readerId] };
+                    }
+                    return msg;
+                }),
+                conversations: state.conversations.map(c => {
+                    if (c._id === conversationId && c.lastMessage && !c.lastMessage.seenBy.includes(readerId)) {
+                        return {
+                            ...c,
+                            lastMessage: { ...c.lastMessage, seenBy: [...c.lastMessage.seenBy, readerId] }
+                        };
+                    }
+                    return c;
+                })
+            }));
 
             // Send request to backend
             const token = localStorage.getItem('token') || sessionStorage.getItem('token');
@@ -243,29 +302,14 @@ export const useChatStore = create<ChatState>((set, get) => ({
                 { headers: { Authorization: `Bearer ${token}` } }
             );
 
-            // Update messages in current view
-            const updatedMessages = messages.map(msg => {
-                if (msg.conversationId === conversationId && !msg.seenBy.includes(readerId)) {
-                    return { ...msg, seenBy: [...msg.seenBy, readerId] };
-                }
-                return msg;
-            });
-
-            // Update last message in conversations list if applicable
-            const updatedConversations = conversations.map(c => {
-                if (c._id === conversationId && c.lastMessage && !c.lastMessage.seenBy.includes(readerId)) {
-                    return {
-                        ...c,
-                        lastMessage: { ...c.lastMessage, seenBy: [...c.lastMessage.seenBy, readerId] }
-                    };
-                }
-                return c;
-            });
-
-            set({ messages: updatedMessages, conversations: updatedConversations });
+            // No need to set state again after API if we trust the optimistic update.
+            // If we wanted to be strictly accurate, we could update again, but purely functional:
+            // But usually optimistic is enough unless error.
 
         } catch (error) {
             console.error('Error marking messages as read:', error);
+            // Ideally revert here, but strict revert logic is complex. 
+            // For read receipts, occasional sync error is acceptable vs disappearance.
         }
     }
 }));

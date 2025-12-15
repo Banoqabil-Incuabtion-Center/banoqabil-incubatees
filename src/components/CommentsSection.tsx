@@ -36,6 +36,7 @@ export const CommentsSection: React.FC<CommentsSectionProps> = ({ postId }) => {
 
   const [content, setContent] = useState("");
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const initialFetchDone = useRef(false);
 
   // Initial fetch - only run once when component mounts
@@ -46,13 +47,21 @@ export const CommentsSection: React.FC<CommentsSectionProps> = ({ postId }) => {
     }
   }, []);
 
+  // Debounced submit handler
   const handleAddComment = async () => {
-    if (!content.trim()) return;
+    if (!content.trim() || isSubmitting) return;
+
+    const text = content;
+    setContent("");
+    setIsSubmitting(true);
+
     try {
-      await createComment(content);
-      setContent("");
+      await createComment(text);
     } catch (error) {
       console.error("Failed to add comment:", error);
+      setContent(text); // Restore on failure
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -121,20 +130,21 @@ export const CommentsSection: React.FC<CommentsSectionProps> = ({ postId }) => {
             value={content}
             onChange={(e) => setContent(e.target.value)}
             onKeyPress={(e) => {
-              if (e.key === "Enter" && !e.shiftKey && content.trim()) {
+              if (e.key === "Enter" && !e.shiftKey && content.trim() && !isSubmitting) {
                 e.preventDefault();
                 handleAddComment();
               }
             }}
             className="w-full border rounded-md p-2"
+            disabled={isSubmitting}
           />
           <Button
             size="sm"
-            disabled={!content.trim()}
+            disabled={!content.trim() || isSubmitting}
             onClick={handleAddComment}
             className="w-10 h-10"
           >
-            <Send className="w-5 h-5" />
+            {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
           </Button>
 
         </div>

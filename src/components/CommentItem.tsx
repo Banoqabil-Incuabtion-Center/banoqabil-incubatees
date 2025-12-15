@@ -93,7 +93,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                         <div className="flex items-center gap-2 flex-wrap">
                             <p className="text-sm font-semibold">{comment.user?.name}</p>
                             <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                                <span>{formatTimeAgo(comment.createdAt)}</span>
+                                {/* Moved time to bottom */}
                             </div>
                             {comment.depth > 0 && (
                                 <span className="text-xs bg-muted px-2 py-0.5 rounded">
@@ -151,31 +151,37 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                                 {comment.content}
                             </p>
 
-                            <div className="flex items-center gap-4 pt-1">
+                            <div className="flex items-center gap-3 mt-1">
                                 {canReply && !isReplying && (
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
+                                    <button
                                         onClick={() => setIsReplying(true)}
-                                        className="h-7 text-xs px-2"
+                                        className="text-xs text-muted-foreground hover:text-foreground font-medium flex items-center gap-1 transition-colors"
                                     >
-                                        <Reply className="w-3 h-3 mr-1" />
                                         Reply
-                                    </Button>
+                                    </button>
                                 )}
 
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
+                                <button
                                     onClick={() => onLike(comment._id)}
                                     className={cn(
-                                        "h-7 text-xs px-2 gap-1",
-                                        comment.userLiked && "text-red-500 hover:text-red-600"
+                                        "text-xs font-medium flex items-center gap-1 transition-colors",
+                                        comment.userLiked ? "text-red-500 hover:text-red-600" : "text-muted-foreground hover:text-foreground"
                                     )}
                                 >
-                                    <Heart className={cn("w-3 h-3", comment.userLiked && "fill-current")} />
+                                    {comment.userLiked ? (
+                                        <Heart className="w-3 h-3 fill-current" />
+                                    ) : (
+                                        <Heart className="w-3 h-3" />
+                                    )}
                                     <span>{comment.likeCount || 0}</span>
-                                </Button>
+                                </button>
+
+                                <span className="text-[10px] text-muted-foreground/60 select-none">
+                                    •
+                                </span>
+                                <span className="text-[10px] text-muted-foreground/60 select-none">
+                                    {formatTimeAgo(comment.createdAt)}
+                                </span>
                             </div>
 
                             {isReplying && (

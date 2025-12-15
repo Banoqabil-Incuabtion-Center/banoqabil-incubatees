@@ -80,11 +80,11 @@ export const useComments = (postId: string) => {
         const unsubCreated = on('comment:created', (payload: CommentCreatedPayload) => {
             console.log('Socket: comment:created', payload);
 
-            // Ignore events initiated by the current user to prevent duplication
-            // (we handle these optmistically + via API response)
-            if (user?._id && payload.comment.user._id === user._id) {
-                return;
-            }
+            // We no longer ignore events from self, to ensure multi-tab sync.
+            // The store's addComment/addReply functions have built-in duplicate checks.
+            // if (user?._id && payload.comment.user._id === user._id) {
+            //     return;
+            // }
 
             // Check if this comment already exists (for other cases)
             const currentComments = useCommentStore.getState().comments[postId] || [];

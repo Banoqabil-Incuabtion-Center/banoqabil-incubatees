@@ -100,6 +100,23 @@ export const useCommentStore = create<CommentState>((set) => ({
 }));
 
 const replaceCommentInTree = (comments: CommentTree[], tempId: string, newComment: CommentTree): CommentTree[] => {
+    // Helper to check if ID exists in tree
+    const existsInTree = (nodes: CommentTree[], id: string): boolean => {
+        return nodes.some(node => {
+            if (node._id === id) return true;
+            return node.replies ? existsInTree(node.replies, id) : false;
+        });
+    };
+
+    // If the new comment already exists in the tree (e.g. via socket),
+    // we should just remove the temp one instead of replacing it (which would create a duplicate or overwrite).
+    const alreadyExists = existsInTree(comments, newComment._id);
+
+    if (alreadyExists) {
+        // Just remove the tempId
+        return removeCommentFromTree(comments, tempId);
+    }
+
     return comments.map(comment => {
         if (comment._id === tempId) {
             return newComment; // Replace entirely

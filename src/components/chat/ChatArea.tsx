@@ -17,7 +17,7 @@ interface ChatAreaProps {
 export function ChatArea({ activeUserId, userName = "Select a User", userAvatar }: ChatAreaProps) {
     const scrollRef = useRef<HTMLDivElement>(null);
     const { user } = useAuthStore();
-    const { messages, fetchMessages, sendMessage, isLoadingMessages, markMessageAsRead } = useChatStore();
+    const { messages, fetchMessages, sendMessage, isLoadingMessages, markMessageAsRead, isSendingMessage } = useChatStore();
     const [inputValue, setInputValue] = useState("");
     const { socket, on, emit } = useSocket();
 
@@ -39,7 +39,7 @@ export function ChatArea({ activeUserId, userName = "Select a User", userAvatar 
             // 2. Message is NOT sent by me (I don't "read" my own messages in this context)
             // 3. I haven't already marked it as seen (prevents infinite loop)
             const isFromMe = (typeof lastMessage.sender === 'object' ? lastMessage.sender._id : lastMessage.sender) === user._id;
-            const hasSeen = lastMessage.seenBy.includes(user._id);
+            const hasSeen = lastMessage.seenBy?.includes(user._id);
 
             if (lastMessage.conversationId && !isFromMe && !hasSeen) {
                 // Emit event to notify the sender
@@ -69,8 +69,9 @@ export function ChatArea({ activeUserId, userName = "Select a User", userAvatar 
 
     const handleSendMessage = async () => {
         if (!inputValue.trim() || !activeUserId) return;
-        await sendMessage(activeUserId, inputValue);
+        const text = inputValue;
         setInputValue("");
+        await sendMessage(activeUserId, text);
     };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -148,7 +149,7 @@ export function ChatArea({ activeUserId, userName = "Select a User", userAvatar 
                                                 {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                 {isMe && (
                                                     <CheckCheck
-                                                        className={`w-3 h-3 ${msg.seenBy.some(id => id !== user?._id) ? "text-blue-500" : "text-muted-foreground"}`}
+                                                        className={`w-3 h-3 ${msg.seenBy?.some(id => id !== user?._id) ? "text-blue-500" : "text-muted-foreground"}`}
                                                     />
                                                 )}
                                             </span>
