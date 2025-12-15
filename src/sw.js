@@ -15,8 +15,10 @@ precacheAndRoute(self.__WB_MANIFEST);
 cleanupOutdatedCaches();
 
 self.addEventListener('push', function (event) {
+    console.log('[SW] Push Received', event.data);
     if (event.data) {
         const payload = event.data.json();
+        console.log('[SW] Push Payload', payload);
         const title = payload.title || 'New Notification';
         const options = {
             body: payload.body,

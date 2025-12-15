@@ -34,6 +34,10 @@ export default defineConfig({
         display: 'standalone',
         background_color: '#ffffff',
         orientation: 'portrait'
+      },
+      devOptions: {
+        enabled: true,
+        type: 'module',
       }
     })
   ],
