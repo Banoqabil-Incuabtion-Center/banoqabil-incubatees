@@ -339,7 +339,7 @@ export const PostCard = ({
 
   return (
     <>
-      <Card className="overflow-hidden border-border ">
+      <Card className="overflow-hidden border-border gap-2">
         <CardHeader className="space-y-0">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-2 sm:gap-3">
@@ -354,8 +354,9 @@ export const PostCard = ({
                 <div className="flex items-center gap-2">
                   <p className="font-semibold text-sm leading-none">{displayName}</p>
                 </div>
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  {/* <Clock className="w-3.5 h-3.5" /> */}
+                <div className="flex items-center text-xs text-muted-foreground">
+                  <span>{title}</span>
+                  <span className="mx-1">•</span>
                   <span>{formatTimeAgo(createdAt)}</span>
                 </div>
               </div>
@@ -454,7 +455,7 @@ export const PostCard = ({
 
           {/* Post Content */}
           <div className="space-y-1.5 sm:space-y-2">
-            <h3 className="font-bold text-base sm:text-lg leading-tight">{title}</h3>
+            {/* <h3 className="font-bold text-base sm:text-lg leading-tight">{title}</h3> */}
             <p className="text-sm text-foreground/80 leading-relaxed">
               {description}
             </p>
@@ -469,12 +470,12 @@ export const PostCard = ({
               className="inline-flex items-center gap-2 text-sm text-primary hover:underline font-medium transition-colors group"
             >
               <ExternalLink className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-              Visit Link
+              {link}
             </a>
           )}
 
           {/* Action Buttons */}
-          <div className="flex pt-2">
+          <div className="flex">
             <div className="flex items-center gap-2 w-full">
               <Button
                 variant="ghost"
