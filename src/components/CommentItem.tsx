@@ -93,7 +93,6 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                         <div className="flex items-center gap-2 flex-wrap">
                             <p className="text-sm font-semibold">{comment.user?.name}</p>
                             <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                                <Clock className="w-3 h-3" />
                                 <span>{formatTimeAgo(comment.createdAt)}</span>
                             </div>
                             {comment.depth > 0 && (
