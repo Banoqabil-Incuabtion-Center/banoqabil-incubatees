@@ -47,10 +47,12 @@ export interface CommentLikeAddedPayload {
     commentId: string;
     like: Like;
     likeCount: number;
+    postId: string;
 }
 
 export interface CommentLikeRemovedPayload {
     commentId: string;
     userId: string;
     likeCount: number;
+    postId: string;
 }

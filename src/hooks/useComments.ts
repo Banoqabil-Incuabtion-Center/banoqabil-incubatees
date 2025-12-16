@@ -79,6 +79,7 @@ export const useComments = (postId: string) => {
 
         const unsubCreated = on('comment:created', (payload: CommentCreatedPayload) => {
             console.log('Socket: comment:created', payload);
+            if (payload.comment.post !== postId) return;
 
             // We no longer ignore events from self, to ensure multi-tab sync.
             // The store's addComment/addReply functions have built-in duplicate checks.
@@ -101,22 +102,26 @@ export const useComments = (postId: string) => {
 
         const unsubUpdated = on('comment:updated', (payload: CommentUpdatedPayload) => {
             console.log('Socket: comment:updated', payload);
+            if (payload.comment.post !== postId) return;
             updateComment(postId, payload.comment._id, payload.comment as any);
         });
 
         const unsubDeleted = on('comment:deleted', (payload: CommentDeletedPayload) => {
             console.log('Socket: comment:deleted', payload);
+            if (payload.postId !== postId) return;
             deleteComment(postId, payload.commentId);
             setTotal(prev => Math.max(0, prev - 1));
         });
 
         const unsubLikeAdded = on('comment:like:added', (payload: CommentLikeAddedPayload) => {
             console.log('Socket: comment:like:added', payload);
+            if (payload.postId !== postId) return;
             setCommentLike(postId, payload.commentId, true, payload.likeCount);
         });
 
         const unsubLikeRemoved = on('comment:like:removed', (payload: CommentLikeRemovedPayload) => {
             console.log('Socket: comment:like:removed', payload);
+            if (payload.postId !== postId) return;
             setCommentLike(postId, payload.commentId, false, payload.likeCount);
         });
 

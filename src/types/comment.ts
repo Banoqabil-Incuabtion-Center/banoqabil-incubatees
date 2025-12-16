@@ -49,4 +49,5 @@ export interface CommentUpdatedPayload {
 export interface CommentDeletedPayload {
     commentId: string;
     parentCommentId: string | null;
+    postId: string;
 }
