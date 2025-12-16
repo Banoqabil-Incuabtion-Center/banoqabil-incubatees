@@ -2,7 +2,7 @@
 import { Link } from "react-router-dom"
 import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
-import MarkAttendance from "./MarkAttendance"
+
 import { useAuthStore } from "@/hooks/store/authStore"
 import { UserAvatar } from "./UserAvatar"
 import { useNotificationStore } from "@/hooks/useNotificationStore"
@@ -33,9 +33,7 @@ export function SiteHeader() {
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="hidden md:block">
-            <MarkAttendance userId={user?._id} />
-          </div>
+
 
           <Button variant="ghost" size="icon" className="relative" asChild>
             <Link to="/notifications">

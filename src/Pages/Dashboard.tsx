@@ -263,43 +263,23 @@ const Dashboard = () => {
             </>
           ) : (
             <>
-              {todayAttendance?.shift && (
-                <Badge variant="outline" className="gap-1">
-                  {todayAttendance.shift === 'Morning' ? <Sun className="w-3 h-3" /> : <Moon className="w-3 h-3" />}
-                  {todayAttendance.shift}
-                </Badge>
-              )}
-              {isCheckedIn ? (
-                <Badge variant="default" className="bg-green-500 hover:bg-green-600">
-                  <CheckCircle2 className="w-3 h-3 mr-1" />
-                  Checked In
-                </Badge>
-              ) : (
-                <Badge variant="secondary">
-                  <XCircle className="w-3 h-3 mr-1" />
-                  Not Checked In
-                </Badge>
-              )}
+              <>
+                {todayAttendance?.shift && (
+                  <Badge variant="outline" className="gap-1">
+                    {todayAttendance.shift === 'Morning' ? <Sun className="w-3 h-3" /> : <Moon className="w-3 h-3" />}
+                    {todayAttendance.shift}
+                  </Badge>
+                )}
+                {/* Replaced static badges with MarkAttendance component */}
+                <MarkAttendance userId={user?._id} />
+              </>
             </>
           )}
         </div>
       </div>
 
       {/* Stats Cards */}
-      {/* Mobile Check-In Section */}
-      <div className="md:hidden">
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Clock className="w-5 h-5" />
-              Quick Check-In
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <MarkAttendance userId={user?._id} />
-          </CardContent>
-        </Card>
-      </div>
+
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {dashboardLoading ? (

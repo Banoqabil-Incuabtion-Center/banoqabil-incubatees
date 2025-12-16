@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sun, Moon, Clock, AlertCircle, CheckCircle2, XCircle, Info, CalendarDays, TableIcon } from "lucide-react";
 import AttendanceCalendar from "@/components/AttendanceCalendar";
+import MarkAttendance from "@/components/MarkAttendance";
 
 const Attendance: React.FC = () => {
   const { user } = useAuthStore();
@@ -205,63 +206,20 @@ const Attendance: React.FC = () => {
 
   return (
     <div className="flex flex-col gap-4 sm:gap-5 p-4 sm:p-6">
-      {/* Shift Info Card */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg flex items-center gap-2">
-            {userShift === 'Morning' ? <Sun className="w-5 h-5 text-yellow-500" /> : <Moon className="w-5 h-5 text-blue-500" />}
-            {userShift || 'No'} Shift Assigned
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {[...Array(4)].map((_, i) => (
-                <div key={i} className="bg-muted/50 p-3 rounded-lg space-y-2">
-                  <Skeleton className="h-3 w-16" />
-                  <Skeleton className="h-5 w-24" />
-                </div>
-              ))}
-            </div>
-          ) : currentShiftInfo ? (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
-              <div className="bg-muted/50 p-3 rounded-lg">
-                <p className="text-muted-foreground text-xs mb-1">Timing</p>
-                <p className="font-semibold">{currentShiftInfo.start} - {currentShiftInfo.end}</p>
-              </div>
-              <div className="bg-muted/50 p-3 rounded-lg">
-                <p className="text-muted-foreground text-xs mb-1">Late After</p>
-                <p className="font-semibold text-yellow-600">{currentShiftInfo.lateAfter}</p>
-              </div>
-              <div className="bg-muted/50 p-3 rounded-lg">
-                <p className="text-muted-foreground text-xs mb-1">Early Leave Before</p>
-                <p className="font-semibold text-orange-600">{currentShiftInfo.earlyLeaveBefore}</p>
-              </div>
-              <div className="bg-muted/50 p-3 rounded-lg">
-                <p className="text-muted-foreground text-xs mb-1">Min Hours</p>
-                <p className="font-semibold text-green-600">{currentShiftInfo.minHours}h</p>
-              </div>
-            </div>
-          ) : shiftTiming ? (
-            <p className="text-sm">
-              <Clock className="w-4 h-4 inline mr-2" />
-              {shiftTiming.start} - {shiftTiming.end}
-            </p>
-          ) : (
-            <p className="text-sm text-muted-foreground flex items-center gap-2">
-              <Info className="w-4 h-4" /> Contact admin to assign your shift
-            </p>
-          )}
-        </CardContent>
-      </Card>
+
 
       {/* Today's Status */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2">
-            <Clock className="w-5 h-5" />
-            Today's Attendance
-          </CardTitle>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-0">
+            <CardTitle className="flex items-center gap-2">
+              <Clock className="w-5 h-5" />
+              Today's Attendance
+            </CardTitle>
+            <div className="w-full md:w-auto flex justify-start md:justify-end">
+              <MarkAttendance userId={user?._id} />
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -341,6 +299,57 @@ const Attendance: React.FC = () => {
           )}
         </CardContent>
       </Card>
+      {/* Shift Info Card */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center gap-2">
+            {userShift === 'Morning' ? <Sun className="w-5 h-5 text-yellow-500" /> : <Moon className="w-5 h-5 text-blue-500" />}
+            {userShift || 'No'} Shift Assigned
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="bg-muted/50 p-3 rounded-lg space-y-2">
+                  <Skeleton className="h-3 w-16" />
+                  <Skeleton className="h-5 w-24" />
+                </div>
+              ))}
+            </div>
+          ) : currentShiftInfo ? (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+              <div className="bg-muted/50 p-3 rounded-lg">
+                <p className="text-muted-foreground text-xs mb-1">Timing</p>
+                <p className="font-semibold">{currentShiftInfo.start} - {currentShiftInfo.end}</p>
+              </div>
+              <div className="bg-muted/50 p-3 rounded-lg">
+                <p className="text-muted-foreground text-xs mb-1">Late After</p>
+                <p className="font-semibold text-yellow-600">{currentShiftInfo.lateAfter}</p>
+              </div>
+              <div className="bg-muted/50 p-3 rounded-lg">
+                <p className="text-muted-foreground text-xs mb-1">Early Leave Before</p>
+                <p className="font-semibold text-orange-600">{currentShiftInfo.earlyLeaveBefore}</p>
+              </div>
+              <div className="bg-muted/50 p-3 rounded-lg">
+                <p className="text-muted-foreground text-xs mb-1">Min Hours</p>
+                <p className="font-semibold text-green-600">{currentShiftInfo.minHours}h</p>
+              </div>
+            </div>
+          ) : shiftTiming ? (
+            <p className="text-sm">
+              <Clock className="w-4 h-4 inline mr-2" />
+              {shiftTiming.start} - {shiftTiming.end}
+            </p>
+          ) : (
+            <p className="text-sm text-muted-foreground flex items-center gap-2">
+              <Info className="w-4 h-4" /> Contact admin to assign your shift
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+
 
       {/* History with Tabs */}
       <Card>
