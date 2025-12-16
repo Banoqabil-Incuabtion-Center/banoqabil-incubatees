@@ -157,6 +157,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                                         onClick={() => setIsReplying(true)}
                                         className="text-xs text-muted-foreground hover:text-foreground font-medium flex items-center gap-1 transition-colors"
                                     >
+                                        <Reply className="w-3 h-3 mr-1" />
                                         Reply
                                     </button>
                                 )}
@@ -171,9 +172,9 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                                     {comment.userLiked ? (
                                         <Heart className="w-3 h-3 fill-current" />
                                     ) : (
-                                        <Heart className="w-3 h-3" />
+                                        <Heart className="w-3 h-3" /> 
                                     )}
-                                    <span>{comment.likeCount || 0}</span>
+                                    <span>{comment.likeCount || "like"}</span>
                                 </button>
 
                                 <span className="text-[10px] text-muted-foreground/60 select-none">
