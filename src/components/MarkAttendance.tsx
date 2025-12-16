@@ -107,7 +107,7 @@ const MarkAttendance: React.FC<Props> = ({ userId }) => {
 
   return (
     <div className="flex gap-1 sm:gap-2 flex-wrap items-center">
-      <div className="flex gap-1 sm:gap-2 items-center">
+      <div className="flex gap-1 sm:gap-2 items-center order-2 md:order-1">
         {/* User Shift Info - shown on all screens but compact on mobile */}
         {userShift && (
           <div className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-xs text-muted-foreground">
@@ -134,7 +134,7 @@ const MarkAttendance: React.FC<Props> = ({ userId }) => {
         )}
       </div>
       {/* Action Buttons */}
-      <div className="flex gap-2 items-center  flex-wrap">
+      <div className="flex gap-2 items-center flex-wrap order-1 md:order-2">
         {!isCheckedIn && (
           <Button
             onClick={handleCheckIn}

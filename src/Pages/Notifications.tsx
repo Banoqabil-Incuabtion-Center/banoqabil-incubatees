@@ -151,7 +151,7 @@ const Notifications = () => {
             )}
             <div className='space-y-6 p-2 '>
 
-                <div className="space-y-1 ">
+                {/* <div className="space-y-1 ">
                     <CardTitle className="text-2xl font-bold flex items-center gap-2">
                         <Bell className="h-6 w-6" />
                         Notifications
@@ -159,7 +159,7 @@ const Notifications = () => {
                     <CardDescription>
                         Stay updated with recent activity
                     </CardDescription>
-                </div>
+                </div> */}
                 <Button
                     variant="outline"
                     size="sm"

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
+import MarkAttendance from "@/components/MarkAttendance"
 import { UserAvatar } from "@/components/UserAvatar"
 import { userRepo } from "../repositories/userRepo"
 import { attRepo } from "../repositories/attRepo"
@@ -285,6 +286,21 @@ const Dashboard = () => {
       </div>
 
       {/* Stats Cards */}
+      {/* Mobile Check-In Section */}
+      <div className="md:hidden">
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Clock className="w-5 h-5" />
+              Quick Check-In
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <MarkAttendance userId={user?._id} />
+          </CardContent>
+        </Card>
+      </div>
+
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {dashboardLoading ? (
           // Skeleton loaders for stats

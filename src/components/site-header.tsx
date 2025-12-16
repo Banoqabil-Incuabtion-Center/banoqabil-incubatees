@@ -33,7 +33,9 @@ export function SiteHeader() {
         </div>
 
         <div className="flex items-center gap-2">
-          <MarkAttendance userId={user?._id} />
+          <div className="hidden md:block">
+            <MarkAttendance userId={user?._id} />
+          </div>
 
           <Button variant="ghost" size="icon" className="relative" asChild>
             <Link to="/notifications">
