@@ -98,7 +98,7 @@ export function ChatArea({ activeUserId, userName = "Select a User", userAvatar 
             {/* Header */}
             <div className="h-14 border-b flex items-center justify-between px-4 shadow-sm bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
                 <div className="flex items-center gap-3">
-                    <UserAvatar src={userAvatar} name={userName}  />
+                    <UserAvatar src={userAvatar} name={userName}/>
                     <div className="flex flex-col">
                         <span className="font-semibold text-sm leading-none flex items-center gap-1.5">
                             {userName}
