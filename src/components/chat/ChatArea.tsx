@@ -2,7 +2,7 @@ import { useRef, useEffect, useState } from "react";
 import { UserAvatar } from "@/components/UserAvatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Hash, Phone, Video, PlusCircle, SendHorizontal, CheckCheck } from "lucide-react";
+import { Hash, Phone, Video, PlusCircle, SendHorizontal, CheckCheck, Loader2 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { useAuthStore } from "@/hooks/store/authStore";
 import { useChatStore } from "@/hooks/store/useChatStore";
@@ -17,7 +17,7 @@ interface ChatAreaProps {
 export function ChatArea({ activeUserId, userName = "Select a User", userAvatar }: ChatAreaProps) {
     const scrollRef = useRef<HTMLDivElement>(null);
     const { user } = useAuthStore();
-    const { messages, fetchMessages, sendMessage, isLoadingMessages, markMessageAsRead, isSendingMessage, onlineUsers } = useChatStore();
+    const { messages, fetchMessages, sendMessage, isLoadingMessages, markMessageAsRead, isSendingMessage, onlineUsers, hasMoreMessages } = useChatStore();
     const [inputValue, setInputValue] = useState("");
     const { socket, on, emit } = useSocket();
 
@@ -55,17 +55,53 @@ export function ChatArea({ activeUserId, userName = "Select a User", userAvatar 
         }
     }, [activeUserId, messages, user, emit, markMessageAsRead]);
 
+    const [isLoadingMore, setIsLoadingMore] = useState(false);
+
+    // Scroll listener for pagination
+    const handleScroll = async () => {
+        if (!scrollRef.current) return;
+
+        const { scrollTop, scrollHeight } = scrollRef.current;
+
+        // If scrolled to top and not loading and has more messages
+        if (scrollTop === 0 && !isLoadingMessages && hasMoreMessages && messages.length >= 30) {
+            // We need a way to know if there are truly more messages, 
+            // but for now we can try fetching if we have a significant amount.
+            // Ideally store should expose `hasMoreMessages`.
+            // Assuming store exposes `hasMoreMessages` which we added.
+            // We also need the oldest message timestamp.
+            const oldestMessage = messages[0];
+            if (!oldestMessage) return;
+
+            setIsLoadingMore(true);
+            const currentScrollHeight = scrollRef.current.scrollHeight;
+
+            await fetchMessages(activeUserId!, oldestMessage.createdAt);
+
+            setIsLoadingMore(false);
+
+            // Restore scroll position
+            if (scrollRef.current) {
+                const newScrollHeight = scrollRef.current.scrollHeight;
+                scrollRef.current.scrollTop = newScrollHeight - currentScrollHeight;
+            }
+        }
+    };
+
     useEffect(() => {
         if (activeUserId && activeUserId !== 'announcements') {
             fetchMessages(activeUserId);
         }
     }, [activeUserId, fetchMessages]);
 
+    // Auto-scroll to bottom ONLY on initial load or when new message arrives (and we were already at bottom)
     useEffect(() => {
-        if (scrollRef.current) {
+        if (scrollRef.current && !isLoadingMore) {
+            // Only auto-scroll if we are not loading more history
+            // Simple heuristic: if we are near bottom, or it's the very first load
             scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
         }
-    }, [messages, activeUserId]);
+    }, [messages.length, activeUserId]); // Depend on length change logic inside to differentiate prepend vs append
 
     const handleSendMessage = async () => {
         if (!inputValue.trim() || !activeUserId) return;
@@ -98,7 +134,7 @@ export function ChatArea({ activeUserId, userName = "Select a User", userAvatar 
             {/* Header */}
             <div className="h-14 border-b flex items-center justify-between px-4 shadow-sm bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
                 <div className="flex items-center gap-3">
-                    <UserAvatar src={userAvatar} name={userName}/>
+                    <UserAvatar src={userAvatar} name={userName} />
                     <div className="flex flex-col">
                         <span className="font-semibold text-sm leading-none flex items-center gap-1.5">
                             {userName}
@@ -119,21 +155,35 @@ export function ChatArea({ activeUserId, userName = "Select a User", userAvatar 
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 custom-scrollbar" ref={scrollRef}>
+            <div className="flex-1 overflow-y-auto p-4 custom-scrollbar" ref={scrollRef} onScroll={handleScroll}>
                 <div className="flex flex-col gap-4 pb-4">
-                    {/* Welcome message */}
-                    <div className="mt-8 mb-8 px-4">
-                        <div className="h-16 w-16 bg-muted/50 rounded-full flex items-center justify-center mb-4">
-                            <UserAvatar src={userAvatar} name={userName} className="h-16 w-16" />
+                    {/* Welcome message - Only show if no more messages (start of history) */}
+                    {!hasMoreMessages && !isLoadingMessages && (
+                        <div className="mt-8 mb-8 px-4">
+                            <div className="h-16 w-16 bg-muted/50 rounded-full flex items-center justify-center mb-4">
+                                <UserAvatar src={userAvatar} name={userName} className="h-16 w-16" />
+                            </div>
+                            <div className="space-y-1">
+                                <h1 className="text-2xl font-bold">This is the beginning of your direct message history with <span className="text-primary">{userName}</span></h1>
+                                <p className="text-muted-foreground">Say hello!</p>
+                            </div>
                         </div>
-                        <h1 className="text-3xl font-bold mb-1">This is the beginning of your direct message history with <span className="text-primary">{userName}</span></h1>
-                        <p className="text-muted-foreground">This is the beginning of your direct message history with {userName}. Say hello!</p>
-                    </div>
+                    )}
 
                     <Separator className="mb-4" />
 
+                    {/* Pagination Loader */}
+                    {isLoadingMore && (
+                        <div className="flex justify-center py-2">
+                            <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                        </div>
+                    )}
+
                     {isLoadingMessages ? (
-                        <div className="text-center text-muted-foreground">Loading messages...</div>
+                        <div className="flex flex-col items-center justify-center py-12 text-muted-foreground h-full">
+                            <Loader2 className="w-8 h-8 animate-spin mb-2 text-primary" />
+                            <p className="text-sm">Loading conversation...</p>
+                        </div>
                     ) : (
                         messages.map((msg) => {
                             // Check if msg.sender is populated object or string ID

@@ -34,22 +34,23 @@ interface ChatState {
     activeUserId: string | null;
     isLoadingConversations: boolean;
     isLoadingMessages: boolean;
+    hasMoreMessages: boolean;
     isSendingMessage: boolean;
 
     isSearching: boolean;
     searchResults: User[];
 
+    onlineUsers: string[];
+
     fetchConversations: () => Promise<void>;
-    fetchMessages: (receiverId: string) => Promise<void>;
+    fetchMessages: (receiverId: string, before?: string) => Promise<void>;
     sendMessage: (receiverId: string, text: string) => Promise<void>;
     searchUsers: (query: string) => Promise<void>;
     setActiveUser: (userId: string | null) => void;
     addMessage: (message: Message) => void;
-    updateTypingStatus: (userId: string, isTyping: boolean) => void; // Placeholder
+    updateTypingStatus: (userId: string, isTyping: boolean) => void;
     markMessageAsRead: (conversationId: string, readerId: string) => Promise<void>;
 
-    // Online Users
-    onlineUsers: string[];
     setOnlineUsers: (users: string[]) => void;
     addOnlineUser: (userId: string) => void;
     removeOnlineUser: (userId: string) => void;
@@ -62,6 +63,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     activeUserId: null,
     isLoadingConversations: false,
     isLoadingMessages: false,
+    hasMoreMessages: true,
     isSendingMessage: false,
     isSearching: false,
     searchResults: [],
@@ -117,14 +119,40 @@ export const useChatStore = create<ChatState>((set, get) => ({
         }
     },
 
-    fetchMessages: async (receiverId: string) => {
-        set({ isLoadingMessages: true, messages: [] }); // Clear previous messages
+    fetchMessages: async (receiverId: string, before?: string) => {
+        // If it's an initial fetch (no 'before'), clear messages and set loading
+        if (!before) {
+            set({ isLoadingMessages: true, messages: [], hasMoreMessages: true });
+        }
+
         try {
             const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-            const response = await axios.get(`${SERVER_URL}/api/messages/${receiverId}`, {
+            let url = `${SERVER_URL}/api/messages/${receiverId}?limit=30`; // Default limit
+            if (before) {
+                url += `&before=${before}`;
+            }
+
+            const response = await axios.get(url, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            set({ messages: response.data, isLoadingMessages: false });
+
+            const newMessages = response.data;
+
+            set((state) => {
+                let updatedMessages;
+                if (before) {
+                    // Prepend new messages
+                    updatedMessages = [...newMessages, ...state.messages];
+                } else {
+                    updatedMessages = newMessages;
+                }
+
+                return {
+                    messages: updatedMessages,
+                    isLoadingMessages: false,
+                    hasMoreMessages: newMessages.length === 30 // If we got full limit, likely more exists
+                };
+            });
         } catch (error) {
             console.error('Error fetching messages:', error);
             set({ isLoadingMessages: false });
