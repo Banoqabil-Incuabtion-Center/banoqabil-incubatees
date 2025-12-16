@@ -2,7 +2,7 @@ import { useRef, useEffect, useState } from "react";
 import { UserAvatar } from "@/components/UserAvatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Hash, Phone, Video, PlusCircle, SendHorizontal, CheckCheck, Loader2 } from "lucide-react";
+import { Hash, Phone, Video, PlusCircle, SendHorizontal, CheckCheck, Loader2, ArrowLeft } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { useAuthStore } from "@/hooks/store/authStore";
 import { useChatStore } from "@/hooks/store/useChatStore";
@@ -12,9 +12,10 @@ interface ChatAreaProps {
     activeUserId?: string;
     userName?: string;
     userAvatar?: string;
+    onBack?: () => void;
 }
 
-export function ChatArea({ activeUserId, userName = "Select a User", userAvatar }: ChatAreaProps) {
+export function ChatArea({ activeUserId, userName = "Select a User", userAvatar, onBack }: ChatAreaProps) {
     const scrollRef = useRef<HTMLDivElement>(null);
     const { user } = useAuthStore();
     const { messages, fetchMessages, sendMessage, isLoadingMessages, markMessageAsRead, isSendingMessage, onlineUsers, hasMoreMessages } = useChatStore();
@@ -134,6 +135,11 @@ export function ChatArea({ activeUserId, userName = "Select a User", userAvatar 
             {/* Header */}
             <div className="h-14 border-b flex items-center justify-between px-4 shadow-sm bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
                 <div className="flex items-center gap-3">
+                    {/* Back Button for Mobile */}
+                    <Button variant="ghost" size="icon" className="md:hidden -ml-2 h-8 w-8" onClick={onBack}>
+                        <ArrowLeft className="h-5 w-5" />
+                    </Button>
+
                     <UserAvatar src={userAvatar} name={userName} />
                     <div className="flex flex-col">
                         <span className="font-semibold text-sm leading-none flex items-center gap-1.5">

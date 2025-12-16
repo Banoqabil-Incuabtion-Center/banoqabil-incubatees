@@ -64,7 +64,14 @@ export default function Direct() {
             return <AnnouncementView />;
         }
         // activeUserId can be null, cast to string|undefined if needed by component, or update component to accept null
-        return <ChatArea activeUserId={activeUserId || undefined} userName={getName(activeUserId)} userAvatar={getAvatar(activeUserId)} />;
+        return (
+            <ChatArea
+                activeUserId={activeUserId || undefined}
+                userName={getName(activeUserId)}
+                userAvatar={getAvatar(activeUserId)}
+                onBack={() => setActiveUser(null)} // Clear active user to return to list
+            />
+        );
     };
 
     // Deep linking support
@@ -87,31 +94,37 @@ export default function Direct() {
         };
     }, [on, addMessage]);
 
+    // Mobile View: If no active conversation, show Sidebar directly (full screen)
+    if (isMobile && !activeUserId && activeUserId !== 'announcements') {
+        return (
+            <div className="flex flex-1 bg-background overflow-hidden h-full min-h-0">
+                <DirectSidebar
+                    activeUserId={undefined} // No active user yet
+                    onUserSelect={handleUserSelect}
+                    className="w-full border-r-0"
+                />
+            </div>
+        );
+    }
+
+    // Mobile View: If active conversation, show ChatArea directly (full screen) with Back button
+    if (isMobile && activeUserId) {
+        return (
+            <div className="flex flex-1 bg-background overflow-hidden h-full min-h-0">
+                {renderContent()}
+            </div>
+        );
+    }
+
+    // Desktop View
     return (
         <div className="flex flex-1 bg-background overflow-hidden h-full min-h-0">
-            {/* Sidebar - Hidden on mobile, Sheet on mobile */}
-            {isMobile ? (
-                <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-                    <SheetTrigger asChild>
-                        <Button variant="ghost" size="icon" className="absolute top-[4.5rem] left-4 z-50 md:hidden">
-                            <Menu className="h-6 w-6" />
-                        </Button>
-                    </SheetTrigger>
-                    <SheetContent side="left" className="p-0 w-80">
-                        <DirectSidebar
-                            activeUserId={activeUserId || undefined}
-                            onUserSelect={handleUserSelect}
-                            className="bg-background border-r-0"
-                        />
-                    </SheetContent>
-                </Sheet>
-            ) : (
-                <DirectSidebar
-                    className="w-80 shrink-0 hidden md:flex"
-                    activeUserId={activeUserId || undefined}
-                    onUserSelect={handleUserSelect}
-                />
-            )}
+            {/* Sidebar - Always visible on desktop */}
+            <DirectSidebar
+                className="w-80 shrink-0 hidden md:flex"
+                activeUserId={activeUserId || undefined}
+                onUserSelect={handleUserSelect}
+            />
 
             {/* Content Area */}
             {renderContent()}
