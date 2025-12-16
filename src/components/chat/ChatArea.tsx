@@ -17,7 +17,7 @@ interface ChatAreaProps {
 export function ChatArea({ activeUserId, userName = "Select a User", userAvatar }: ChatAreaProps) {
     const scrollRef = useRef<HTMLDivElement>(null);
     const { user } = useAuthStore();
-    const { messages, fetchMessages, sendMessage, isLoadingMessages, markMessageAsRead, isSendingMessage } = useChatStore();
+    const { messages, fetchMessages, sendMessage, isLoadingMessages, markMessageAsRead, isSendingMessage, onlineUsers } = useChatStore();
     const [inputValue, setInputValue] = useState("");
     const { socket, on, emit } = useSocket();
 
@@ -98,11 +98,17 @@ export function ChatArea({ activeUserId, userName = "Select a User", userAvatar 
             {/* Header */}
             <div className="h-14 border-b flex items-center justify-between px-4 shadow-sm bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
                 <div className="flex items-center gap-3">
-                    <UserAvatar src={userAvatar} name={userName} className="h-8 w-8" />
+                    <UserAvatar src={userAvatar} name={userName}  />
                     <div className="flex flex-col">
                         <span className="font-semibold text-sm leading-none flex items-center gap-1.5">
                             {userName}
                         </span>
+                        {activeUserId && activeUserId !== 'announcements' && (
+                            <span className="text-xs text-muted-foreground flex items-center gap-1.5 mt-1">
+                                <span className={`w-2 h-2 rounded-full ${onlineUsers.includes(activeUserId) ? "bg-green-500" : "bg-muted-foreground/40"}`} />
+                                {onlineUsers.includes(activeUserId) ? "Online" : "Offline"}
+                            </span>
+                        )}
                     </div>
                 </div>
                 <div className="flex items-center gap-4 text-muted-foreground">
