@@ -170,13 +170,13 @@ export function ChatArea({ activeUserId, userName = "Select a User", userAvatar,
                                 <UserAvatar src={userAvatar} name={userName} className="h-16 w-16" />
                             </div>
                             <div className="space-y-1">
-                                <h1 className="text-2xl font-bold">This is the beginning of your direct message history with <span className="text-primary">{userName}</span></h1>
-                                <p className="text-muted-foreground">Say hello!</p>
+                                <h1 className="text-xl font-bold">This is the beginning of your direct message history with <span className="text-primary">{userName}</span></h1>
+                                {/* <p className="text-muted-foreground">Say hello!</p> */}
                             </div>
                         </div>
                     )}
 
-                    <Separator className="mb-4" />
+                    {/* <Separator className="mb-2" /> */}
 
                     {/* Pagination Loader */}
                     {isLoadingMore && (
