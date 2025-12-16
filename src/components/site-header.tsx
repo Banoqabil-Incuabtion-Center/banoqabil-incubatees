@@ -11,6 +11,8 @@ import { Button } from "@/components/ui/button"
 import { Download, Bell } from "lucide-react"
 import { usePwaInstall } from "@/hooks/usePwaInstall"
 
+import { MobilePageTitle } from "./MobilePageTitle"
+
 export function SiteHeader() {
   const { user } = useAuthStore()
   const { isInstallable, installPwa } = usePwaInstall()
@@ -26,6 +28,8 @@ export function SiteHeader() {
             orientation="vertical"
             className="mr-2 h-4 hidden md:block"
           />
+          {/* Mobile Page Title */}
+          <MobilePageTitle />
         </div>
 
         <div className="flex items-center gap-2">
@@ -55,14 +59,7 @@ export function SiteHeader() {
             </Button>
           )}
 
-          {/* Profile Link - Mobile Only */}
-          <Link to="/profile" className="md:hidden">
-            <UserAvatar
-              src={user?.avatar}
-              name={user?.name}
-              className="w-8 h-8 rounded-lg border border-border"
-            />
-          </Link>
+          {/* Profile Link Removed - moved to BottomNav */}
         </div>
       </div>
     </header>

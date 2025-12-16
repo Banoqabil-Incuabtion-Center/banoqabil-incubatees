@@ -8,6 +8,7 @@ const navItems = [
     { title: 'Direct', url: '/direct', icon: Send },
     { title: 'Posts', url: '/posts', icon: FileText },
     { title: 'Attendance', url: '/attendance', icon: CalendarCheck },
+    { title: 'Profile', url: '/profile', icon: User },
 ]
 
 export function BottomNav() {
@@ -15,7 +16,7 @@ export function BottomNav() {
 
     return (
         <nav className="fixed bottom-0 left-0 right-0 z-50 border-t bg-card md:hidden safe-area-bottom">
-            <div className="flex items-center justify-around h-16 max-w-lg mx-auto">
+            <div className="flex items-center justify-around h-12 max-w-lg mx-auto">
                 {navItems.map((item) => {
                     const isActive = location.pathname === item.url
                     const Icon = item.icon
@@ -27,13 +28,13 @@ export function BottomNav() {
                             size="sm"
                             asChild
                             className={cn(
-                                "flex-col h-14 w-16 gap-1 rounded-xl",
+                                "flex-col h-10 w-16 gap-1 rounded-xl",
                                 isActive && "bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary"
                             )}
                         >
                             <Link to={item.url}>
                                 <Icon className="h-5 w-5" />
-                                <span className="text-[10px] font-medium">{item.title}</span>
+                                {/* <span className="text-[10px] font-medium">{item.title}</span> */}
                             </Link>
                         </Button>
                     )
