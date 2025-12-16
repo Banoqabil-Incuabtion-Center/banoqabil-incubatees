@@ -134,7 +134,7 @@ const Notifications = () => {
     );
 
     return (
-        <div className="container py-6 max-w-2xl mx-auto space-y-6">
+        <div className="container max-w-2xl mx-auto space-y-6">
             {!isSubscribed && !pushLoading && (
                 <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -149,41 +149,41 @@ const Notifications = () => {
                     </Button>
                 </div>
             )}
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-                    <div className="space-y-1">
-                        <CardTitle className="text-2xl font-bold flex items-center gap-2">
-                            <Bell className="h-6 w-6" />
-                            Notifications
-                        </CardTitle>
-                        <CardDescription>
-                            Stay updated with recent activity
-                        </CardDescription>
-                    </div>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleMarkAllAsRead}
-                        className="ml-auto"
-                    >
-                        <CheckCheck className="mr-2 h-4 w-4" />
-                        Mark all as read
-                    </Button>
-                </CardHeader>
-                <CardContent>
-                    <PaginatedList<Notification>
-                        ref={paginatedListRef}
-                        fetchData={fetchNotificationsData}
-                        renderItem={renderNotification}
-                        pageSize={15}
-                        loadingComponent={
-                            <div className="flex items-center justify-center py-12 text-muted-foreground">
-                                Loading notifications...
-                            </div>
-                        }
-                    />
-                </CardContent>
-            </Card>
+            <div className='space-y-6 p-2 '>
+
+                <div className="space-y-1 ">
+                    <CardTitle className="text-2xl font-bold flex items-center gap-2">
+                        <Bell className="h-6 w-6" />
+                        Notifications
+                    </CardTitle>
+                    <CardDescription>
+                        Stay updated with recent activity
+                    </CardDescription>
+                </div>
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleMarkAllAsRead}
+                    className="ml-auto"
+                >
+                    <CheckCheck className="mr-2 h-4 w-4" />
+                    Mark all as read
+                </Button>
+
+
+                <PaginatedList<Notification>
+                    ref={paginatedListRef}
+                    fetchData={fetchNotificationsData}
+                    renderItem={renderNotification}
+                    pageSize={15}
+                    loadingComponent={
+                        <div className="flex items-center justify-center py-12 text-muted-foreground">
+                            Loading notifications...
+                        </div>
+                    }
+                />
+
+            </div>
         </div>
     );
 };
