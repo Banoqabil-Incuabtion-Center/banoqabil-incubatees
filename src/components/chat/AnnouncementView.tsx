@@ -1,4 +1,5 @@
-import { Megaphone } from "lucide-react";
+import { Megaphone, ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const MOCK_ANNOUNCEMENTS = [
     {
@@ -19,7 +20,11 @@ const MOCK_ANNOUNCEMENTS = [
     }
 ];
 
-export function AnnouncementView() {
+interface AnnouncementViewProps {
+    onBack?: () => void;
+}
+
+export function AnnouncementView({ onBack }: AnnouncementViewProps) {
     const adminPosts = MOCK_ANNOUNCEMENTS;
     const loading = false;
 
@@ -28,6 +33,11 @@ export function AnnouncementView() {
             {/* Header */}
             <div className="h-14 border-b flex items-center px-4 shadow-sm bg-background/95 backdrop-blur z-10">
                 <div className="flex items-center gap-3">
+                    {/* Back Button for Mobile */}
+                    <Button variant="ghost" size="icon" className="md:hidden -ml-2 h-8 w-8" onClick={onBack}>
+                        <ArrowLeft className="h-5 w-5" />
+                    </Button>
+
                     <div className="h-8 w-8 flex items-center justify-center rounded-full bg-red-100 text-red-600">
                         <Megaphone className="h-4 w-4" />
                     </div>

@@ -10,6 +10,8 @@ import { useChatStore } from "@/hooks/store/useChatStore";
 import { useSocket } from "@/hooks/useSocket";
 import { useSearchParams } from "react-router-dom";
 
+import { cn } from "@/lib/utils";
+
 export default function Direct() {
     // const [activeId, setActiveId] = useState<string | undefined>(undefined); // Removed local state
     const isMobile = useIsMobile();
@@ -61,7 +63,7 @@ export default function Direct() {
 
     const renderContent = () => {
         if (activeUserId === 'announcements') {
-            return <AnnouncementView />;
+            return <AnnouncementView onBack={() => setActiveUser(null)} />;
         }
         // activeUserId can be null, cast to string|undefined if needed by component, or update component to accept null
         return (
@@ -94,40 +96,34 @@ export default function Direct() {
         };
     }, [on, addMessage]);
 
-    // Mobile View: If no active conversation, show Sidebar directly (full screen)
-    if (isMobile && !activeUserId && activeUserId !== 'announcements') {
-        return (
-            <div className="flex flex-1 bg-background overflow-hidden h-full min-h-0">
-                <DirectSidebar
-                    activeUserId={undefined} // No active user yet
-                    onUserSelect={handleUserSelect}
-                    className="w-full border-r-0"
-                />
-            </div>
-        );
-    }
+    // Removed auto-select 'announcements' effect to restore default placeholder behavior
 
-    // Mobile View: If active conversation, show ChatArea directly (full screen) with Back button
-    if (isMobile && activeUserId) {
-        return (
-            <div className="flex flex-1 bg-background overflow-hidden h-full min-h-0">
-                {renderContent()}
-            </div>
-        );
-    }
-
-    // Desktop View
     return (
         <div className="flex flex-1 bg-background overflow-hidden h-full min-h-0">
-            {/* Sidebar - Always visible on desktop */}
+            {/* Sidebar */}
+            {/* Mobile: Visible when NO active user. Hidden when active user. */}
+            {/* Desktop: Always visible. */}
             <DirectSidebar
-                className="w-80 shrink-0 hidden md:flex"
+                className={cn(
+                    "shrink-0 border-r",
+                    // Mobile styles
+                    isMobile ? (activeUserId ? "hidden" : "flex w-full border-r-0") :
+                        // Desktop styles
+                        "hidden md:flex w-80"
+                )}
                 activeUserId={activeUserId || undefined}
                 onUserSelect={handleUserSelect}
             />
 
             {/* Content Area */}
-            {renderContent()}
+            {/* Mobile: Hidden when NO active user. Visible when active user. */}
+            {/* Desktop: Always visible (flex-1). */}
+            <div className={cn(
+                "flex-1 flex flex-col min-w-0 bg-background overflow-hidden",
+                isMobile && !activeUserId ? "hidden" : "flex"
+            )}>
+                {renderContent()}
+            </div>
         </div>
     );
 }
