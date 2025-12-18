@@ -275,6 +275,7 @@ export default function ProfilePage() {
                   fallbackColor="bg-gradient-to-br from-primary to-primary/60"
                 />
               </div>
+
             </div>
 
             {/* User Info */}
@@ -306,6 +307,15 @@ export default function ProfilePage() {
                     {user?.shift}
                   </Badge>
                 )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsModalOpen(true)}
+                  className="gap-1.5 h-8"
+                >
+                  <Edit3 className="w-4 h-4" />
+                  <span>Edit</span>
+                </Button>
               </div>
             </div>
           </div>
@@ -313,7 +323,7 @@ export default function ProfilePage() {
       </Card>
 
       {/* Details Card */}
-      <Card>
+      {/* <Card>
         <CardHeader className="flex-row items-center justify-between space-y-0">
           <CardTitle className="text-lg flex items-center gap-2">Personal Information
             <Button
@@ -350,7 +360,7 @@ export default function ProfilePage() {
             )
           })}
         </CardContent>
-      </Card>
+      </Card> */}
 
       {/* Hidden Logout component */}
       <Logout />
