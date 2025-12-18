@@ -49,13 +49,18 @@ export function AppSidebar(props) {
   return (
     <Sidebar collapsible="offcanvas" {...props}>
 
-      <SidebarHeader>
+      <SidebarHeader className="p-6">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild className="data-[slot=sidebar-menu-button]:!p-1.5">
-              <Link to="/">
-                <Home className="!size-5" />
-                <span className="text-base font-semibold">{APPNAME}</span>
+            <SidebarMenuButton asChild className="h-auto p-0 hover:bg-transparent">
+              <Link to="/" className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
+                  <Home className="text-white size-5" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-sm font-black tracking-tight leading-none">{APPNAME}</span>
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">Portal</span>
+                </div>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -66,27 +71,27 @@ export function AppSidebar(props) {
 
 
         <NavMain items={data.navMain} />
-        <div className="mt-auto border-t p-3">
+        <div className="mt-auto p-4">
           <DropdownMenu>
-            <DropdownMenuTrigger className="w-full rounded-lg hover:bg-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-              <div className="flex items-center gap-3 px-2 py-2">
+            <DropdownMenuTrigger className="w-full focus-visible:outline-none">
+              <div className="flex items-center gap-3 p-3 rounded-2xl bg-card border border-primary/5 shadow-soft hover:shadow-premium hover:border-primary/10 hover:translate-y-[-2px] transition-all group">
                 <UserAvatar
                   src={user?.avatar}
                   name={user?.name}
-                  className="h-9 w-9"
-                  fallbackColor="bg-gray-200"
+                  className="h-10 w-10 border-2 border-primary/10 shadow-soft"
+                  fallbackColor="bg-primary"
                 />
 
                 <div className="flex flex-col items-start flex-1 min-w-0">
-                  <span className="text-sm font-semibold truncate w-full text-left">
+                  <span className="text-xs font-black truncate w-full text-left tracking-tight">
                     {isLoading ? "Loading..." : user?.name}
                   </span>
-                  <span className="text-xs text-muted-foreground truncate w-full text-left">
-                    {isLoading ? "Loading..." : user?.email}
+                  <span className="text-[10px] text-muted-foreground truncate w-full text-left font-bold uppercase tracking-wider">
+                    {isLoading ? "Loading..." : "Student"}
                   </span>
                 </div>
 
-                <ChevronUp className="w-4 h-4 text-muted-foreground ml-auto" />
+                <ChevronUp className="w-4 h-4 text-muted-foreground/30 group-hover:text-primary transition-colors" />
               </div>
             </DropdownMenuTrigger>
 
@@ -95,14 +100,22 @@ export function AppSidebar(props) {
               align="end"
               className="w-56 mb-2"
             >
-              <DropdownMenuLabel className="font-normal">
-                <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">
-                    {user?.name}
-                  </p>
-                  <p className="text-xs leading-none text-muted-foreground">
-                    {user?.email}
-                  </p>
+              <DropdownMenuLabel className="p-3">
+                <div className="flex items-center gap-3">
+                  <UserAvatar
+                    src={user?.avatar}
+                    name={user?.name}
+                    className="h-9 w-9"
+                    fallbackColor="bg-primary"
+                  />
+                  <div className="flex flex-col space-y-0.5">
+                    <p className="text-sm font-black leading-none tracking-tight">
+                      {user?.name}
+                    </p>
+                    <p className="text-[10px] font-bold leading-none text-muted-foreground truncate max-w-[120px]">
+                      {user?.email}
+                    </p>
+                  </div>
                 </div>
               </DropdownMenuLabel>
 
@@ -110,8 +123,8 @@ export function AppSidebar(props) {
 
               {isInstallable && (
                 <>
-                  <DropdownMenuItem onClick={installPwa} className="cursor-pointer">
-                    <Download className="mr-2 h-4 w-4" />
+                  <DropdownMenuItem onClick={installPwa} className="cursor-pointer font-medium py-2 rounded-lg">
+                    <Download className="mr-2 h-4 w-4 text-primary" />
                     <span>Install App</span>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
@@ -119,15 +132,15 @@ export function AppSidebar(props) {
               )}
 
               <DropdownMenuItem asChild>
-                <Link to="/profile" className="cursor-pointer">
-                  <User className="mr-2 h-4 w-4" />
+                <Link to="/profile" className="cursor-pointer font-medium py-2 rounded-lg">
+                  <User className="mr-2 h-4 w-4 text-muted-foreground" />
                   <span>Profile</span>
                 </Link>
               </DropdownMenuItem>
 
               <DropdownMenuItem asChild>
-                <Link to="/activities" className="cursor-pointer">
-                  <History className="mr-2 h-4 w-4" />
+                <Link to="/activities" className="cursor-pointer font-medium py-2 rounded-lg">
+                  <History className="mr-2 h-4 w-4 text-muted-foreground" />
                   <span>Activities</span>
                 </Link>
               </DropdownMenuItem>

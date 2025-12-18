@@ -120,11 +120,11 @@ export const CommentsSection: React.FC<CommentsSectionProps> = ({ postId }) => {
         <UserAvatar
           src={user?.avatar}
           name={user?.name}
-          className="h-9 w-9 border-2 border-background shadow-sm"
-          fallbackColor="bg-gradient-to-br from-violet-500 to-purple-600"
+          className="h-9 w-9 border-2 border-primary/10 shadow-soft shrink-0"
+          fallbackColor="bg-primary"
         />
 
-        <div className="flex gap-2 items-center w-full justify-between">
+        <div className="flex gap-2 items-center flex-1 bg-muted/30 hover:bg-muted/50 transition-colors border border-primary/5 rounded-2xl px-2 py-1">
           <input
             placeholder="Write a comment..."
             value={content}
@@ -135,18 +135,17 @@ export const CommentsSection: React.FC<CommentsSectionProps> = ({ postId }) => {
                 handleAddComment();
               }
             }}
-            className="w-full border rounded-md p-2"
+            className="flex-1 bg-transparent border-none focus:ring-0 text-sm py-2 px-3 outline-none font-medium placeholder:text-muted-foreground/60"
             disabled={isSubmitting}
           />
           <Button
-            size="sm"
+            size="icon"
             disabled={!content.trim() || isSubmitting}
             onClick={handleAddComment}
-            className="w-10 h-10"
+            className="h-8 w-8 rounded-xl bg-primary shadow-lg shadow-primary/20 hover:scale-105 transition-transform shrink-0"
           >
-            {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+            {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin text-white" /> : <Send className="w-4 h-4 text-white" />}
           </Button>
-
         </div>
       </div>
 

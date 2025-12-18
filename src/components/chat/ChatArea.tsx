@@ -7,6 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { useAuthStore } from "@/hooks/store/authStore";
 import { useChatStore } from "@/hooks/store/useChatStore";
 import { useSocket } from "@/hooks/useSocket";
+import { cn } from "@/lib/utils";
 
 interface ChatAreaProps {
     activeUserId?: string;
@@ -131,99 +132,124 @@ export function ChatArea({ activeUserId, userName = "Select a User", userAvatar,
     }
 
     return (
-        <div className="flex flex-col flex-1 h-full bg-background relative min-h-0">
+        <div className="flex flex-col flex-1 h-full bg-background/50 relative min-h-0">
             {/* Header */}
-            <div className="h-14 border-b flex items-center justify-between px-4 shadow-sm bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-                <div className="flex items-center gap-3">
+            <div className="h-16 border-b border-primary/5 flex items-center justify-between px-6 shadow-soft bg-white/80 backdrop-blur-md sticky top-0 z-10 transition-all duration-300">
+                <div className="flex items-center gap-4">
                     {/* Back Button for Mobile */}
-                    <Button variant="ghost" size="icon" className="md:hidden -ml-2 h-8 w-8" onClick={onBack}>
+                    <Button variant="ghost" size="icon" className="md:hidden -ml-2 h-10 w-10 rounded-xl hover:bg-primary/5" onClick={onBack}>
                         <ArrowLeft className="h-5 w-5" />
                     </Button>
 
-                    <UserAvatar src={userAvatar} name={userName} />
+                    <div className="relative">
+                        <UserAvatar src={userAvatar} name={userName} className="h-10 w-10 border border-primary/10" />
+                        {activeUserId && activeUserId !== 'announcements' && (
+                            <span className={cn("absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-background",
+                                onlineUsers.includes(activeUserId) ? "bg-primary" : "bg-gray-400"
+                            )} />
+                        )}
+                    </div>
+
                     <div className="flex flex-col">
-                        <span className="font-semibold text-sm leading-none flex items-center gap-1.5">
+                        <span className="font-black text-sm tracking-tight leading-none flex items-center gap-1.5">
                             {userName}
                         </span>
                         {activeUserId && activeUserId !== 'announcements' && (
-                            <span className="text-xs text-muted-foreground flex items-center gap-1.5 mt-1">
-                                <span className={`w-2 h-2 rounded-full ${onlineUsers.includes(activeUserId) ? "bg-green-500" : "bg-muted-foreground/40"}`} />
-                                {onlineUsers.includes(activeUserId) ? "Online" : "Offline"}
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mt-1 flex items-center gap-1.5">
+                                {onlineUsers.includes(activeUserId) ? "Active Now" : "Offline"}
                             </span>
                         )}
                     </div>
                 </div>
-                <div className="flex items-center gap-4 text-muted-foreground">
-                    <Phone className="w-5 h-5 cursor-pointer hover:text-foreground transition-colors" />
-                    <Video className="w-5 h-5 cursor-pointer hover:text-foreground transition-colors" />
-                    <Separator orientation="vertical" className="h-6 mx-2" />
+                <div className="flex items-center gap-2 text-muted-foreground">
+                    <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-primary/5 hover:text-primary transition-all">
+                        <Phone className="w-4 h-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-primary/5 hover:text-primary transition-all">
+                        <Video className="w-4 h-4" />
+                    </Button>
                 </div>
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 custom-scrollbar" ref={scrollRef} onScroll={handleScroll}>
-                <div className="flex flex-col gap-4 pb-4">
+            <div className="flex-1 overflow-y-auto p-4 md:p-6 custom-scrollbar" ref={scrollRef} onScroll={handleScroll}>
+                <div className="flex flex-col gap-6 pb-4">
                     {/* Welcome message - Only show if no more messages (start of history) */}
                     {!hasMoreMessages && !isLoadingMessages && (
-                        <div className="mt-8 mb-8 px-4">
-                            <div className="h-16 w-16 bg-muted/50 rounded-full flex items-center justify-center mb-4">
-                                <UserAvatar src={userAvatar} name={userName} className="h-16 w-16" />
+                        <div className="mt-12 mb-12 px-6 py-10 rounded-[2.5rem] bg-primary/5 border border-primary/5 flex flex-col items-center text-center shadow-soft">
+                            <div className="relative mb-6">
+                                <UserAvatar src={userAvatar} name={userName} className="h-24 w-24 border-2 border-primary/20 shadow-premium" />
+                                <div className="absolute -bottom-2 -right-2 bg-primary text-primary-foreground p-2 rounded-full shadow-lg">
+                                    <Hash className="w-5 h-5" />
+                                </div>
                             </div>
-                            <div className="space-y-1">
-                                <h1 className="text-xl font-bold">This is the beginning of your direct message history with <span className="text-primary">{userName}</span></h1>
-                                {/* <p className="text-muted-foreground">Say hello!</p> */}
+                            <div className="max-w-md space-y-3">
+                                <h1 className="text-2xl font-black tracking-tight">Chat with <span className="text-primary">{userName}</span></h1>
+                                <p className="text-sm text-muted-foreground font-medium leading-relaxed">
+                                    This is the start of your private conversation with {userName}. Keep it professional and polite!
+                                </p>
                             </div>
                         </div>
                     )}
 
-                    {/* <Separator className="mb-2" /> */}
-
                     {/* Pagination Loader */}
                     {isLoadingMore && (
-                        <div className="flex justify-center py-2">
-                            <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                        <div className="flex justify-center py-4">
+                            <div className="flex gap-1.5 items-center">
+                                <div className="h-1.5 w-1.5 bg-primary rounded-full animate-bounce" />
+                                <div className="h-1.5 w-1.5 bg-primary rounded-full animate-bounce [animation-delay:0.2s]" />
+                                <div className="h-1.5 w-1.5 bg-primary rounded-full animate-bounce [animation-delay:0.4s]" />
+                            </div>
                         </div>
                     )}
 
                     {isLoadingMessages ? (
-                        <div className="flex flex-col items-center justify-center py-12 text-muted-foreground h-full">
-                            <Loader2 className="w-8 h-8 animate-spin mb-2 text-primary" />
-                            <p className="text-sm">Loading conversation...</p>
+                        <div className="flex flex-col items-center justify-center py-20 text-muted-foreground h-full">
+                            <Loader2 className="w-10 h-10 animate-spin mb-4 text-primary opacity-20" />
+                            <p className="text-xs font-black uppercase tracking-[0.2em] opacity-40">Loading history</p>
                         </div>
                     ) : (
-                        messages.map((msg) => {
-                            // Check if msg.sender is populated object or string ID
+                        messages.map((msg, index) => {
                             const senderId = typeof msg.sender === 'object' ? msg.sender._id : msg.sender;
                             const isMe = senderId === user?._id;
+                            const nextMsg = messages[index + 1];
+                            const nextSenderId = nextMsg ? (typeof nextMsg.sender === 'object' ? nextMsg.sender._id : nextMsg.sender) : null;
+                            const isLastInGroup = senderId !== nextSenderId;
 
                             return (
-                                <div key={msg._id} className={`flex gap-3 group ${isMe ? 'flex-row-reverse' : ''}`}>
-                                    {isMe ? (
-                                        <UserAvatar src={user?.avatar} name={user?.name} className="h-10 w-10 mt-0.5 cursor-pointer hover:opacity-80 transition-opacity" />
-                                    ) : (
-                                        <UserAvatar src={userAvatar} name={userName} className="h-10 w-10 mt-0.5 cursor-pointer hover:opacity-80 transition-opacity" />
-                                    )}
+                                <div key={msg._id} className={`flex gap-3 group px-1 ${isMe ? 'flex-row-reverse' : ''}`}>
+                                    <div className={`shrink-0 ${isLastInGroup ? 'opacity-100' : 'opacity-0'} transition-opacity self-end`}>
+                                        <UserAvatar
+                                            src={isMe ? user?.avatar : userAvatar}
+                                            name={isMe ? user?.name : userName}
+                                            className="h-8 w-8 border border-primary/5 shadow-soft"
+                                        />
+                                    </div>
 
-                                    <div className={`max-w-[70%] min-w-0 flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
-                                        <div className="flex items-baseline gap-2 mb-1 flex-wrap">
-                                            {!isMe && <span className="font-semibold text-sm hover:underline cursor-pointer truncate max-w-[150px]">{userName}</span>}
-                                            <span className="text-[10px] text-muted-foreground select-none whitespace-nowrap flex items-center gap-1">
-                                                {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                                {isMe && (
-                                                    <CheckCheck
-                                                        className={`w-3 h-3 ${msg.seenBy?.some(id => id !== user?._id) ? "text-blue-500" : "text-muted-foreground"}`}
-                                                    />
-                                                )}
-                                            </span>
-                                        </div>
-                                        <div className={`px-4 py-2.5 rounded-2xl text-[15px] leading-relaxed shadow-sm break-words overflow-hidden
-                                    ${isMe
-                                                ? 'bg-primary text-primary-foreground rounded-tr-sm'
-                                                : 'bg-secondary/50 hover:bg-secondary/60 transition-colors rounded-tl-sm'
+                                    <div className={`max-w-[80%] sm:max-w-[70%] min-w-0 flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
+                                        <div className={`px-4 py-3 shadow-soft transition-all duration-300
+                                            ${isMe
+                                                ? 'bg-primary text-primary-foreground rounded-2xl rounded-tr-[4px]'
+                                                : 'bg-white dark:bg-muted/50 hover:shadow-md border border-primary/5 text-foreground rounded-2xl rounded-tl-[4px]'
                                             }`}
                                             style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
-                                            {msg.text}
+                                            <p className="text-[14.5px] leading-relaxed font-medium">
+                                                {msg.text}
+                                            </p>
                                         </div>
+
+                                        {isLastInGroup && (
+                                            <div className="flex items-center gap-1.5 mt-1.5 px-1">
+                                                <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40">
+                                                    {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                </span>
+                                                {isMe && (
+                                                    <CheckCheck
+                                                        className={`w-3 h-3 ${msg.seenBy?.some(id => id !== user?._id) ? "text-primary" : "text-muted-foreground/30"}`}
+                                                    />
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             );
@@ -232,32 +258,38 @@ export function ChatArea({ activeUserId, userName = "Select a User", userAvatar,
                 </div>
             </div>
 
-            {/* Input Area */}
-            <div className="pt-0">
-                <div className="bg-secondary/30 rounded-lg p-3 flex items-start gap-3">
-                    <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full bg-muted/50 text-muted-foreground hover:text-foreground shrink-0">
-                        <PlusCircle className="w-5 h-5" />
-                    </Button>
+            {/* Floating Input Area */}
+            <div className="sticky bottom-0 p-4 md:p-6 bg-gradient-to-t from-background via-background/80 to-transparent">
+                <div className="max-w-4xl mx-auto">
+                    <div className="bg-white/90 dark:bg-muted/90 backdrop-blur-xl rounded-[2rem] p-2 pr-3 flex items-center gap-2 border border-primary/10 shadow-premium hover:shadow-premium-hover transition-all duration-500 group focus-within:ring-2 focus-within:ring-primary/20">
+                        <Button size="icon" variant="ghost" className="h-11 w-11 rounded-2xl bg-primary/5 text-primary hover:bg-primary/10 shrink-0 transition-all active:scale-95">
+                            <PlusCircle className="w-5 h-5" />
+                        </Button>
 
-                    <div className="flex-1">
-                        <Input
-                            className="bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 px-0 h-auto py-2 text-base placeholder:text-muted-foreground/70"
-                            placeholder={`Message @${userName}`}
-                            value={inputValue}
-                            onChange={(e) => setInputValue(e.target.value)}
-                            onKeyDown={handleKeyDown}
-                        />
+                        <div className="flex-1">
+                            <Input
+                                className="bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 px-2 h-11 text-sm sm:text-base font-medium placeholder:text-muted-foreground/50"
+                                placeholder={`Write a message to ${userName}...`}
+                                value={inputValue}
+                                onChange={(e) => setInputValue(e.target.value)}
+                                onKeyDown={handleKeyDown}
+                            />
+                        </div>
+
+                        <Button
+                            size="icon"
+                            className={cn(
+                                "h-11 w-11 rounded-2xl shrink-0 transition-all duration-300",
+                                inputValue.trim()
+                                    ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30 hover:shadow-primary/40 hover:-translate-y-0.5 active:scale-90"
+                                    : "bg-muted text-muted-foreground/50 cursor-not-allowed"
+                            )}
+                            onClick={handleSendMessage}
+                            disabled={!inputValue.trim() || isSendingMessage}
+                        >
+                            {isSendingMessage ? <Loader2 className="w-5 h-5 animate-spin" /> : <SendHorizontal className="w-5 h-5" />}
+                        </Button>
                     </div>
-
-                    <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-8 w-8 text-primary hover:text-primary/80 shrink-0"
-                        onClick={handleSendMessage}
-                        disabled={!inputValue.trim()}
-                    >
-                        <SendHorizontal className="w-5 h-5" />
-                    </Button>
                 </div>
             </div>
         </div>

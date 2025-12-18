@@ -11,6 +11,7 @@ import { useIsMobile } from '@/hooks/use-mobile'
 import { useChatStore } from '@/hooks/store/useChatStore'
 import { useNotificationStore } from '@/hooks/useNotificationStore'
 import { useSocket } from '@/hooks/useSocket'
+import { ProfileReminder } from '../ProfileReminder'
 
 const UserLayout = () => {
     const location = useLocation();
@@ -69,7 +70,7 @@ const UserLayout = () => {
             </SidebarInset>
             {/* Bottom Navigation - only visible on mobile */}
             {!hideUI && <BottomNav />}
-
+            <ProfileReminder />
         </SidebarProvider>
     )
 }

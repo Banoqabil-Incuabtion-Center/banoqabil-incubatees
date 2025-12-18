@@ -37,7 +37,7 @@ import { usePostSocket } from "@/hooks/usePostSocket";
 
 const PostSkeleton = () => {
   return (
-    <Card className="overflow-hidden border-border">
+    <Card className="overflow-hidden border-primary/5 rounded-[2rem] shadow-premium">
       <CardHeader className="space-y-0 p-4 sm:p-6">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-2 sm:gap-3">
@@ -419,27 +419,26 @@ const Posts = () => {
       <div className="max-w-3xl mx-auto space-y-4 sm:space-y-6">
         {/* Posts List */}
         {/* Create Post Input */}
-        <Card className="p-4 shadow-sm">
+        <Card className="p-4 sm:p-5 border-primary/5 rounded-[2rem] shadow-premium group hover:shadow-premium-hover transition-all duration-300">
           <div className="flex gap-4 items-center">
-            {/* We can grab user from auth store, but since we are inside Posts component and didn't import hook yet, let's keep it simple or assume we can add the hook. 
-               Actually, I need to add the import first. But I can't add import *and* replace body in one go easily with replace_file_content unless I do multi.
-               I'll do the body replacement first using a generic Avatar fallback or just a placeholder if user var isn't ready.
-               Wait, I should really use the user's avatar.
-               Let's assume I'll add the hook in a separate step or just use a generic User icon for now if I can't easily get the user name. 
-               Actually, userPosts might not be the current user.
-               Let's just use a generic UserAvatar with no name (fallback) or simpler: just the input field.
-               User explicitly said "fb ki trha". FB has avatar.
-               I will attempt to use a placeholder avatar for now to avoid breaking if I miss the import.
-            */}
-            <div className="h-10 w-10 rounded-full flex items-center justify-center overflow-hidden shrink-0">
-              <UserAvatar src={user?.avatar} name={user?.name} className="h-10 w-10" />
+            <div className="shrink-0">
+              <UserAvatar
+                src={user?.avatar}
+                name={user?.name}
+                className="h-10 w-10 sm:h-12 sm:w-12 border-2 border-primary/10 shadow-soft"
+                fallbackColor="bg-primary"
+              />
             </div>
 
             <div
               onClick={() => setIsModalOpen(true)}
-              className="flex-1 bg-secondary/50 hover:bg-secondary/70 transition-colors rounded-full px-4 py-2.5 cursor-pointer text-muted-foreground text-sm font-medium"
+              className="flex-1 bg-muted/30 hover:bg-primary/5 border border-transparent hover:border-primary/10 transition-all rounded-2xl px-5 py-3.5 cursor-pointer text-muted-foreground text-sm sm:text-base font-bold tracking-tight"
             >
-              What's on your mind?
+              What's on your mind, {user?.name?.split(' ')[0]}?
+            </div>
+
+            <div className="hidden sm:flex items-center justify-center h-12 w-12 rounded-2xl bg-primary/5 text-primary group-hover:bg-primary group-hover:text-white transition-all duration-300 cursor-pointer" onClick={() => setIsModalOpen(true)}>
+              <Plus className="w-5 h-5" />
             </div>
           </div>
         </Card>

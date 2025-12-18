@@ -57,7 +57,7 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
     const gradientClass = fallbackColor || `bg-gradient-to-br ${getGradient(name)}`;
 
     return (
-        <Avatar className={cn(sizeClasses[size], " border-2 border-background rounded-2xl", className)}>
+        <Avatar className={cn(sizeClasses[size], " border-2 border-background rounded-full", className)}>
             <AvatarImage src={src || undefined} alt={name} className="object-cover" />
             <AvatarFallback
                 className={cn(

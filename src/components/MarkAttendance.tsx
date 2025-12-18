@@ -5,6 +5,7 @@ import { toast } from "sonner"
 import { CheckCircle2, Clock, Sun, Moon, AlertCircle, XCircle, Loader2 } from "lucide-react"
 import { attRepo, AttendanceStatus, AttendanceSettings } from "@/repositories/attRepo"
 import { Skeleton } from "@/components/ui/skeleton"
+import { cn } from "@/lib/utils"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -110,27 +111,40 @@ const MarkAttendance: React.FC<Props> = ({ userId }) => {
       <div className="flex gap-1 sm:gap-2 items-center order-2 md:order-1">
         {/* User Shift Info - shown on all screens but compact on mobile */}
         {userShift && (
-          <div className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-xs text-muted-foreground">
-            {userShift === 'Morning' ? (
-              <Sun className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-yellow-500" />
-            ) : (
-              <Moon className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-blue-500" />
-            )}
-            <span className="hidden sm:inline">{userShift}</span>
-            {shiftTiming && (
-              <span className="text-muted-foreground">{shiftTiming.start}-{shiftTiming.end}</span>
-            )}
+          <div className="flex items-center gap-1.5 sm:gap-3 px-3 py-1.5 rounded-xl bg-primary/5 border border-primary/10 shadow-soft">
+            <div className={cn(
+              "p-1 rounded-lg",
+              userShift === 'Morning' ? "bg-yellow-500/10" : "bg-primary/10"
+            )}>
+              {userShift === 'Morning' ? (
+                <Sun className="w-3.5 h-3.5 text-yellow-500" />
+              ) : (
+                <Moon className="w-3.5 h-3.5 text-primary" />
+              )}
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-tight leading-none text-muted-foreground/60">{userShift} Shift</span>
+              {shiftTiming && (
+                <span className="text-[10px] sm:text-xs font-bold text-primary leading-none mt-0.5">{shiftTiming.start}-{shiftTiming.end}</span>
+              )}
+            </div>
           </div>
         )}
         {/* Warnings */}
         {!userShift && !isCheckedIn && (
-          <p className="text-[10px] sm:text-xs text-yellow-600">No shift</p>
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-yellow-500/5 border border-yellow-500/10">
+            <AlertCircle className="w-3.5 h-3.5 text-yellow-600" />
+            <p className="text-[10px] sm:text-xs font-bold text-yellow-700">No shift assigned</p>
+          </div>
         )}
         {userShift && !canCheckIn && !isCheckedIn && (
-          <p className="text-[10px] sm:text-xs text-muted-foreground">
-            <span className="hidden sm:inline">Check-in during shift</span>
-            <span className="sm:hidden">Shift hours only</span>
-          </p>
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-muted/30 border border-primary/5">
+            <Clock className="w-3.5 h-3.5 text-muted-foreground/60" />
+            <p className="text-[10px] sm:text-xs font-bold text-muted-foreground/60">
+              <span className="hidden sm:inline">Check-in during shift hours only</span>
+              <span className="sm:hidden">Shift hours only</span>
+            </p>
+          </div>
         )}
       </div>
       {/* Action Buttons */}
@@ -140,13 +154,13 @@ const MarkAttendance: React.FC<Props> = ({ userId }) => {
             onClick={handleCheckIn}
             disabled={isLoading || !canCheckIn}
             size="sm"
-            className="gap-1.5"
+            className="h-10 px-5 rounded-xl gap-2 font-black tracking-tight shadow-lg shadow-primary/20 hover:shadow-primary/30 active:scale-95 transition-all"
           >
             <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute h-full w-full rounded-full bg-green-300 opacity-75"></span>
-              <span className="relative rounded-full h-2 w-2 bg-green-300"></span>
+              <span className="animate-ping absolute h-full w-full rounded-full bg-white opacity-75"></span>
+              <span className="relative rounded-full h-2 w-2 bg-white"></span>
             </span>
-            {isLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : "Check In"}
+            {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Check In"}
           </Button>
         )}
 
@@ -157,13 +171,13 @@ const MarkAttendance: React.FC<Props> = ({ userId }) => {
                 disabled={isLoading}
                 variant="destructive"
                 size="sm"
-                className="gap-1.5"
+                className="h-10 px-5 rounded-xl gap-2 font-black tracking-tight shadow-lg shadow-destructive/20 hover:shadow-destructive/30 active:scale-95 transition-all"
               >
                 <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute h-full w-full rounded-full bg-red-300 opacity-75"></span>
-                  <span className="relative rounded-full h-2 w-2 bg-red-300"></span>
+                  <span className="animate-ping absolute h-full w-full rounded-full bg-white opacity-75"></span>
+                  <span className="relative rounded-full h-2 w-2 bg-white"></span>
                 </span>
-                {isLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : "Check Out"}
+                {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Check Out"}
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
@@ -185,33 +199,29 @@ const MarkAttendance: React.FC<Props> = ({ userId }) => {
 
         {/* Status Badges */}
         {isCheckedIn && (
-          <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap">
-            {attendance?.shift && (
-              <Badge variant="outline" className="text-[10px] sm:text-xs gap-0.5 sm:gap-1 py-0 px-1 sm:px-2">
-                {attendance.shift === 'Morning' ? <Sun className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> : <Moon className="w-2.5 h-2.5 sm:w-3 sm:h-3" />}
-                <span className="hidden xs:inline">{attendance.shift}</span>
-              </Badge>
-            )}
-
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap ml-1">
             {attendance?.isLate && (
-              <Badge className="bg-yellow-500 text-[10px] sm:text-xs py-0 px-1 sm:px-2">
-                <AlertCircle className="w-2.5 h-2.5 sm:w-3 sm:h-3 mr-0.5" />Late
+              <Badge className="h-7 px-3 bg-yellow-500 hover:bg-yellow-600 font-bold tracking-tight shadow-soft">
+                <AlertCircle className="w-3 h-3 mr-1.5" />Late
               </Badge>
             )}
 
             {isCheckedOut && (
               <>
                 {attendance?.isEarlyLeave && (
-                  <Badge className="bg-orange-500 text-[10px] sm:text-xs py-0 px-1 sm:px-2">Early</Badge>
+                  <Badge className="h-7 px-3 bg-orange-500 hover:bg-orange-600 font-bold tracking-tight shadow-soft">Early</Badge>
                 )}
 
-                <Badge className={`${getStatusColor(attendance?.status || '')} text-[10px] sm:text-xs py-0 px-1 sm:px-2`}>
+                <Badge className={cn(
+                  "h-7 px-3 font-bold tracking-tight shadow-soft",
+                  getStatusColor(attendance?.status || '')
+                )}>
                   {attendance?.status}
                 </Badge>
 
                 {attendance?.hoursWorked !== undefined && (
-                  <Badge variant="outline" className="text-[10px] sm:text-xs py-0 px-1 sm:px-2 gap-0.5 sm:gap-1">
-                    <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                  <Badge variant="outline" className="h-7 px-3 rounded-lg border-primary/20 bg-primary/5 text-primary font-bold tracking-tight flex items-center gap-1.5">
+                    <Clock className="w-3 h-3" />
                     {attendance.hoursWorked.toFixed(1)}h
                   </Badge>
                 )}
@@ -219,17 +229,18 @@ const MarkAttendance: React.FC<Props> = ({ userId }) => {
             )}
 
             {!isCheckedOut && attendance?.status?.includes('No Checkout') && (
-              <Badge className="bg-red-500 text-[10px] sm:text-xs py-0 px-1 sm:px-2">
-                <XCircle className="w-2.5 h-2.5 sm:w-3 sm:h-3 mr-0.5" />No Checkout
+              <Badge className="h-7 px-3 bg-red-500 hover:bg-red-600 font-bold tracking-tight shadow-soft">
+                <XCircle className="w-3 h-3 mr-1.5" />No Checkout
               </Badge>
             )}
           </div>
         )}
 
         {isCheckedOut && (
-          <span className="text-green-600 text-xs flex items-center gap-1">
-            <CheckCircle2 className="w-3.5 h-3.5" /> Done
-          </span>
+          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-green-500/10 border border-green-500/20 rounded-xl">
+            <CheckCircle2 className="w-4 h-4 text-green-600" />
+            <span className="text-green-700 text-xs font-black uppercase tracking-tight">Shift Done</span>
+          </div>
         )}
       </div>
 

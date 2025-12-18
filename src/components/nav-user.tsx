@@ -3,6 +3,7 @@ import {
   IconLogout,
   IconUserCircle,
 } from "@tabler/icons-react"
+import { Link } from "react-router-dom"
 
 import { UserAvatar } from "./UserAvatar"
 import {
@@ -80,11 +81,12 @@ export function NavUser({
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <IconUserCircle />
-                Account
+              <DropdownMenuItem asChild>
+                <Link to="/profile">
+                  <IconUserCircle className="mr-2 h-4 w-4" />
+                  <span>View Profile</span>
+                </Link>
               </DropdownMenuItem>
-
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem>

@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sun, Moon, Clock, AlertCircle, CheckCircle2, XCircle, Info, CalendarDays, TableIcon } from "lucide-react";
 import AttendanceCalendar from "@/components/AttendanceCalendar";
 import MarkAttendance from "@/components/MarkAttendance";
+import { cn } from "@/lib/utils";
 
 const Attendance: React.FC = () => {
   const { user } = useAuthStore();
@@ -209,7 +210,7 @@ const Attendance: React.FC = () => {
 
 
       {/* Today's Status */}
-      <Card>
+      <Card className="border-primary/5 rounded-[2rem] shadow-premium hover:shadow-premium-hover transition-all duration-300">
         <CardHeader className="pb-3">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-0">
             <CardTitle className="flex items-center gap-2">
@@ -230,9 +231,9 @@ const Attendance: React.FC = () => {
               </div>
               <div className="grid grid-cols-3 gap-2 sm:gap-3">
                 {[...Array(3)].map((_, i) => (
-                  <div key={i} className="p-3 sm:p-4 rounded-lg bg-muted/50 space-y-2 flex flex-col items-center">
-                    <Skeleton className="h-3 w-12" />
-                    <Skeleton className="h-6 w-20" />
+                  <div key={i} className="p-3 sm:p-5 rounded-2xl bg-muted/30 space-y-3 flex flex-col items-center border border-primary/5 shadow-soft">
+                    <Skeleton className="h-3 w-16" />
+                    <Skeleton className="h-8 w-24" />
                   </div>
                 ))}
               </div>
@@ -241,51 +242,78 @@ const Attendance: React.FC = () => {
             <div className="space-y-4">
               {/* Badges */}
               <div className="flex items-center gap-2 flex-wrap">
-                <Badge variant="outline" className="gap-1">
-                  {attendance?.shift === 'Morning' ? <Sun className="w-3 h-3" /> : <Moon className="w-3 h-3" />}
+                <Badge variant="outline" className="h-7 px-3 rounded-full border-primary/20 bg-primary/5 text-primary font-bold tracking-tight">
+                  {attendance?.shift === 'Morning' ? <Sun className="w-3.5 h-3.5 mr-1.5" /> : <Moon className="w-3.5 h-3.5 mr-1.5" />}
                   {attendance?.shift}
                 </Badge>
-                {attendance?.isLate && <Badge className="bg-yellow-500"><AlertCircle className="w-3 h-3 mr-1" />Late</Badge>}
-                {attendance?.isEarlyLeave && <Badge className="bg-orange-500">Early Leave</Badge>}
-                {!isCheckedOut && attendance?.status?.includes('No Checkout') && (
-                  <Badge className="bg-red-500"><XCircle className="w-3 h-3 mr-1" />No Checkout</Badge>
+                {attendance?.isLate && (
+                  <Badge className="h-7 px-3 bg-yellow-500 hover:bg-yellow-600 font-bold tracking-tight">
+                    <AlertCircle className="w-3.5 h-3.5 mr-1.5" />
+                    Late
+                  </Badge>
                 )}
-                <Badge className={`${attendance?.status === 'Present' ? 'bg-green-500' :
-                  attendance?.status?.includes('Late') ? 'bg-yellow-500' :
-                    attendance?.status?.includes('Early') ? 'bg-orange-500' :
-                      attendance?.status?.includes('No Checkout') ? 'bg-red-500' :
-                        'bg-gray-500'
-                  }`}>
+                {attendance?.isEarlyLeave && (
+                  <Badge className="h-7 px-3 bg-orange-500 hover:bg-orange-600 font-bold tracking-tight">
+                    Early Leave
+                  </Badge>
+                )}
+                {!isCheckedOut && attendance?.status?.includes('No Checkout') && (
+                  <Badge className="h-7 px-3 bg-red-500 hover:bg-red-600 font-bold tracking-tight">
+                    <XCircle className="w-3.5 h-3.5 mr-1.5" />
+                    No Checkout
+                  </Badge>
+                )}
+                <Badge className={cn(
+                  "h-7 px-3 font-bold tracking-tight",
+                  attendance?.status === 'Present' ? 'bg-green-500 hover:bg-green-600' :
+                    attendance?.status?.includes('Late') ? 'bg-yellow-500 hover:bg-yellow-600' :
+                      attendance?.status?.includes('Early') ? 'bg-orange-500 hover:bg-orange-600' :
+                        attendance?.status?.includes('No Checkout') ? 'bg-red-500 hover:bg-red-600' :
+                          'bg-gray-500 hover:bg-gray-600'
+                )}>
                   {attendance?.status}
                 </Badge>
               </div>
 
               {/* Time Cards */}
-              <div className="grid grid-cols-3 gap-2 sm:gap-3">
-                <div className="bg-green-50 dark:bg-green-900/20 p-3 sm:p-4 rounded-lg text-center">
-                  <p className="text-[10px] sm:text-xs text-muted-foreground mb-1">Check In</p>
-                  <p className="text-sm sm:text-lg font-bold">
+              <div className="grid grid-cols-3 gap-3 sm:gap-4 mt-2">
+                <div className="bg-green-50/50 dark:bg-green-900/10 p-4 sm:p-5 rounded-2xl border border-green-100 dark:border-green-900/20 text-center shadow-soft group hover:translate-y-[-2px] transition-all">
+                  <p className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-green-600/60 dark:text-green-400/60 mb-1.5">Check In</p>
+                  <p className="text-sm sm:text-2xl font-black tracking-tight text-green-700 dark:text-green-300">
                     {attendance?.checkInTime
                       ? new Date(attendance.checkInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                       : "—"}
                   </p>
                 </div>
 
-                <div className={`p-3 sm:p-4 rounded-lg text-center ${isCheckedOut ? 'bg-blue-50 dark:bg-blue-900/20' : 'bg-yellow-50 dark:bg-yellow-900/20'}`}>
-                  <p className="text-[10px] sm:text-xs text-muted-foreground mb-1">Check Out</p>
-                  <p className={`text-sm sm:text-lg font-bold ${!isCheckedOut ? 'text-yellow-600' : ''}`}>
+                <div className={cn(
+                  "p-4 sm:p-5 rounded-2xl text-center border shadow-soft group hover:translate-y-[-2px] transition-all",
+                  isCheckedOut
+                    ? 'bg-blue-50/50 dark:bg-blue-900/10 border-blue-100 dark:border-blue-900/20'
+                    : 'bg-yellow-50/50 dark:bg-yellow-900/10 border-yellow-100 dark:border-yellow-900/20'
+                )}>
+                  <p className={cn(
+                    "text-[10px] sm:text-xs font-black uppercase tracking-widest mb-1.5",
+                    isCheckedOut ? "text-blue-600/60 dark:text-blue-400/60" : "text-yellow-600/60 dark:text-yellow-400/60"
+                  )}>Check Out</p>
+                  <p className={cn(
+                    "text-sm sm:text-2xl font-black tracking-tight",
+                    isCheckedOut ? "text-blue-700 dark:text-blue-300" : "text-yellow-600"
+                  )}>
                     {attendance?.checkOutTime
                       ? new Date(attendance.checkOutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                       : "Pending"}
                   </p>
                 </div>
 
-                <div className="bg-purple-50 dark:bg-purple-900/20 p-3 sm:p-4 rounded-lg text-center">
-                  <p className="text-[10px] sm:text-xs text-muted-foreground mb-1">Hours</p>
-                  <p className={`text-sm sm:text-lg font-bold flex items-center justify-center gap-1 ${todayHours >= 4 ? 'text-green-600' : 'text-red-500'
-                    }`}>
+                <div className="bg-primary/5 dark:bg-primary/10 p-4 sm:p-5 rounded-2xl text-center border border-primary/10 shadow-soft group hover:translate-y-[-2px] transition-all">
+                  <p className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-primary/60 mb-1.5">Hours</p>
+                  <p className={cn(
+                    "text-sm sm:text-2xl font-black tracking-tight flex items-center justify-center gap-2",
+                    todayHours >= (currentShiftInfo?.minHours || 4) ? 'text-primary' : 'text-red-500'
+                  )}>
                     {todayHours.toFixed(1)}h
-                    {todayHours >= 4 && <CheckCircle2 className="w-3 h-3 sm:w-4 sm:h-4" />}
+                    {todayHours >= (currentShiftInfo?.minHours || 4) && <CheckCircle2 className="w-4 h-4 sm:w-6 sm:h-6" />}
                   </p>
                 </div>
               </div>
@@ -300,51 +328,57 @@ const Attendance: React.FC = () => {
         </CardContent>
       </Card>
       {/* Shift Info Card */}
-      <Card>
+      <Card className="border-primary/5 rounded-[2rem] shadow-premium hover:shadow-premium-hover transition-all duration-300">
         <CardHeader className="pb-3">
-          <CardTitle className="text-lg flex items-center gap-2">
-            {userShift === 'Morning' ? <Sun className="w-5 h-5 text-yellow-500" /> : <Moon className="w-5 h-5 text-blue-500" />}
+          <CardTitle className="text-xl font-black tracking-tight flex items-center gap-3">
+            <div className={cn(
+              "p-2.5 rounded-2xl shadow-lg",
+              userShift === 'Morning' ? "bg-yellow-500 shadow-yellow-500/20" : "bg-primary shadow-primary/20"
+            )}>
+              {userShift === 'Morning' ? <Sun className="w-5 h-5 text-white" /> : <Moon className="w-5 h-5 text-white" />}
+            </div>
             {userShift || 'No'} Shift Assigned
           </CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[...Array(4)].map((_, i) => (
-                <div key={i} className="bg-muted/50 p-3 rounded-lg space-y-2">
+                <div key={i} className="bg-muted/30 border border-primary/5 p-4 rounded-2xl space-y-3">
                   <Skeleton className="h-3 w-16" />
-                  <Skeleton className="h-5 w-24" />
+                  <Skeleton className="h-6 w-24" />
                 </div>
               ))}
             </div>
           ) : currentShiftInfo ? (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
-              <div className="bg-muted/50 p-3 rounded-lg">
-                <p className="text-muted-foreground text-xs mb-1">Timing</p>
-                <p className="font-semibold">{currentShiftInfo.start} - {currentShiftInfo.end}</p>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+              <div className="bg-muted/30 border border-primary/5 p-4 rounded-2xl group hover:border-primary/20 transition-colors">
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-1.5">Timing</p>
+                <p className="font-bold text-base tracking-tight">{currentShiftInfo.start} - {currentShiftInfo.end}</p>
               </div>
-              <div className="bg-muted/50 p-3 rounded-lg">
-                <p className="text-muted-foreground text-xs mb-1">Late After</p>
-                <p className="font-semibold text-yellow-600">{currentShiftInfo.lateAfter}</p>
+              <div className="bg-muted/30 border border-primary/5 p-4 rounded-2xl group hover:border-yellow-500/20 transition-colors">
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-1.5">Late After</p>
+                <p className="font-bold text-base tracking-tight text-yellow-600">{currentShiftInfo.lateAfter}</p>
               </div>
-              <div className="bg-muted/50 p-3 rounded-lg">
-                <p className="text-muted-foreground text-xs mb-1">Early Leave Before</p>
-                <p className="font-semibold text-orange-600">{currentShiftInfo.earlyLeaveBefore}</p>
+              <div className="bg-muted/30 border border-primary/5 p-4 rounded-2xl group hover:border-orange-500/20 transition-colors">
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-1.5">Early Leave Before</p>
+                <p className="font-bold text-base tracking-tight text-orange-600">{currentShiftInfo.earlyLeaveBefore}</p>
               </div>
-              <div className="bg-muted/50 p-3 rounded-lg">
-                <p className="text-muted-foreground text-xs mb-1">Min Hours</p>
-                <p className="font-semibold text-green-600">{currentShiftInfo.minHours}h</p>
+              <div className="bg-muted/30 border border-primary/5 p-4 rounded-2xl group hover:border-primary/20 transition-colors">
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-1.5">Min Hours</p>
+                <p className="font-bold text-base tracking-tight text-primary">{currentShiftInfo.minHours}h</p>
               </div>
             </div>
           ) : shiftTiming ? (
-            <p className="text-sm">
-              <Clock className="w-4 h-4 inline mr-2" />
-              {shiftTiming.start} - {shiftTiming.end}
-            </p>
+            <div className="bg-primary/5 border border-primary/10 p-4 rounded-2xl flex items-center gap-3">
+              <Clock className="w-5 h-5 text-primary" />
+              <p className="font-bold text-base tracking-tight">{shiftTiming.start} - {shiftTiming.end}</p>
+            </div>
           ) : (
-            <p className="text-sm text-muted-foreground flex items-center gap-2">
-              <Info className="w-4 h-4" /> Contact admin to assign your shift
-            </p>
+            <div className="bg-muted/30 border border-primary/5 p-5 rounded-2xl flex items-center gap-3 text-muted-foreground">
+              <Info className="w-5 h-5" />
+              <p className="text-sm font-medium">Contact admin to assign your shift</p>
+            </div>
           )}
         </CardContent>
       </Card>
@@ -352,72 +386,79 @@ const Attendance: React.FC = () => {
 
 
       {/* History with Tabs */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center justify-between">
-            <span>Attendance History</span>
+      <Card className="border-primary/5 rounded-[2rem] shadow-premium hover:shadow-premium-hover transition-all duration-300">
+        <CardHeader className="pb-3 px-6 sm:px-8 pt-6 sm:pt-8">
+          <CardTitle className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <span className="text-2xl font-black tracking-tight">Attendance History</span>
             <div className="flex gap-2">
-              <Badge variant="secondary" className="text-sm">Total: {totalHours.toFixed(1)}h</Badge>
-              <Badge variant="outline" className="text-sm">{pagination.total} records</Badge>
+              <Badge variant="secondary" className="h-8 px-4 rounded-xl bg-primary/10 text-primary font-black shadow-soft">Total: {totalHours.toFixed(1)}h</Badge>
+              <Badge variant="outline" className="h-8 px-4 rounded-xl border-primary/20 font-bold shadow-soft">{pagination.total} records</Badge>
             </div>
           </CardTitle>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="calendar" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-4">
-              <TabsTrigger value="calendar" className="gap-2">
+            <TabsList className="grid w-full grid-cols-2 p-1 bg-muted/30 rounded-2xl h-14 mb-6">
+              <TabsTrigger value="calendar" className="gap-2 rounded-xl font-bold transition-all data-[state=active]:shadow-soft data-[state=active]:bg-primary data-[state=active]:text-white">
                 <CalendarDays className="w-4 h-4" />
                 Calendar
               </TabsTrigger>
-              <TabsTrigger value="table" className="gap-2">
+              <TabsTrigger value="table" className="gap-2 rounded-xl font-bold transition-all data-[state=active]:shadow-soft data-[state=active]:bg-primary data-[state=active]:text-white">
                 <TableIcon className="w-4 h-4" />
                 Table
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="calendar">
+            <TabsContent value="calendar" className="animate-in fade-in-50 duration-500">
               {user?._id && <AttendanceCalendar userId={user._id} />}
             </TabsContent>
 
-            <TabsContent value="table">
+            <TabsContent value="table" className="animate-in fade-in-50 duration-500">
               {isHistoryLoading ? (
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between pb-4">
-                    <Skeleton className="h-8 w-[250px]" />
-                    <Skeleton className="h-8 w-[100px]" />
+                  <div className="flex items-center justify-between pb-4 px-2">
+                    <Skeleton className="h-10 w-[200px] rounded-xl" />
+                    <Skeleton className="h-10 w-[100px] rounded-xl" />
                   </div>
-                  <div className="rounded-md border">
-                    <div className="h-12 border-b px-4 flex items-center">
-                      <Skeleton className="h-4 w-full" />
+                  <div className="rounded-[2rem] border border-primary/5 overflow-hidden shadow-soft">
+                    <div className="h-14 bg-muted/30 border-b border-primary/5 px-6 flex items-center">
+                      <Skeleton className="h-4 w-full rounded-full" />
                     </div>
                     {[...Array(5)].map((_, i) => (
-                      <div key={i} className="h-16 border-b px-4 flex items-center gap-4">
-                        <Skeleton className="h-4 w-24" />
-                        <Skeleton className="h-4 w-20" />
-                        <Skeleton className="h-4 w-24" />
-                        <Skeleton className="h-4 w-24" />
-                        <Skeleton className="h-4 w-16" />
-                        <Skeleton className="h-6 w-20 rounded-full" />
+                      <div key={i} className="h-20 border-b border-primary/5 px-6 flex items-center gap-6">
+                        <Skeleton className="h-4 w-28 rounded-full" />
+                        <Skeleton className="h-4 w-24 rounded-full" />
+                        <Skeleton className="h-4 w-28 rounded-full" />
+                        <Skeleton className="h-4 w-28 rounded-full" />
+                        <Skeleton className="h-4 w-20 rounded-full" />
+                        <Skeleton className="h-8 w-24 rounded-full" />
                       </div>
                     ))}
                   </div>
                 </div>
               ) : history.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-6">No records found</p>
+                <div className="text-center py-20 bg-muted/10 rounded-3xl border border-dashed border-primary/10">
+                  <AlertCircle className="w-12 h-12 mx-auto text-muted-foreground/30 mb-4" />
+                  <p className="text-lg font-bold text-muted-foreground/50">No records found</p>
+                </div>
               ) : (
-                <Table
-                  columns={columns}
-                  dataSource={history.map(item => ({ ...item, key: item._id }))}
-                  pagination={{
-                    current: pagination.current,
-                    pageSize: pagination.pageSize,
-                    total: pagination.total,
-                    showSizeChanger: false
-                  }}
-                  onChange={handleTableChange}
-                  size="small"
-                  scroll={{ x: 600 }}
-                />
+                <div className="rounded-3xl border border-primary/5 overflow-hidden shadow-soft">
+                  <Table
+                    columns={columns}
+                    dataSource={history.map(item => ({ ...item, key: item._id }))}
+                    pagination={{
+                      current: pagination.current,
+                      pageSize: pagination.pageSize,
+                      total: pagination.total,
+                      showSizeChanger: false,
+                      className: "px-6 py-4"
+                    }}
+                    onChange={handleTableChange}
+                    size="middle"
+                    scroll={{ x: 600 }}
+                    className="attendance-table"
+                  />
+                </div>
               )}
             </TabsContent>
           </Tabs>

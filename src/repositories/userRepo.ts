@@ -50,6 +50,16 @@ export class UserRepo {
     const response = await api.get("/api/user/enums")
     return response.data
   }
+
+  async getActivities(page = 1, limit = 10) {
+    const response = await api.get(`/api/user/activities?page=${page}&limit=${limit}`)
+    return response.data
+  }
+
+  async getUserById(id: string) {
+    const response = await api.get(`/api/user/public/${id}`)
+    return response.data
+  }
 }
 
 export const userRepo = new UserRepo();

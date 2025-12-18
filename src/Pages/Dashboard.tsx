@@ -245,13 +245,13 @@ const Dashboard = () => {
   return (
     <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
       {/* Welcome Section */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-8 rounded-3xl bg-gradient-to-br from-primary/10 via-background to-background border border-primary/5 shadow-soft">
         <div>
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-foreground tracking-tight">
             Hey, {user.name}! 👋
           </h1>
-          <p className="text-sm sm:text-base text-muted-foreground mt-1">
-            Here's what's happening with your account today.
+          <p className="text-sm sm:text-base text-muted-foreground mt-2 font-medium">
+            Ready to build something amazing today?
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
@@ -265,7 +265,7 @@ const Dashboard = () => {
             <>
               <>
                 {todayAttendance?.shift && (
-                  <Badge variant="outline" className="gap-1">
+                  <Badge className="gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 text-primary border-none font-bold text-[10px] uppercase tracking-wider">
                     {todayAttendance.shift === 'Morning' ? <Sun className="w-3 h-3" /> : <Moon className="w-3 h-3" />}
                     {todayAttendance.shift}
                   </Badge>
@@ -286,14 +286,14 @@ const Dashboard = () => {
           // Skeleton loaders for stats
           <>
             {[...Array(4)].map((_, i) => (
-              <Card key={i}>
+              <Card key={i} className="border-none shadow-premium rounded-3xl overflow-hidden">
                 <CardContent className="p-4 sm:p-6">
                   <div className="flex items-center justify-between">
                     <div className="space-y-2">
                       <Skeleton className="h-3 w-16" />
-                      <Skeleton className="h-7 w-12" />
+                      <Skeleton className="h-8 w-12 rounded-lg" />
                     </div>
-                    <Skeleton className="h-10 w-10 sm:h-12 sm:w-12 rounded-full" />
+                    <Skeleton className="h-12 w-12 rounded-2xl" />
                   </div>
                 </CardContent>
               </Card>
@@ -301,61 +301,61 @@ const Dashboard = () => {
           </>
         ) : (
           <>
-            <Card>
+            <Card className="border-none shadow-premium rounded-3xl hover:translate-y-[-4px] transition-transform">
               <CardContent className="p-4 sm:p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs sm:text-sm text-muted-foreground">Total Posts</p>
-                    <h3 className="text-xl sm:text-2xl font-bold mt-1">{totalPosts}</h3>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Total Posts</p>
+                    <h3 className="text-2xl sm:text-3xl font-black mt-1">{totalPosts}</h3>
                   </div>
-                  <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                    <FileText className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
+                  <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center">
+                    <FileText className="h-6 w-6 text-primary" />
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="border-none shadow-premium rounded-3xl hover:translate-y-[-4px] transition-transform">
               <CardContent className="p-4 sm:p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs sm:text-sm text-muted-foreground">Total Hours</p>
-                    <h3 className="text-xl sm:text-2xl font-bold mt-1">{totalHours}</h3>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Total Hours</p>
+                    <h3 className="text-2xl sm:text-3xl font-black mt-1">{totalHours}</h3>
                   </div>
-                  <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
-                    <TimerIcon className="h-5 w-5 sm:h-6 sm:w-6 text-red-500" />
+                  <div className="h-12 w-12 rounded-2xl bg-amber-500/10 flex items-center justify-center">
+                    <TimerIcon className="h-6 w-6 text-amber-500" />
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="border-none shadow-premium rounded-3xl hover:translate-y-[-4px] transition-transform">
               <CardContent className="p-4 sm:p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs sm:text-sm text-muted-foreground">Announcements</p>
-                    <h3 className="text-xl sm:text-2xl font-bold mt-1">{totalAnnouncements}</h3>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Announcements</p>
+                    <h3 className="text-2xl sm:text-3xl font-black mt-1">{totalAnnouncements}</h3>
                   </div>
-                  <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-                    <Megaphone className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
+                  <div className="h-12 w-12 rounded-2xl bg-blue-500/10 flex items-center justify-center">
+                    <Megaphone className="h-6 w-6 text-blue-600" />
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="border-none shadow-premium rounded-3xl hover:translate-y-[-4px] transition-transform">
               <CardContent className="p-4 sm:p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs sm:text-sm text-muted-foreground">Attendance Rate</p>
-                    <h3 className="text-xl sm:text-2xl font-bold mt-1">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Attendance Rate</p>
+                    <h3 className="text-2xl sm:text-3xl font-black mt-1">
                       {attendanceHistory.length > 0
                         ? Math.round((attendanceStats.present / attendanceHistory.length) * 100)
                         : 0}%
                     </h3>
                   </div>
-                  <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                    <CalendarCheck className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
+                  <div className="h-12 w-12 rounded-2xl bg-green-500/10 flex items-center justify-center">
+                    <CalendarCheck className="h-6 w-6 text-green-600" />
                   </div>
                 </div>
               </CardContent>

@@ -22,8 +22,8 @@ export function SiteHeader() {
   const location = useLocation()
 
   return (
-    <header className="sticky top-0 z-50 flex h-(--header-height) shrink-0 items-center gap-1 sm:gap-2 border-b bg-white transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height)">
-      <div className="flex w-full items-center justify-between px-4 sm:px-4 lg:px-6">
+    <header className="sticky top-0 z-50 flex h-(--header-height) shrink-0 items-center gap-2 border-b border-primary/5 bg-white/80 backdrop-blur-md shadow-premium transition-all ease-in-out group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height)">
+      <div className="flex w-full items-center justify-between px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-2">
           {/* Hide sidebar trigger on mobile - we have bottom nav instead */}
           <SidebarTrigger className="-ml-1 hidden md:flex" />
@@ -42,7 +42,7 @@ export function SiteHeader() {
             <Link to="/notifications">
               <Bell className="h-5 w-5" />
               {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] text-white">
+                <span className="absolute -top-0.5 -right-0.5 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-red-600 border-2 border-white text-[10px] font-black text-white shadow-soft animate-in zoom-in-50 duration-300">
                   {unreadCount > 9 ? '9+' : unreadCount}
                 </span>
               )}

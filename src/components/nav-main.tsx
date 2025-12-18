@@ -27,19 +27,24 @@ export function NavMain({
   return (
     <SidebarGroup>
       <SidebarGroupContent className="flex flex-col gap-2">
-        <SidebarMenu>
+        <SidebarMenu className="gap-1">
           {items.map((item) => {
             const isActive = location.pathname === item.url
             return (
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton
                   isActive={isActive}
-                  className="cursor-pointer active:bg-accent focus:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className={cn(
+                    "h-12 px-4 rounded-2xl transition-all duration-300 font-medium",
+                    isActive
+                      ? "bg-primary/10 text-primary shadow-soft"
+                      : "hover:bg-accent/50 text-muted-foreground hover:text-foreground"
+                  )}
                   tooltip={item.title}
                   onClick={() => navigate(item.url)}
                 >
-                  {item.icon && <item.icon />}
-                  <span className="text-base">{item.title}</span>
+                  {item.icon && <item.icon className={cn("size-5", isActive && "text-primary")} />}
+                  <span className="text-sm font-bold tracking-tight">{item.title}</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             )

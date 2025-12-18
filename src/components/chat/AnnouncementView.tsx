@@ -29,80 +29,92 @@ export function AnnouncementView({ onBack }: AnnouncementViewProps) {
     const loading = false;
 
     return (
-        <div className="flex flex-col flex-1 h-full bg-background relative">
+        <div className="flex flex-col flex-1 h-full bg-background/50 relative">
             {/* Header */}
-            <div className="h-14 border-b flex items-center px-4 shadow-sm bg-background/95 backdrop-blur z-10">
-                <div className="flex items-center gap-3">
+            <div className="h-16 border-b border-primary/5 flex items-center px-6 shadow-soft bg-white/80 backdrop-blur-md sticky top-0 z-10 transition-all duration-300">
+                <div className="flex items-center gap-4">
                     {/* Back Button for Mobile */}
-                    <Button variant="ghost" size="icon" className="md:hidden -ml-2 h-8 w-8" onClick={onBack}>
+                    <Button variant="ghost" size="icon" className="md:hidden -ml-2 h-10 w-10 rounded-xl hover:bg-primary/5" onClick={onBack}>
                         <ArrowLeft className="h-5 w-5" />
                     </Button>
 
-                    <div className="h-8 w-8 flex items-center justify-center rounded-full bg-red-100 text-red-600">
-                        <Megaphone className="h-4 w-4" />
+                    <div className="h-10 w-10 flex items-center justify-center rounded-2xl bg-primary/10 text-primary shadow-soft border border-primary/5">
+                        <Megaphone className="h-5 w-5" />
                     </div>
                     <div>
-                        <h2 className="font-bold text-base leading-none">Official Announcements</h2>
-                        <p className="text-xs text-muted-foreground mt-0.5">Important updates from the administration</p>
+                        <h2 className="font-black text-sm tracking-tight leading-none">Official Announcements</h2>
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50 mt-1">Updates from administration</p>
                     </div>
                 </div>
             </div>
 
             <div className="flex-1 overflow-y-auto custom-scrollbar">
-                <div className="flex flex-col gap-4 p-4 pb-4">
+                <div className="flex flex-col gap-6 p-4 md:p-8 pb-10">
                     {/* Welcome Header */}
-                    <div className="mt-8 mb-8 px-4">
-                        <div className="h-16 w-16 bg-red-100 rounded-full flex items-center justify-center mb-4 text-red-600">
-                            <Megaphone className="h-8 w-8" />
+                    <div className="mt-6 mb-10 p-8 md:p-12 rounded-[2.5rem] bg-primary/5 border border-primary/5 flex flex-col items-center text-center shadow-soft">
+                        <div className="h-20 w-20 bg-primary/10 rounded-[1.5rem] flex items-center justify-center mb-6 text-primary shadow-soft border border-primary/10">
+                            <Megaphone className="h-10 w-10" />
                         </div>
-                        <h1 className="text-3xl font-bold mb-1">
-                            Welcome to <span className="text-primary">Official Announcements</span>
-                        </h1>
-                        <p className="text-muted-foreground">
-                            This is the beginning of the Official Announcements channel. Stay tuned for important updates!
-                        </p>
+                        <div className="max-w-md space-y-3">
+                            <h1 className="text-3xl font-black tracking-tight">
+                                Official <span className="text-primary">Announcements</span>
+                            </h1>
+                            <p className="text-sm text-muted-foreground font-medium leading-relaxed">
+                                Welcome to the hub of important updates. All official communications, guidelines, and schedules will be posted here.
+                            </p>
+                        </div>
                     </div>
 
                     {!loading && adminPosts.length === 0 && (
-                        <div className="text-center py-12 text-muted-foreground">
-                            <Megaphone className="w-12 h-12 mx-auto mb-4 opacity-20" />
-                            <p>No announcements yet.</p>
+                        <div className="text-center py-20 bg-muted/20 rounded-[2rem] border border-dashed border-primary/10">
+                            <Megaphone className="w-16 h-16 mx-auto mb-4 opacity-10 text-primary" />
+                            <p className="text-xs font-black uppercase tracking-widest text-muted-foreground/40">No announcements yet</p>
                         </div>
                     )}
 
                     {adminPosts.map((post) => (
-                        <div key={post._id} className="flex gap-3 group">
+                        <div key={post._id} className="flex gap-4 group">
                             <div className="flex-shrink-0 mt-0.5">
-                                <div className="h-10 w-10 rounded-full bg-red-100 flex items-center justify-center text-red-600">
+                                <div className="h-10 w-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-soft border border-primary/5">
                                     <Megaphone className="h-5 w-5" />
                                 </div>
                             </div>
 
-                            <div className="flex flex-col items-start max-w-[85%]">
-                                <div className="flex items-baseline gap-2 mb-1">
-                                    <span className="font-semibold text-sm">Official Announcement</span>
-                                    <span className="text-[10px] text-muted-foreground select-none">
-                                        {new Date(post.createdAt).toLocaleDateString()} {new Date(post.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            <div className="flex flex-col items-start max-w-[90%] sm:max-w-[80%]">
+                                <div className="flex items-baseline gap-3 mb-2 px-1">
+                                    <span className="font-black text-[11px] uppercase tracking-widest text-primary">Administrator</span>
+                                    <span className="text-[10px] font-bold text-muted-foreground/40 select-none">
+                                        {new Date(post.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} • {new Date(post.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                     </span>
                                 </div>
-                                <div className="px-4 py-3 rounded-2xl rounded-tl-sm bg-secondary/50 text-[15px] leading-relaxed shadow-sm w-full space-y-2">
-                                    <h3 className="font-bold text-base">{post.title}</h3>
-                                    <p className="whitespace-pre-wrap">{post.description}</p>
+                                <div className="px-6 py-5 rounded-[2rem] rounded-tl-[4px] bg-white dark:bg-muted/50 text-[15px] leading-relaxed shadow-soft border border-primary/5 w-full space-y-4 hover:shadow-md transition-shadow">
+                                    <h3 className="font-black text-lg tracking-tight text-foreground">{post.title}</h3>
+                                    <p className="whitespace-pre-wrap text-muted-foreground font-medium text-[14.5px] leading-relaxed italic border-l-2 border-primary/20 pl-4 py-1">
+                                        {post.description}
+                                    </p>
 
                                     {post.image && (
-                                        <div className="mt-2 rounded-lg overflow-hidden border bg-background/50 max-w-md">
+                                        <div className="mt-4 rounded-2xl overflow-hidden border border-primary/10 bg-muted/30 shadow-soft">
                                             {post.image.match(/\.(mp4|webm|mov|mkv)$/i) ? (
-                                                <video src={post.image} controls className="w-full h-auto max-h-[300px] object-cover" />
+                                                <video src={post.image} controls className="w-full h-auto max-h-[400px] object-cover" />
                                             ) : (
-                                                <img src={post.image} alt="Announcement attachment" className="w-full h-auto max-h-[300px] object-cover" />
+                                                <img src={post.image} alt="Announcement attachment" className="w-full h-auto max-h-[400px] object-cover" />
                                             )}
                                         </div>
                                     )}
 
                                     {post.link && (
-                                        <a href={post.link} target="_blank" rel="noopener noreferrer" className="block text-sm text-blue-500 hover:underline mt-1 break-all">
-                                            {post.link}
-                                        </a>
+                                        <div className="pt-2">
+                                            <a
+                                                href={post.link}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-primary hover:text-primary/80 bg-primary/5 px-4 py-2 rounded-xl transition-all hover:translate-x-1"
+                                            >
+                                                View Attachment
+                                                <ArrowLeft className="w-3 h-3 rotate-180" />
+                                            </a>
+                                        </div>
                                     )}
                                 </div>
                             </div>

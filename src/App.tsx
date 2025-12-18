@@ -8,6 +8,8 @@ import UserLayout from "./components/layout/userLayout"
 import Attendance from "./Pages/Attendance"
 import Posts from "./Pages/Posts"
 import Profile from "./Pages/Profile"
+import EditProfile from "./Pages/EditProfile"
+import UserPublicProfile from "./Pages/UserPublicProfile"
 import Direct from "./Pages/Direct"
 import Activities from "./Pages/Activities"
 import Notifications from "./Pages/Notifications"
@@ -32,6 +34,8 @@ const App = () => {
           <Route path="/posts" element={<Posts />} />
           <Route path="/direct" element={<Direct />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/profile/edit" element={<EditProfile />} />
+          <Route path="/user/:id" element={<UserPublicProfile />} />
           <Route path="/activities" element={<Activities />} />
           <Route path="/notifications" element={<Notifications />} />
         </Route>

@@ -99,17 +99,17 @@ export default function Direct() {
     // Removed auto-select 'announcements' effect to restore default placeholder behavior
 
     return (
-        <div className="flex flex-1 bg-background overflow-hidden h-full min-h-0">
+        <div className="flex flex-1 bg-muted/10 overflow-hidden h-full min-h-0">
             {/* Sidebar */}
             {/* Mobile: Visible when NO active user. Hidden when active user. */}
             {/* Desktop: Always visible. */}
             <DirectSidebar
                 className={cn(
-                    "shrink-0 border-r",
+                    "shrink-0 border-r border-primary/5 shadow-soft",
                     // Mobile styles
                     isMobile ? (activeUserId ? "hidden" : "flex w-full border-r-0") :
                         // Desktop styles
-                        "hidden md:flex w-80"
+                        "hidden md:flex w-80 lg:w-96"
                 )}
                 activeUserId={activeUserId || undefined}
                 onUserSelect={handleUserSelect}
@@ -119,7 +119,7 @@ export default function Direct() {
             {/* Mobile: Hidden when NO active user. Visible when active user. */}
             {/* Desktop: Always visible (flex-1). */}
             <div className={cn(
-                "flex-1 flex flex-col min-w-0 bg-background overflow-hidden",
+                "flex-1 flex flex-col min-w-0 bg-background overflow-hidden relative shadow-inner",
                 isMobile && !activeUserId ? "hidden" : "flex"
             )}>
                 {renderContent()}

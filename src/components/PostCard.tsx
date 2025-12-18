@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { cn } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -339,24 +342,32 @@ export const PostCard = ({
 
   return (
     <>
-      <Card className="overflow-hidden border-border gap-2">
+      <Card className="overflow-hidden border-primary/5 rounded-[2rem] shadow-premium hover:shadow-premium-hover transition-all duration-300">
         <CardHeader className="space-y-0">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-2 sm:gap-3">
-              <UserAvatar
-                src={authorAvatar}
-                name={displayName}
-                className="h-9 w-9 sm:h-11 sm:w-11"
-                fallbackColor="bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-600"
-              />
+              <Link to={`/user/${authorId}`} className="hover:opacity-80 transition-opacity">
+                <UserAvatar
+                  src={authorAvatar}
+                  name={displayName}
+                  className="h-10 w-10 sm:h-12 sm:w-12 border-2 border-primary/10 shadow-soft"
+                  fallbackColor="bg-primary"
+                />
+              </Link>
 
               <div className="space-y-0.5">
                 <div className="flex items-center gap-2">
-                  <p className="font-semibold text-sm leading-none">{displayName}</p>
+                  {isAdmin ? (
+                    <p className="font-semibold text-sm leading-none">{displayName}</p>
+                  ) : (
+                    <Link to={`/user/${authorId}`} className="hover:text-primary transition-colors">
+                      <p className="font-black text-sm sm:text-base leading-none tracking-tight">{displayName}</p>
+                    </Link>
+                  )}
                 </div>
-                <div className="flex items-center text-xs text-muted-foreground">
+                <div className="flex items-center text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider">
                   <span>{title}</span>
-                  <span className="mx-1">•</span>
+                  <span className="mx-2 opacity-50">•</span>
                   <span>{formatTimeAgo(createdAt)}</span>
                 </div>
               </div>
@@ -435,7 +446,7 @@ export const PostCard = ({
         <CardContent className="space-y-3 sm:space-y-4 pt-0 sm:pt-0">
           {/* Post Media (Image or Video) */}
           {image && (
-            <div className="rounded-lg overflow-hidden -mx-4 sm:-mx-6 -mt-1 bg-black/5 aspect-[16/9]">
+            <div className="rounded-2xl overflow-hidden -mx-2 sm:-mx-3 bg-black/5 aspect-[16/9] border border-primary/5 shadow-inner">
               {isVideo(image) ? (
                 <VideoPlayer
                   src={image}
@@ -446,7 +457,7 @@ export const PostCard = ({
                 <img
                   src={getOptimizedImageUrl(image)}
                   alt={title}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
                   loading="lazy"
                 />
               )}
@@ -454,54 +465,62 @@ export const PostCard = ({
           )}
 
           {/* Post Content */}
-          <div className="space-y-1.5 sm:space-y-2">
-            {/* <h3 className="font-bold text-base sm:text-lg leading-tight">{title}</h3> */}
-            <p className="text-sm text-foreground/80 leading-relaxed">
+          <div className="px-1 py-1">
+            <p className="text-sm sm:text-base text-foreground/80 leading-relaxed font-medium">
               {description}
             </p>
           </div>
 
           {/* Link */}
           {link && (
-            <a
-              href={link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-sm text-primary hover:underline font-medium transition-colors group"
-            >
-              <ExternalLink className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-              {link}
-            </a>
+            <div className="px-1">
+              <a
+                href={link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-xs sm:text-sm text-primary hover:underline font-bold transition-colors group"
+              >
+                <div className="w-8 h-8 rounded-xl bg-primary/5 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                  <ExternalLink className="w-4 h-4" />
+                </div>
+                <span className="truncate max-w-[200px] sm:max-w-md">{link}</span>
+              </a>
+            </div>
           )}
 
           {/* Action Buttons */}
-          <div className="flex">
-            <div className="flex items-center gap-2 w-full">
+          <div className="flex pt-2">
+            <div className="flex items-center gap-4 w-full">
               <Button
                 variant="ghost"
                 size="sm"
-                className={`flex hover:bg-red-50  ${liked ? 'text-red-500' : ''}`}
+                className={cn(
+                  "flex-1 h-11 rounded-2xl gap-2 font-bold transition-all",
+                  liked
+                    ? "bg-red-50 text-red-500 shadow-sm"
+                    : "hover:bg-red-500/5 text-muted-foreground hover:text-red-500"
+                )}
                 onClick={handleLike}
-                disabled={false}
               >
                 <Heart
-                  className={`w-4 h-4 transition-all ${liked ? "fill-current scale-110" : ""}`}
+                  className={cn("w-5 h-5 transition-transform duration-300", liked && "fill-current scale-110 animate-in zoom-in-50")}
                 />
-
-                {likeCount > 0 ? likeCount : ""}
-
+                <span className="text-xs">{likeCount > 0 ? likeCount : "Like"}</span>
               </Button>
 
               <Button
                 variant="ghost"
                 size="sm"
-                className="hover:bg-blue-50"
+                className={cn(
+                  "flex-1 h-11 rounded-2xl gap-2 font-bold transition-all",
+                  showComments
+                    ? "bg-primary/5 text-primary shadow-sm"
+                    : "hover:bg-primary/5 text-muted-foreground hover:text-primary"
+                )}
                 onClick={() => setShowComments(!showComments)}
               >
-                <MessageSquare className={`w-4 h-4 ${showComments ? "text-blue-600" : ""}`} />
-
-                {commentCount > 0 ? commentCount : ""}
-
+                <MessageSquare className={cn("w-5 h-5 transition-transform duration-300", showComments && "scale-110")} />
+                <span className="text-xs">{commentCount > 0 ? commentCount : "Comment"}</span>
               </Button>
             </div>
           </div>

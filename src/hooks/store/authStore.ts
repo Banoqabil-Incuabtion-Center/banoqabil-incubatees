@@ -12,6 +12,8 @@ interface User {
   course: string
   shift?: 'Morning' | 'Evening'
   avatar?: string
+  bio?: string
+  status?: string
 }
 
 interface AuthState {
