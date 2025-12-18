@@ -54,16 +54,15 @@ const UserLayout = () => {
             )}>
                 {!hideUI && <SiteHeader />}
                 {/* Add bottom padding on mobile for BottomNav, unless hidden */}
-                <div className={cn(
-                    "flex-1 flex flex-col overflow-hidden min-h-0",
-                    !hideUI && !isDirectPage && "pb-16 md:pb-0" // Add padding only if UI is visible and NOT direct page (handled internally)
-                )}>
+                <div className="flex-1 flex flex-col overflow-hidden min-h-0">
                     {/* Breadcrumbs moved to SiteHeader */}
                     {isDirectPage ? (
                         <Outlet />
                     ) : (
                         <PullToRefresh>
-                            <Outlet />
+                            <div className={cn("min-h-full", !hideUI && "pb-16 md:pb-0")}>
+                                <Outlet />
+                            </div>
                         </PullToRefresh>
                     )}
                 </div>

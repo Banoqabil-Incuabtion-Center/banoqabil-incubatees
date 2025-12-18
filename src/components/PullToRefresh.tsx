@@ -18,9 +18,12 @@ const PullToRefresh: React.FC<PullToRefreshProps> = ({
     const contentRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
+        const element = contentRef.current;
+        if (!element) return;
+
         const handleTouchStart = (e: TouchEvent) => {
-            // Only enable pull to refresh if we are at the top of the page
-            if (window.scrollY === 0) {
+            // Check element scroll position instead of window
+            if (element.scrollTop === 0) {
                 setStartY(e.touches[0].clientY);
             }
         };
@@ -30,22 +33,23 @@ const PullToRefresh: React.FC<PullToRefreshProps> = ({
             const diff = touchY - startY;
 
             // Only scroll if we started at the top and are pulling down
-            if (window.scrollY === 0 && diff > 0 && startY > 0) {
+            if (element.scrollTop === 0 && diff > 0 && startY > 0) {
                 // Add resistance/damping to the pull
                 const dampenedDiff = Math.min(diff * 0.5, threshold * 1.5);
                 setCurrentY(dampenedDiff);
 
                 // Prevent default scrolling only if we are actively pulling down
                 if (dampenedDiff > 10) {
-                    e.preventDefault();
+                    if (e.cancelable) e.preventDefault();
                 }
             }
         };
 
         const handleTouchEnd = async () => {
+            // ... existing logic ...
             if (currentY > threshold) {
                 setRefreshing(true);
-                setCurrentY(threshold); // Snap to threshold position
+                setCurrentY(threshold);
 
                 if (onRefresh) {
                     await onRefresh();
@@ -56,16 +60,11 @@ const PullToRefresh: React.FC<PullToRefreshProps> = ({
                 setRefreshing(false);
             }
 
-            // Reset position
             setCurrentY(0);
             setStartY(0);
         };
 
-        const element = contentRef.current;
-        if (!element) return;
-
-        element.addEventListener('touchstart', handleTouchStart); // Passive false is default for touchstart in React but good to be explicit if using native
-        // We need passive: false to be able to preventDefault in touchmove
+        element.addEventListener('touchstart', handleTouchStart);
         element.addEventListener('touchmove', handleTouchMove, { passive: false });
         element.addEventListener('touchend', handleTouchEnd);
 
@@ -77,7 +76,7 @@ const PullToRefresh: React.FC<PullToRefreshProps> = ({
     }, [startY, currentY, threshold, onRefresh]);
 
     return (
-        <div ref={contentRef} className="min-h-screen relative">
+        <div ref={contentRef} className="h-full overflow-y-auto relative overscroll-y-contain">
             {/* Pull Indicator */}
             <div
                 className="absolute top-0 left-0 w-full flex justify-center items-center pointer-events-none transition-transform duration-200"
