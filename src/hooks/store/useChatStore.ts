@@ -37,12 +37,17 @@ interface ChatState {
     hasMoreMessages: boolean;
     isSendingMessage: boolean;
 
+    conversationPage: number;
+    hasMoreConversations: boolean;
+    isLoadingMoreConversations: boolean;
+
     isSearching: boolean;
     searchResults: User[];
 
     onlineUsers: string[];
 
     fetchConversations: () => Promise<void>;
+    loadMoreConversations: () => Promise<void>;
     fetchMessages: (receiverId: string, before?: string) => Promise<void>;
     sendMessage: (receiverId: string, text: string) => Promise<void>;
     searchUsers: (query: string) => Promise<void>;
@@ -62,6 +67,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
     activeConversation: null,
     activeUserId: null,
     isLoadingConversations: false,
+    conversationPage: 1,
+    hasMoreConversations: true,
+    isLoadingMoreConversations: false,
     isLoadingMessages: false,
     hasMoreMessages: true,
     isSendingMessage: false,
@@ -88,16 +96,49 @@ export const useChatStore = create<ChatState>((set, get) => ({
     },
 
     fetchConversations: async () => {
-        set({ isLoadingConversations: true });
+        set({ isLoadingConversations: true, conversationPage: 1, hasMoreConversations: true });
         try {
             const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-            const response = await axios.get(`${SERVER_URL}/api/messages/conversations`, {
+            const response = await axios.get(`${SERVER_URL}/api/messages/conversations?page=1&limit=10`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            set({ conversations: response.data, isLoadingConversations: false });
+            set({
+                conversations: response.data,
+                isLoadingConversations: false,
+                hasMoreConversations: response.data.length === 10
+            });
         } catch (error) {
             console.error('Error fetching conversations:', error);
             set({ isLoadingConversations: false });
+        }
+    },
+
+    loadMoreConversations: async () => {
+        const { conversationPage, hasMoreConversations, isLoadingMoreConversations, isLoadingConversations } = get();
+        if (!hasMoreConversations || isLoadingMoreConversations || isLoadingConversations) return;
+
+        set({ isLoadingMoreConversations: true });
+        const nextPage = conversationPage + 1;
+
+        try {
+            const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+            const response = await axios.get(`${SERVER_URL}/api/messages/conversations?page=${nextPage}&limit=10`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+
+            const newConversations = response.data;
+            const hasMore = newConversations.length === 10;
+
+            set((state) => ({
+                conversations: [...state.conversations, ...newConversations],
+                conversationPage: nextPage,
+                hasMoreConversations: hasMore,
+                isLoadingMoreConversations: false
+            }));
+
+        } catch (error) {
+            console.error('Error loading more conversations:', error);
+            set({ isLoadingMoreConversations: false });
         }
     },
 

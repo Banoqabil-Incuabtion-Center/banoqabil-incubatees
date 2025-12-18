@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { useChatStore } from "@/hooks/store/useChatStore";
 import { useAuthStore } from "@/hooks/store/authStore";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useSocket } from "@/hooks/useSocket";
 
 interface DirectSidebarProps {
@@ -30,8 +30,12 @@ export function DirectSidebar({ className, activeUserId, onUserSelect }: DirectS
         isLoadingConversations,
         searchUsers,
         searchResults,
-        isSearching
+        isSearching,
+        loadMoreConversations,
+        hasMoreConversations,
+        isLoadingMoreConversations
     } = useChatStore();
+
     const { user: currentUser } = useAuthStore();
     const [searchQuery, setSearchQuery] = useState("");
     const { on, emit } = useSocket();
@@ -64,6 +68,27 @@ export function DirectSidebar({ className, activeUserId, onUserSelect }: DirectS
     useEffect(() => {
         fetchConversations();
     }, [fetchConversations]);
+
+    const observerTarget = useRef<HTMLDivElement>(null);
+
+    const handleObserver = useCallback((entries: IntersectionObserverEntry[]) => {
+        const [target] = entries;
+        if (target.isIntersecting && hasMoreConversations && !isLoadingMoreConversations && !isLoadingConversations) {
+            loadMoreConversations();
+        }
+    }, [hasMoreConversations, isLoadingMoreConversations, isLoadingConversations, loadMoreConversations]);
+
+    useEffect(() => {
+        const element = observerTarget.current;
+        const option = { threshold: 0.1 };
+
+        if (!element) return;
+
+        const observer = new IntersectionObserver(handleObserver, option);
+        observer.observe(element);
+
+        return () => observer.unobserve(element);
+    }, [handleObserver, isLoadingConversations]); // Re-attach if loading state changes (though ref shouldn't change, consistency good)
 
     // Debounce search
     useEffect(() => {
@@ -261,6 +286,13 @@ export function DirectSidebar({ className, activeUserId, onUserSelect }: DirectS
                                                 </Button>
                                             );
                                         })
+                                    )}
+
+                                    {/* Sentinel for infinite scroll */}
+                                    {conversations.length > 0 && (
+                                        <div ref={observerTarget} className="h-6 flex items-center justify-center w-full">
+                                            {isLoadingMoreConversations && <div className="text-xs text-muted-foreground animate-pulse">Loading more...</div>}
+                                        </div>
                                     )}
                                 </div>
                             </div>
