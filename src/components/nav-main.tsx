@@ -1,4 +1,5 @@
 import { type Icon } from "@tabler/icons-react"
+import { cn } from "@/lib/utils"
 
 
 import {
@@ -8,7 +9,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import { Link } from "react-router-dom"
+import { Link, useLocation } from "react-router-dom"
 import { useNavigate } from "react-router-dom"
 export function NavMain({
   items,
@@ -21,19 +22,28 @@ export function NavMain({
 }) {
 
   const navigate = useNavigate()
+  const location = useLocation()
 
   return (
     <SidebarGroup>
       <SidebarGroupContent className="flex flex-col gap-2">
         <SidebarMenu>
-          {items.map((item) => (
-            <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton className="cursor-pointer active:bg-accent focus:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" tooltip={item.title} onClick={() => navigate(item.url)}>
-                {item.icon && <item.icon />}
-                <span className="text-base">{item.title}</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
+          {items.map((item) => {
+            const isActive = location.pathname === item.url
+            return (
+              <SidebarMenuItem key={item.title}>
+                <SidebarMenuButton
+                  isActive={isActive}
+                  className="cursor-pointer active:bg-accent focus:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  tooltip={item.title}
+                  onClick={() => navigate(item.url)}
+                >
+                  {item.icon && <item.icon />}
+                  <span className="text-base">{item.title}</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )
+          })}
         </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>

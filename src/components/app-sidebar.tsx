@@ -19,7 +19,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { UserAvatar } from "@/components/UserAvatar"
-import { Home, Send, FileText, CalendarCheck, Check, LogOut, ChevronUp, Download, User, History } from "lucide-react"
+import { Home, Send, FileText, CalendarCheck, Check, LogOut, ChevronUp, Download, User, History, Users } from "lucide-react"
 import Logout from "@/auth/Logout"
 import { userRepo } from "../repositories/userRepo"
 import { useAuthStore } from "@/hooks/store/authStore"
@@ -31,7 +31,7 @@ const data = {
   navMain: [
     { title: "Home", url: "/", icon: Home },
     { title: "Direct", url: "/direct", icon: Send },
-    { title: "Posts", url: "/posts", icon: FileText },
+    { title: "Community", url: "/posts", icon: Users },
     { title: "Attendance", url: "/attendance", icon: CalendarCheck },
   ],
 }

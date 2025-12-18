@@ -1,7 +1,9 @@
 
-import { Link } from "react-router-dom"
+import { Link, useLocation } from "react-router-dom"
+import { cn } from "@/lib/utils"
 import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
+import { DynamicBreadcrumb } from "./DynamicBreadcrumb"
 
 import { useAuthStore } from "@/hooks/store/authStore"
 import { UserAvatar } from "./UserAvatar"
@@ -17,6 +19,7 @@ export function SiteHeader() {
   const { user } = useAuthStore()
   const { isInstallable, installPwa } = usePwaInstall()
   const unreadCount = useNotificationStore(state => state.unreadCount)
+  const location = useLocation()
 
   return (
     <header className="sticky top-0 z-50 flex h-(--header-height) shrink-0 items-center gap-1 sm:gap-2 border-b bg-white transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height)">
@@ -24,10 +27,10 @@ export function SiteHeader() {
         <div className="flex items-center gap-2">
           {/* Hide sidebar trigger on mobile - we have bottom nav instead */}
           <SidebarTrigger className="-ml-1 hidden md:flex" />
-          <Separator
-            orientation="vertical"
-            className="mr-2 h-4 hidden md:block"
-          />
+          {/* Breadcrumbs - Hidden on mobile */}
+          <div className="hidden md:block">
+            <DynamicBreadcrumb />
+          </div>
           {/* Mobile Page Title */}
           <MobilePageTitle />
         </div>

@@ -100,7 +100,7 @@ export function DirectSidebar({ className, activeUserId, onUserSelect }: DirectS
             </div>
 
             <ScrollArea className="flex-1 min-h-0 overflow-hidden">
-                <div className="p-2 space-y-4">
+                <div className="p-2 pb-20 md:pb-2 space-y-4">
 
                     {searchQuery ? (
                         // Search Results
@@ -269,9 +269,7 @@ export function DirectSidebar({ className, activeUserId, onUserSelect }: DirectS
                 </div>
             </ScrollArea>
 
-            <div className="p-2 bg-background/40 flex items-center gap-2 border-t text-xs text-muted-foreground justify-center">
-                <span className="truncate">Connected</span>
-            </div>
+
         </div>
     );
 }
