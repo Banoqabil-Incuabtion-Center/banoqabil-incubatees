@@ -342,9 +342,9 @@ export const PostCard = ({
 
   return (
     <>
-      <Card className="overflow-hidden border-primary/5 rounded-[2rem] shadow-premium hover:shadow-premium-hover transition-all duration-300">
-        <CardHeader className="space-y-0">
-          <div className="flex items-start justify-between">
+      <div className="group py-6 sm:py-8 border-b border-primary/5 transition-all duration-300">
+        <div className="space-y-4">
+          <div className="flex items-start justify-between px-1">
             <div className="flex items-center gap-2 sm:gap-3">
               <Link to={`/user/${authorId}`} className="hover:opacity-80 transition-opacity">
                 <UserAvatar
@@ -420,7 +420,7 @@ export const PostCard = ({
               ) : (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 -mt-1">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 -mt-1 hover:bg-primary/5 rounded-full">
                       <MoreVertical className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
@@ -441,99 +441,90 @@ export const PostCard = ({
               )
             )}
           </div>
-        </CardHeader>
 
-        <CardContent className="space-y-3 sm:space-y-4 pt-0 sm:pt-0">
-          {/* Post Media (Image or Video) */}
-          {image && (
-            <div className="rounded-2xl overflow-hidden -mx-2 sm:-mx-3 bg-black/5 aspect-[16/9] border border-primary/5 shadow-inner">
-              {isVideo(image) ? (
-                <VideoPlayer
-                  src={image}
-                  className="w-full h-full object-cover"
-                  playOnHover
-                />
-              ) : (
-                <img
-                  src={getOptimizedImageUrl(image)}
-                  alt={title}
-                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
-                  loading="lazy"
-                />
-              )}
-            </div>
-          )}
-
-          {/* Post Content */}
-          <div className="px-1 py-1">
-            <p className="text-sm sm:text-base text-foreground/80 leading-relaxed font-medium">
-              {description}
-            </p>
-          </div>
-
-          {/* Link */}
-          {link && (
+          <div className="space-y-4">
+            {/* Post Content */}
             <div className="px-1">
-              <a
-                href={link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-xs sm:text-sm text-primary hover:underline font-bold transition-colors group"
-              >
-                <div className="w-8 h-8 rounded-xl bg-primary/5 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
-                  <ExternalLink className="w-4 h-4" />
-                </div>
-                <span className="truncate max-w-[200px] sm:max-w-md">{link}</span>
-              </a>
+              <p className="text-sm sm:text-base text-foreground/80 leading-relaxed font-medium">
+                {description}
+              </p>
             </div>
-          )}
 
-          {/* Action Buttons */}
-          <div className="flex pt-2">
-            <div className="flex items-center gap-4 w-full">
-              <Button
-                variant="ghost"
-                size="sm"
-                className={cn(
-                  "flex-1 h-11 rounded-2xl gap-2 font-bold transition-all",
-                  liked
-                    ? "bg-red-50 text-red-500 shadow-sm"
-                    : "hover:bg-red-500/5 text-muted-foreground hover:text-red-500"
+            {/* Post Media (Image or Video) */}
+            {image && (
+              <div className="rounded-2xl sm:rounded-3xl overflow-hidden bg-black/5 aspect-[16/9] border border-primary/5 shadow-premium-soft">
+                {isVideo(image) ? (
+                  <VideoPlayer
+                    src={image}
+                    className="w-full h-full object-cover"
+                    playOnHover
+                  />
+                ) : (
+                  <img
+                    src={getOptimizedImageUrl(image)}
+                    alt={title}
+                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
+                    loading="lazy"
+                  />
                 )}
-                onClick={handleLike}
-              >
-                <Heart
-                  className={cn("w-5 h-5 transition-transform duration-300", liked && "fill-current scale-110 animate-in zoom-in-50")}
-                />
-                <span className="text-xs">{likeCount > 0 ? likeCount : "Like"}</span>
-              </Button>
+              </div>
+            )}
 
-              <Button
-                variant="ghost"
-                size="sm"
-                className={cn(
-                  "flex-1 h-11 rounded-2xl gap-2 font-bold transition-all",
-                  showComments
-                    ? "bg-primary/5 text-primary shadow-sm"
-                    : "hover:bg-primary/5 text-muted-foreground hover:text-primary"
-                )}
-                onClick={() => setShowComments(!showComments)}
-              >
-                <MessageSquare className={cn("w-5 h-5 transition-transform duration-300", showComments && "scale-110")} />
-                <span className="text-xs">{commentCount > 0 ? commentCount : "Comment"}</span>
-              </Button>
+            {/* Link */}
+            {link && (
+              <div className="px-1">
+                <a
+                  href={link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-xs sm:text-sm text-primary hover:underline font-bold transition-colors group/link"
+                >
+                  <div className="w-8 h-8 rounded-xl bg-primary/5 flex items-center justify-center group-hover/link:bg-primary/10 transition-colors">
+                    <ExternalLink className="w-4 h-4" />
+                  </div>
+                  <span className="truncate max-w-[200px] sm:max-w-md">{link}</span>
+                </a>
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex pt-2 px-1">
+              <div className="flex items-center gap-6">
+                <button
+                  className={cn(
+                    "flex items-center gap-1.5 text-sm font-bold transition-all hover:scale-105 active:scale-95",
+                    liked ? "text-red-500" : "text-muted-foreground hover:text-red-500"
+                  )}
+                  onClick={handleLike}
+                >
+                  <Heart
+                    className={cn("w-5 h-5 transition-transform duration-300", liked && "fill-current")}
+                  />
+                  <span>{likeCount > 0 ? likeCount : "Like"}</span>
+                </button>
+
+                <button
+                  className={cn(
+                    "flex items-center gap-1.5 text-sm font-bold transition-all hover:scale-105 active:scale-95",
+                    showComments ? "text-primary" : "text-muted-foreground hover:text-primary"
+                  )}
+                  onClick={() => setShowComments(!showComments)}
+                >
+                  <MessageSquare className="w-5 h-5" />
+                  <span>{commentCount > 0 ? commentCount : "Comment"}</span>
+                </button>
+              </div>
             </div>
+
+            {/* Comments Section */}
+            {showComments && postId && (
+              <div className="mt-6 pt-6 border-t border-primary/5 animate-in fade-in slide-in-from-top-2 duration-300">
+                <CommentsSection postId={postId} />
+              </div>
+            )}
           </div>
-
-          {/* Comments Section */}
-          {showComments && postId && (
-            <>
-              <Separator />
-              <CommentsSection postId={postId} />
-            </>
-          )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Edit Modal */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>

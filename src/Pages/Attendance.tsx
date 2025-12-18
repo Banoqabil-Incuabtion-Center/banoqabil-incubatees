@@ -210,7 +210,7 @@ const Attendance: React.FC = () => {
 
 
       {/* Today's Status */}
-      <Card className="border-primary/5 rounded-[2rem] shadow-premium hover:shadow-premium-hover transition-all duration-300">
+      <Card className="border-primary/5 rounded-2xl sm:rounded-[2rem] shadow-premium hover:shadow-premium-hover transition-all duration-300">
         <CardHeader className="pb-3">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-0">
             <CardTitle className="flex items-center gap-2">
@@ -328,7 +328,7 @@ const Attendance: React.FC = () => {
         </CardContent>
       </Card>
       {/* Shift Info Card */}
-      <Card className="border-primary/5 rounded-[2rem] shadow-premium hover:shadow-premium-hover transition-all duration-300">
+      <Card className="border-primary/5 rounded-2xl sm:rounded-[2rem] shadow-premium hover:shadow-premium-hover transition-all duration-300">
         <CardHeader className="pb-3">
           <CardTitle className="text-xl font-black tracking-tight flex items-center gap-3">
             <div className={cn(
@@ -386,7 +386,7 @@ const Attendance: React.FC = () => {
 
 
       {/* History with Tabs */}
-      <Card className="border-primary/5 rounded-[2rem] shadow-premium hover:shadow-premium-hover transition-all duration-300">
+      <Card className="border-primary/5 rounded-2xl sm:rounded-[2rem] shadow-premium hover:shadow-premium-hover transition-all duration-300">
         <CardHeader className="pb-3 px-6 sm:px-8 pt-6 sm:pt-8">
           <CardTitle className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <span className="text-2xl font-black tracking-tight">Attendance History</span>
@@ -420,7 +420,7 @@ const Attendance: React.FC = () => {
                     <Skeleton className="h-10 w-[200px] rounded-xl" />
                     <Skeleton className="h-10 w-[100px] rounded-xl" />
                   </div>
-                  <div className="rounded-[2rem] border border-primary/5 overflow-hidden shadow-soft">
+                  <div className="rounded-2xl sm:rounded-[2rem] border border-primary/5 overflow-hidden shadow-soft">
                     <div className="h-14 bg-muted/30 border-b border-primary/5 px-6 flex items-center">
                       <Skeleton className="h-4 w-full rounded-full" />
                     </div>
@@ -442,7 +442,7 @@ const Attendance: React.FC = () => {
                   <p className="text-lg font-bold text-muted-foreground/50">No records found</p>
                 </div>
               ) : (
-                <div className="rounded-3xl border border-primary/5 overflow-hidden shadow-soft">
+                <div className="rounded-2xl sm:rounded-3xl border border-primary/5 overflow-hidden shadow-soft">
                   <Table
                     columns={columns}
                     dataSource={history.map(item => ({ ...item, key: item._id }))}

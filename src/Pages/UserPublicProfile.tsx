@@ -134,19 +134,20 @@ export default function UserPublicProfile() {
                             </TabsTrigger>
                         </TabsList>
 
-                        <TabsContent value="posts" className="mt-6 space-y-6 animate-in fade-in slide-in-from-bottom-2">
+                        <TabsContent value="posts" className="mt-6 space-y-2 animate-in fade-in slide-in-from-bottom-2">
                             {postsLoading ? (
-                                <div className="space-y-4">
+                                <div className="space-y-0">
                                     {[1, 2, 3].map(i => (
-                                        <Card key={i} className="p-4 bg-muted/30">
+                                        <div key={i} className="py-6 sm:py-8 border-b border-primary/5">
                                             <div className="flex gap-4">
-                                                <Skeleton className="w-10 h-10 rounded-full" />
-                                                <div className="flex-1 space-y-2">
+                                                <Skeleton className="w-10 h-10 sm:w-12 sm:h-12 rounded-full" />
+                                                <div className="flex-1 space-y-3">
                                                     <Skeleton className="h-4 w-1/4" />
-                                                    <Skeleton className="h-32 w-full rounded-xl" />
+                                                    <Skeleton className="h-4 w-full" />
+                                                    <Skeleton className="h-32 w-full rounded-2xl sm:rounded-3xl" />
                                                 </div>
                                             </div>
-                                        </Card>
+                                        </div>
                                     ))}
                                 </div>
                             ) : posts.length === 0 ? (
@@ -160,7 +161,7 @@ export default function UserPublicProfile() {
                                     </div>
                                 </Card>
                             ) : (
-                                <div className="grid grid-cols-1 gap-6">
+                                <div className="space-y-0">
                                     {posts.map(post => (
                                         <PostCard
                                             key={post._id}

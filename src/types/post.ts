@@ -3,6 +3,15 @@ export interface User {
     name: string;
     email?: string;
     avatar?: string;
+    cardSettings?: {
+        theme?: string;
+        accentColor?: string;
+        borderRadius?: string;
+        showStatus?: boolean;
+        backgroundColor?: string;
+        textColor?: string;
+        gradient?: string;
+    };
 }
 
 export interface Post {

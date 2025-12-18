@@ -15,28 +15,26 @@ export function BottomNav() {
     const location = useLocation()
 
     return (
-        <nav className="fixed bottom-0 left-0 right-0 z-50 border-t bg-card md:hidden safe-area-bottom">
-            <div className="flex items-center justify-around h-12 max-w-lg mx-auto">
+        <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-sidebar-border bg-white md:hidden safe-area-bottom shadow-[0_-1px_10px_rgba(0,0,0,0.02)]">
+            <div className="flex items-center justify-around h-12 max-w-lg mx-auto px-4">
                 {navItems.map((item) => {
                     const isActive = location.pathname === item.url
                     const Icon = item.icon
 
                     return (
-                        <Button
+                        <Link
                             key={item.url}
-                            variant="ghost"
-                            size="sm"
-                            asChild
+                            to={item.url}
                             className={cn(
-                                "flex-col h-10 w-16 gap-1 rounded-xl",
-                                isActive && "bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary"
+                                "flex flex-col items-center justify-center transition-all duration-300 relative min-w-[64px]",
+                                isActive ? "text-primary scale-110" : "text-muted-foreground/40 hover:text-muted-foreground/60"
                             )}
                         >
-                            <Link to={item.url}>
-                                <Icon className="h-5 w-5" />
-                                {/* <span className="text-[10px] font-medium">{item.title}</span> */}
-                            </Link>
-                        </Button>
+                            <Icon className={cn(
+                                "h-6 w-6 transition-all duration-300",
+                                isActive ? "stroke-[2.5px]" : "stroke-[2px]"
+                            )} />
+                        </Link>
                     )
                 })}
             </div>

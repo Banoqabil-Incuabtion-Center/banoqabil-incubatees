@@ -245,7 +245,7 @@ const Dashboard = () => {
   return (
     <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
       {/* Welcome Section */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-8 rounded-3xl bg-gradient-to-br from-primary/10 via-background to-background border border-primary/5 shadow-soft">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-8 rounded-2xl sm:rounded-[2rem] bg-gradient-to-br from-primary/10 via-background to-background border border-primary/5 shadow-soft">
         <div>
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-foreground tracking-tight">
             Hey, {user.name}! 👋
@@ -286,7 +286,7 @@ const Dashboard = () => {
           // Skeleton loaders for stats
           <>
             {[...Array(4)].map((_, i) => (
-              <Card key={i} className="border-none shadow-premium rounded-3xl overflow-hidden">
+              <Card key={i} className="border-none shadow-premium rounded-2xl sm:rounded-3xl overflow-hidden">
                 <CardContent className="p-4 sm:p-6">
                   <div className="flex items-center justify-between">
                     <div className="space-y-2">
@@ -301,7 +301,7 @@ const Dashboard = () => {
           </>
         ) : (
           <>
-            <Card className="border-none shadow-premium rounded-3xl hover:translate-y-[-4px] transition-transform">
+            <Card className="border-none shadow-premium rounded-2xl sm:rounded-3xl hover:translate-y-[-4px] transition-transform">
               <CardContent className="p-4 sm:p-6">
                 <div className="flex items-center justify-between">
                   <div>
@@ -315,7 +315,7 @@ const Dashboard = () => {
               </CardContent>
             </Card>
 
-            <Card className="border-none shadow-premium rounded-3xl hover:translate-y-[-4px] transition-transform">
+            <Card className="border-none shadow-premium rounded-2xl sm:rounded-3xl hover:translate-y-[-4px] transition-transform">
               <CardContent className="p-4 sm:p-6">
                 <div className="flex items-center justify-between">
                   <div>
@@ -329,7 +329,7 @@ const Dashboard = () => {
               </CardContent>
             </Card>
 
-            <Card className="border-none shadow-premium rounded-3xl hover:translate-y-[-4px] transition-transform">
+            <Card className="border-none shadow-premium rounded-2xl sm:rounded-3xl hover:translate-y-[-4px] transition-transform">
               <CardContent className="p-4 sm:p-6">
                 <div className="flex items-center justify-between">
                   <div>
@@ -343,7 +343,7 @@ const Dashboard = () => {
               </CardContent>
             </Card>
 
-            <Card className="border-none shadow-premium rounded-3xl hover:translate-y-[-4px] transition-transform">
+            <Card className="border-none shadow-premium rounded-2xl sm:rounded-3xl hover:translate-y-[-4px] transition-transform">
               <CardContent className="p-4 sm:p-6">
                 <div className="flex items-center justify-between">
                   <div>
@@ -367,7 +367,7 @@ const Dashboard = () => {
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Admin Announcements Card */}
-        <Card>
+        <Card className="rounded-2xl sm:rounded-3xl overflow-hidden border-none shadow-premium">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               {dashboardLoading ? (
@@ -436,7 +436,7 @@ const Dashboard = () => {
         </Card>
 
         {/* Attendance Pie Chart with total count */}
-        <Card>
+        <Card className="rounded-2xl sm:rounded-3xl overflow-hidden border-none shadow-premium">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               {dashboardLoading ? (
@@ -517,7 +517,7 @@ const Dashboard = () => {
       {/* Weekly Hours */}
       <div className="lg:grid-cols-2 gap-6">
         {/* Weekly Hours Chart */}
-        <Card>
+        <Card className="rounded-2xl sm:rounded-3xl overflow-hidden border-none shadow-premium">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               {dashboardLoading ? (

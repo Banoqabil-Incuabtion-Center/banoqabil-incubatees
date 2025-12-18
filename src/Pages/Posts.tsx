@@ -37,36 +37,30 @@ import { usePostSocket } from "@/hooks/usePostSocket";
 
 const PostSkeleton = () => {
   return (
-    <Card className="overflow-hidden border-primary/5 rounded-[2rem] shadow-premium">
-      <CardHeader className="space-y-0 p-4 sm:p-6">
+    <div className="py-6 sm:py-8 border-b border-primary/5">
+      <div className="space-y-4">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-2 sm:gap-3">
-            <Skeleton className="h-9 w-9 sm:h-11 sm:w-11 rounded-full" />
+            <Skeleton className="h-10 w-10 sm:h-12 sm:w-12 rounded-full" />
             <div className="space-y-1.5">
               <Skeleton className="h-4 w-32" />
               <Skeleton className="h-3 w-20" />
             </div>
           </div>
         </div>
-      </CardHeader>
-      <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6 pt-0 sm:pt-0">
-        <div className="-mx-4 sm:-mx-6 -mt-1">
-          <Skeleton className="w-full h-48 sm:h-64" />
-        </div>
-        <div className="space-y-2">
-          <Skeleton className="h-5 w-3/4" />
-          <Skeleton className="h-4 w-full" />
-          <Skeleton className="h-4 w-full" />
-          <Skeleton className="h-4 w-2/3" />
-        </div>
-        <div className="flex items-center justify-between pt-2">
-          <div className="flex gap-2 w-full">
-            <Skeleton className="h-8 flex-1" />
-            <Skeleton className="h-8 flex-1" />
+        <div className="space-y-4">
+          <div className="space-y-2 px-1">
+            <Skeleton className="h-5 w-3/4" />
+            <Skeleton className="h-4 w-full" />
+          </div>
+          <Skeleton className="w-full aspect-[16/9] rounded-2xl sm:rounded-3xl" />
+          <div className="flex items-center gap-6 px-1">
+            <Skeleton className="h-5 w-16" />
+            <Skeleton className="h-5 w-16" />
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 
@@ -419,7 +413,7 @@ const Posts = () => {
       <div className="max-w-3xl mx-auto space-y-4 sm:space-y-6">
         {/* Posts List */}
         {/* Create Post Input */}
-        <Card className="p-4 sm:p-5 border-primary/5 rounded-[2rem] shadow-premium group hover:shadow-premium-hover transition-all duration-300">
+        <div className="mb-4 sm:mb-8 pb-6 sm:pb-8 border-b border-primary/5">
           <div className="flex gap-4 items-center">
             <div className="shrink-0">
               <UserAvatar
@@ -432,16 +426,19 @@ const Posts = () => {
 
             <div
               onClick={() => setIsModalOpen(true)}
-              className="flex-1 bg-muted/30 hover:bg-primary/5 border border-transparent hover:border-primary/10 transition-all rounded-2xl px-5 py-3.5 cursor-pointer text-muted-foreground text-sm sm:text-base font-bold tracking-tight"
+              className="flex-1 bg-muted/20 hover:bg-primary/5 border border-transparent hover:border-primary/10 transition-all rounded-full px-6 py-3 cursor-pointer text-muted-foreground text-sm sm:text-base font-bold tracking-tight shadow-sm"
             >
               What's on your mind, {user?.name?.split(' ')[0]}?
             </div>
 
-            <div className="hidden sm:flex items-center justify-center h-12 w-12 rounded-2xl bg-primary/5 text-primary group-hover:bg-primary group-hover:text-white transition-all duration-300 cursor-pointer" onClick={() => setIsModalOpen(true)}>
-              <Plus className="w-5 h-5" />
+            <div
+              className="flex items-center justify-center h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-primary text-white shadow-lg shadow-primary/20 hover:scale-110 active:scale-95 transition-all duration-300 cursor-pointer"
+              onClick={() => setIsModalOpen(true)}
+            >
+              <Plus className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
           </div>
-        </Card>
+        </div>
         {/* Loading when empty */}
         {loading && postsToRender.length === 0 && (
           <div className="space-y-4">

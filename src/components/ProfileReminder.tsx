@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { useAuthStore } from "@/hooks/store/authStore"
 import { userRepo } from "@/repositories/userRepo"
 import { toast } from "sonner"
+import { useLocation } from "react-router-dom"
 import {
     Loader2,
     Sparkles,
@@ -30,6 +31,7 @@ import { UserAvatar } from "./UserAvatar"
 
 export function ProfileReminder() {
     const { user, setUser } = useAuthStore()
+    const location = useLocation()
     const [isOpen, setIsOpen] = useState(false)
     const [view, setView] = useState<"summary" | "status" | "bio" | "avatar">("summary")
     const [status, setStatus] = useState("")
@@ -58,24 +60,44 @@ export function ProfileReminder() {
 
     const missingFields = []
     if (user) {
-        if (!user.status) missingFields.push({ id: "status", label: "Current Status", icon: Sparkles, color: "text-primary", bg: "bg-primary/10" })
-        if (!user.bio) missingFields.push({ id: "bio", label: "About Me / Bio", icon: FileText, color: "text-primary", bg: "bg-primary/10" })
+        if (!user.status || user.status.trim() === "") missingFields.push({ id: "status", label: "Current Status", icon: Sparkles, color: "text-primary", bg: "bg-primary/10" })
+        if (!user.bio || user.bio.trim() === "") missingFields.push({ id: "bio", label: "About Me / Bio", icon: FileText, color: "text-primary", bg: "bg-primary/10" })
         if (!user.avatar) missingFields.push({ id: "avatar", label: "Profile Picture", icon: Camera, color: "text-primary", bg: "bg-primary/10" })
     }
 
     useEffect(() => {
-        if (user && missingFields.length > 0) {
-            const timer = setTimeout(() => {
-                setIsOpen(true)
-                if (missingFields.length === 1) {
-                    setView(missingFields[0].id as any)
-                } else {
-                    setView("summary")
-                }
-            }, 3000)
-            return () => clearTimeout(timer)
+        // High priority: Don't show if profile is already complete or we are on edit page
+        if (!user || missingFields.length === 0 || location.pathname === "/profile/edit") {
+            setIsOpen(false)
+            return
         }
-    }, [user])
+
+        const dismissalTime = localStorage.getItem("profileReminderDismissedAt")
+
+        // If dismissed recently, don't show
+        if (dismissalTime) {
+            const lastDismissed = parseInt(dismissalTime)
+            const now = Date.now()
+            // Snooze for 24 hours
+            if (now - lastDismissed < 24 * 60 * 60 * 1000) return
+        }
+
+        const timer = setTimeout(() => {
+            setIsOpen(true)
+            if (missingFields.length === 1) {
+                setView(missingFields[0].id as any)
+            } else {
+                setView("summary")
+            }
+        }, 3000)
+
+        return () => clearTimeout(timer)
+    }, [user, missingFields.length])
+
+    const handleDismiss = () => {
+        setIsOpen(false)
+        localStorage.setItem("profileReminderDismissedAt", Date.now().toString())
+    }
 
     const handleSaveStatus = async () => {
         const trimmedStatus = status.trim()
@@ -131,7 +153,10 @@ export function ProfileReminder() {
     if (!user || missingFields.length === 0) return null
 
     return (
-        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <Dialog open={isOpen} onOpenChange={(open) => {
+            if (!open) handleDismiss()
+            setIsOpen(open)
+        }}>
             <DialogContent className="sm:max-w-[400px] rounded-3xl border-none shadow-premium p-0 overflow-hidden">
                 <div className="bg-background p-6">
 
@@ -167,12 +192,19 @@ export function ProfileReminder() {
                                 ))}
                             </div>
 
-                            <DialogFooter>
+                            <DialogFooter className="flex flex-col gap-2">
                                 <Button
                                     onClick={() => setView(missingFields[0].id as any)}
                                     className="w-full h-14 rounded-2xl font-black shadow-lg shadow-primary/20 bg-primary hover:scale-[1.02] active:scale-[0.98] transition-all"
                                 >
                                     Finish Setup
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    onClick={handleDismiss}
+                                    className="w-full h-10 rounded-xl text-muted-foreground font-semibold hover:bg-transparent hover:text-foreground"
+                                >
+                                    Remind Me Later
                                 </Button>
                             </DialogFooter>
                         </>

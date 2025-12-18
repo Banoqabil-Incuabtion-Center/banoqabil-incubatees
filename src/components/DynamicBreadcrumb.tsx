@@ -28,9 +28,9 @@ export function DynamicBreadcrumb() {
 
     return (
         <Breadcrumb className="hidden md:flex">
-            <BreadcrumbList>
+            <BreadcrumbList className="gap-1 sm:gap-2">
                 <BreadcrumbItem>
-                    <BreadcrumbLink asChild>
+                    <BreadcrumbLink asChild className="text-muted-foreground/60 hover:text-primary transition-colors font-medium text-xs tracking-widest uppercase">
                         <Link to="/">Home</Link>
                     </BreadcrumbLink>
                 </BreadcrumbItem>
@@ -41,12 +41,16 @@ export function DynamicBreadcrumb() {
 
                     return (
                         <React.Fragment key={to}>
-                            <BreadcrumbSeparator />
+                            <BreadcrumbSeparator className="opacity-20 translate-y-[1px]">
+                                /
+                            </BreadcrumbSeparator>
                             <BreadcrumbItem>
                                 {isLast ? (
-                                    <BreadcrumbPage>{name}</BreadcrumbPage>
+                                    <BreadcrumbPage className="font-black text-xs tracking-widest uppercase text-foreground/80">
+                                        {name}
+                                    </BreadcrumbPage>
                                 ) : (
-                                    <BreadcrumbLink asChild>
+                                    <BreadcrumbLink asChild className="text-muted-foreground/60 hover:text-primary transition-colors font-medium text-xs tracking-widest uppercase">
                                         <Link to={to}>{name}</Link>
                                     </BreadcrumbLink>
                                 )}

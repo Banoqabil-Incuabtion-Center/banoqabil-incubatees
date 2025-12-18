@@ -44,7 +44,7 @@ const UserLayout = () => {
             style={
                 {
                     "--sidebar-width": "calc(var(--spacing) * 72)",
-                    "--header-height": "calc(var(--spacing) * 16)",
+                    "--header-height": "calc(var(--spacing) * 14)",
                 } as React.CSSProperties
             }
         >
@@ -61,7 +61,7 @@ const UserLayout = () => {
                         <Outlet />
                     ) : (
                         <PullToRefresh>
-                            <div className={cn("min-h-full", !hideUI && "pb-16 md:pb-0")}>
+                            <div className={cn("min-h-full", !hideUI && "pb-12 md:pb-0")}>
                                 <Outlet />
                             </div>
                         </PullToRefresh>

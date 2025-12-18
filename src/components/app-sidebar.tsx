@@ -54,8 +54,8 @@ export function AppSidebar(props) {
           <SidebarMenuItem>
             <SidebarMenuButton asChild className="h-auto p-0 hover:bg-transparent">
               <Link to="/" className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
-                  <Home className="text-white size-5" />
+                <div className="w-10 h-10 rounded-2xl flex items-center justify-center overflow-hidden">
+                  <img src="/bq-image.png" alt="Logo" className="w-full h-full object-cover" />
                 </div>
                 <div className="flex flex-col">
                   <span className="text-sm font-black tracking-tight leading-none">{APPNAME}</span>

@@ -19,7 +19,11 @@ export function MobilePageTitle({ className }: { className?: string }) {
     const title = PAGE_TITLES[pathname] || "IMS";
 
     return (
-        <div className={cn("font-bold text-xl md:hidden", className)}>
+        <div className={cn(
+            "font-black text-2xl md:hidden tracking-tighter animate-in fade-in slide-in-from-left-4 duration-500",
+            "bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent",
+            className
+        )}>
             {title}
         </div>
     );

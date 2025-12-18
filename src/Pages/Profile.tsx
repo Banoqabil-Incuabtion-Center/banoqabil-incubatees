@@ -37,6 +37,7 @@ import { userRepo } from "../repositories/userRepo"
 import { postRepo } from "../repositories/postRepo"
 import { useAuthStore } from "@/hooks/store/authStore"
 import { UserCard } from "../components/UserCard"
+import { CardCustomizer } from "../components/CardCustomizer"
 import Logout from "@/auth/Logout"
 import { Link, useNavigate } from "react-router-dom"
 import { PostCard } from "../components/PostCard"
@@ -122,8 +123,13 @@ export default function ProfilePage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
 
         {/* Left Column: Profile Summary */}
-        <div className="lg:col-span-4 space-y-6">
+        <div className="lg:col-span-4 space-y-6 animate-in fade-in slide-in-from-left-4 duration-500">
           <UserCard user={user} authUser={authUser} />
+
+          <CardCustomizer
+            user={user}
+            onUpdate={(updatedData) => setUser(updatedData)}
+          />
 
           {/* Account Actions Card (Desktop) */}
           <Card className="hidden lg:block border-none shadow-sm overflow-hidden bg-muted/30">
@@ -182,19 +188,20 @@ export default function ProfilePage() {
                 </CardContent>
               </Card>
             </TabsContent>
-            <TabsContent value="posts" className="mt-6 space-y-6 animate-in fade-in slide-in-from-bottom-2">
+            <TabsContent value="posts" className="mt-6 space-y-2 animate-in fade-in slide-in-from-bottom-2">
               {postsLoading ? (
-                <div className="space-y-4">
+                <div className="space-y-0">
                   {[1, 2, 3].map(i => (
-                    <Card key={i} className="p-4 bg-muted/30">
+                    <div key={i} className="py-6 sm:py-8 border-b border-primary/5">
                       <div className="flex gap-4">
-                        <Skeleton className="w-10 h-10 rounded-full" />
-                        <div className="flex-1 space-y-2">
+                        <Skeleton className="w-10 h-10 sm:w-12 sm:h-12 rounded-full" />
+                        <div className="flex-1 space-y-3">
                           <Skeleton className="h-4 w-1/4" />
-                          <Skeleton className="h-32 w-full rounded-xl" />
+                          <Skeleton className="h-4 w-full" />
+                          <Skeleton className="h-32 w-full rounded-2xl sm:rounded-3xl" />
                         </div>
                       </div>
-                    </Card>
+                    </div>
                   ))}
                 </div>
               ) : myPosts.length === 0 ? (
@@ -208,7 +215,7 @@ export default function ProfilePage() {
                   </Button>
                 </Card>
               ) : (
-                <div className="grid grid-cols-1 gap-6">
+                <div className="space-y-0">
                   {myPosts.map(post => (
                     <PostCard
                       key={post._id}

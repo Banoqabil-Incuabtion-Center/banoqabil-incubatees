@@ -15,6 +15,7 @@ import {
     ChevronRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import api from "@/lib/axios";
 
 interface Activity {
@@ -124,129 +125,128 @@ const Activities: React.FC = () => {
     };
 
     return (
-        <div className="flex flex-col gap-4 sm:gap-5 p-4 sm:p-6">
-            <Card>
-                <CardHeader className="pb-3">
-                    <CardTitle className="flex items-center justify-between">
-                        <span className="flex items-center gap-2">
-                            <Clock className="w-5 h-5" />
-                            Your Activities
-                        </span>
-                        <Badge variant="outline">{pagination.total} total</Badge>
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    {isLoading ? (
-                        <div className="space-y-3">
-                            {[...Array(5)].map((_, i) => (
-                                <div key={i} className="flex items-center gap-4 p-4 border rounded-lg">
-                                    <Skeleton className="h-10 w-10 rounded-full" />
-                                    <div className="flex-1 space-y-2">
-                                        <Skeleton className="h-4 w-32" />
-                                        <Skeleton className="h-3 w-48" />
-                                    </div>
-                                    <Skeleton className="h-4 w-20" />
-                                </div>
-                            ))}
+        <div className="container max-w-2xl mx-auto py-10 px-4 space-y-8 animate-in fade-in duration-700">
+            {/* Header Section */}
+            <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 flex items-center justify-center">
+                            <Clock className="w-6 h-6 text-primary stroke-[2.5px] scale-110 transition-all" />
                         </div>
-                    ) : activities.length === 0 ? (
-                        <div className="text-center py-10 text-muted-foreground">
-                            <Clock className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                            <p>No activities found</p>
+                        <div>
+                            <h1 className="text-2xl font-black tracking-tight">Activities</h1>
                         </div>
-                    ) : (
-                        <div className="space-y-3">
-                            {activities.map((activity) => (
+                    </div>
+                    <div className="flex items-center px-4 py-2 bg-muted/30 rounded-xl border border-muted/50 shadow-sm">
+                        <span className="text-[10px] font-black tracking-widest uppercase opacity-60 mr-2">EVENTS</span>
+                        <Badge className="bg-primary/20 text-primary border-none font-black px-2 py-0.5 text-[10px] rounded-md">{pagination.total}</Badge>
+                    </div>
+                </div>
+            </div>
+
+            <div className="grid gap-4">
+                {isLoading ? (
+                    <div className="grid gap-4">
+                        {[...Array(5)].map((_, i) => (
+                            <div key={i} className="h-28 rounded-[2rem] bg-muted/20 animate-pulse border border-dashed border-muted" />
+                        ))}
+                    </div>
+                ) : activities.length === 0 ? (
+                    <div className="text-center py-24 bg-muted/10 rounded-[2.5rem] border-2 border-dashed border-muted shadow-inner">
+                        <div className="w-20 h-20 rounded-full bg-muted/20 flex items-center justify-center mx-auto mb-6">
+                            <Clock className="w-10 h-10 opacity-30" />
+                        </div>
+                        <p className="font-black text-muted-foreground/60 uppercase tracking-widest">No activities found</p>
+                    </div>
+                ) : (
+                    <div className="grid gap-4">
+                        {activities.map((activity) => (
+                            <div
+                                key={activity._id}
+                                className="group flex items-center gap-4 p-5 rounded-[2rem] border border-muted/30 transition-all duration-300 hover:border-primary/30 hover:shadow-soft bg-background cursor-pointer"
+                            >
+                                {/* Action Icon */}
                                 <div
-                                    key={activity._id}
-                                    className="flex items-start gap-4 p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+                                    className={cn(
+                                        "w-12 h-12 flex items-center justify-center transition-all duration-500 shrink-0",
+                                        activity.action === "login"
+                                            ? "text-green-500"
+                                            : "text-red-500"
+                                    )}
                                 >
-                                    {/* Action Icon */}
-                                    <div
-                                        className={`p-2 rounded-full ${activity.action === "login"
-                                            ? "bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400"
-                                            : "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400"
-                                            }`}
-                                    >
-                                        {activity.action === "login" ? (
-                                            <LogIn className="w-5 h-5" />
-                                        ) : (
-                                            <LogOut className="w-5 h-5" />
+                                    {activity.action === "login" ? (
+                                        <LogIn className="w-6 h-6 stroke-[2.5px]" />
+                                    ) : (
+                                        <LogOut className="w-6 h-6 stroke-[2.5px]" />
+                                    )}
+                                </div>
+
+                                {/* Details */}
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <span className="text-sm font-black tracking-tight capitalize">
+                                            {activity.action}
+                                        </span>
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">•</span>
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
+                                            {activity.device?.type || "Unknown"}
+                                        </span>
+                                    </div>
+
+                                    <div className="flex items-center gap-3 text-[11px] text-muted-foreground font-medium opacity-80">
+                                        <span className="truncate">{activity.device?.browser}</span>
+                                        {activity.location?.city && (
+                                            <>
+                                                <span className="text-muted-foreground/20">•</span>
+                                                <span className="truncate">{activity.location.city}</span>
+                                            </>
                                         )}
                                     </div>
-
-                                    {/* Details */}
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-2 flex-wrap">
-                                            <span className="font-medium capitalize">
-                                                {activity.action}
-                                            </span>
-                                            <Badge variant="secondary" className="gap-1">
-                                                {getDeviceIcon(activity.device?.type)}
-                                                {activity.device?.type || "Unknown"}
-                                            </Badge>
-                                        </div>
-
-                                        <div className="text-sm text-muted-foreground mt-1 space-y-0.5">
-                                            {activity.device?.browser && activity.device?.os && (
-                                                <p className="truncate">
-                                                    {activity.device.browser} on {activity.device.os}
-                                                </p>
-                                            )}
-                                            {activity.location?.city && (
-                                                <p className="flex items-center gap-1">
-                                                    <MapPin className="w-3 h-3" />
-                                                    {activity.location.city}
-                                                    {activity.location.country && `, ${activity.location.country}`}
-                                                </p>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    {/* Time */}
-                                    <div className="text-right shrink-0">
-                                        <p className="text-sm font-medium">
-                                            {getRelativeTime(activity.timestamp || activity.createdAt)}
-                                        </p>
-                                        <p className="text-xs text-muted-foreground">
-                                            {formatTime(activity.timestamp || activity.createdAt)}
-                                        </p>
-                                    </div>
                                 </div>
-                            ))}
-                        </div>
-                    )}
 
-                    {/* Pagination */}
-                    {pagination.totalPages > 1 && (
-                        <div className="flex items-center justify-between mt-6 pt-4 border-t">
-                            <p className="text-sm text-muted-foreground">
-                                Page {pagination.currentPage} of {pagination.totalPages}
-                            </p>
-                            <div className="flex gap-2">
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => fetchActivities(pagination.currentPage - 1)}
-                                    disabled={pagination.currentPage <= 1 || isLoading}
-                                >
-                                    <ChevronLeft className="w-4 h-4 mr-1" />
-                                    Prev
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => fetchActivities(pagination.currentPage + 1)}
-                                    disabled={pagination.currentPage >= pagination.totalPages || isLoading}
-                                >
-                                    Next
-                                    <ChevronRight className="w-4 h-4 ml-1" />
-                                </Button>
+                                {/* Time */}
+                                <div className="flex flex-col items-end shrink-0 pl-3">
+                                    <div className="text-[11px] text-foreground font-black tracking-tight">
+                                        {getRelativeTime(activity.timestamp || activity.createdAt)}
+                                    </div>
+                                    <p className="text-[9px] text-muted-foreground font-black uppercase tracking-widest mt-0.5 opacity-50">
+                                        {formatTime(activity.timestamp || activity.createdAt)}
+                                    </p>
+                                </div>
                             </div>
+                        ))}
+                    </div>
+                )}
+
+                {/* Pagination */}
+                {pagination.totalPages > 1 && (
+                    <div className="flex items-center justify-between mt-12 py-8 border-t border-muted/30">
+                        <p className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground opacity-60">
+                            Page {pagination.currentPage} / {pagination.totalPages}
+                        </p>
+                        <div className="flex gap-3">
+                            <Button
+                                variant="outline"
+                                onClick={() => fetchActivities(pagination.currentPage - 1)}
+                                disabled={pagination.currentPage <= 1 || isLoading}
+                                className="rounded-2xl h-11 px-6 font-black text-xs gap-2 border-2 hover:bg-muted transition-all active:scale-95"
+                            >
+                                <ChevronLeft className="w-4 h-4" />
+                                PREV
+                            </Button>
+                            <Button
+                                variant="outline"
+                                onClick={() => fetchActivities(pagination.currentPage + 1)}
+                                disabled={pagination.currentPage >= pagination.totalPages || isLoading}
+                                className="rounded-2xl h-11 px-6 font-black text-xs gap-2 border-2 hover:bg-muted transition-all active:scale-95"
+                            >
+                                NEXT
+                                <ChevronRight className="w-4 h-4" />
+                            </Button>
                         </div>
-                    )}
-                </CardContent>
-            </Card>
+                    </div>
+                )}
+            </div>
         </div>
     );
 };

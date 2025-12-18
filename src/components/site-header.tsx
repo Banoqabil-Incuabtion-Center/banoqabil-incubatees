@@ -22,45 +22,56 @@ export function SiteHeader() {
   const location = useLocation()
 
   return (
-    <header className="sticky top-0 z-50 flex h-(--header-height) shrink-0 items-center gap-2 border-b border-primary/5 bg-white/80 backdrop-blur-md shadow-premium transition-all ease-in-out group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height)">
-      <div className="flex w-full items-center justify-between px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center gap-2">
-          {/* Hide sidebar trigger on mobile - we have bottom nav instead */}
-          <SidebarTrigger className="-ml-1 hidden md:flex" />
+    <header className="sticky top-0 z-50 flex h-(--header-height) shrink-0 items-center border-b border-sidebar-border bg-white transition-all ease-in-out group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height)">
+      <div className="flex w-full items-center justify-between px-4 sm:px-8 max-w-[1600px] mx-auto">
+        <div className="flex items-center gap-3">
+          {/* Sidebar Trigger - Refined for desktop */}
+          <SidebarTrigger className="-ml-2 hidden md:flex h-9 w-9 rounded-xl hover:bg-primary/5 transition-colors" />
+
           {/* Breadcrumbs - Hidden on mobile */}
-          <div className="hidden md:block">
+          <div className="hidden md:block transition-all duration-300">
             <DynamicBreadcrumb />
           </div>
-          {/* Mobile Page Title */}
+
+          {/* Mobile Page Title - Custom typography */}
           <MobilePageTitle />
         </div>
 
-        <div className="flex items-center gap-2">
-
-
-          <Button variant="ghost" size="icon" className="relative" asChild>
-            <Link to="/notifications">
-              <Bell className="h-5 w-5" />
-              {unreadCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-red-600 border-2 border-white text-[10px] font-black text-white shadow-soft animate-in zoom-in-50 duration-300">
-                  {unreadCount > 9 ? '9+' : unreadCount}
-                </span>
-              )}
-            </Link>
-          </Button>
-
-          {/* Install App Button - Mobile Only */}
+        <div className="flex items-center gap-3">
+          {/* Install App Button - Mobile Only - Premium styling */}
           {isInstallable && (
             <Button
               variant="outline"
               size="sm"
               onClick={installPwa}
-              className="md:hidden gap-1 h-8 rounded-full border-primary/20 text-primary hover:bg-primary/5"
+              className="md:hidden gap-2 h-9 px-4 rounded-2xl border-primary/20 text-primary hover:bg-primary/5 font-black text-[10px] tracking-widest shadow-sm shadow-primary/5 transition-all active:scale-95 uppercase"
             >
-              <Download className="w-4 h-4" />
-              <span className="text-xs">Install</span>
+              <Download className="w-3.5 h-3.5" />
+              Install
             </Button>
           )}
+
+          {/* Notifications Trigger */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="group relative h-9 w-9 rounded-xl hover:bg-primary/5 transition-colors"
+            asChild
+          >
+            <Link to="/notifications">
+              <Bell className={cn(
+                "h-5 w-5 transition-all duration-300",
+                location.pathname === "/notifications"
+                  ? "text-primary scale-110 stroke-[2.5px]"
+                  : "text-muted-foreground/60 group-hover:text-primary"
+              )} />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white border-2 border-background animate-in zoom-in-0 duration-300">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </Link>
+          </Button>
 
           {/* Profile Link Removed - moved to BottomNav */}
         </div>

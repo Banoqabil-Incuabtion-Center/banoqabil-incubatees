@@ -14,6 +14,15 @@ interface User {
   avatar?: string
   bio?: string
   status?: string
+  cardSettings?: {
+    theme?: string
+    accentColor?: string
+    borderRadius?: string
+    showStatus?: boolean
+    backgroundColor?: string
+    textColor?: string
+    gradient?: string
+  }
 }
 
 interface AuthState {
