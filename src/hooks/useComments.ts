@@ -9,7 +9,7 @@ import { CommentLikeAddedPayload, CommentLikeRemovedPayload } from '@/types/like
 
 import { usePostStore } from './store/usePostStore';
 
-export const useComments = (postId: string) => {
+export const useComments = (postId: string, initialLimit: number = 10) => {
     const { comments: allComments, setComments, addComment, addReply, updateComment, deleteComment, setCommentLike, replaceComment } = useCommentStore();
     const { incrementComment, decrementComment } = usePostStore();
     const { user } = useAuthStore(); // Need user for optimistic updates
@@ -18,6 +18,7 @@ export const useComments = (postId: string) => {
     const [hasMore, setHasMore] = useState(true);
     const [page, setPage] = useState(1);
     const [total, setTotal] = useState(0);
+    const [limit, setLimit] = useState(initialLimit);
     const { isConnected, on } = useSocket(postId);
 
     // Track if initial fetch has happened
@@ -46,7 +47,7 @@ export const useComments = (postId: string) => {
         try {
             loadingRef.current = true;
             if (!append) setLoading(true);
-            const res = await commentRepo.getCommentsByPost(postId, pageNum, 5);
+            const res = await commentRepo.getCommentsByPost(postId, pageNum, limit);
 
             if (append) {
                 // Get current comments from store at fetch time
@@ -69,7 +70,7 @@ export const useComments = (postId: string) => {
             loadingRef.current = false;
             setLoading(false);
         }
-    }, [postId, setComments]);
+    }, [postId, setComments, limit]);
 
     // Socket listeners - attach when connected (removed hasFetchedRef condition)
     useEffect(() => {

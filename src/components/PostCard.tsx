@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
@@ -49,7 +49,7 @@ import {
 import { useIsMobile } from "@/hooks/use-mobile";
 import { UserAvatar } from "./UserAvatar";
 
-import { Clock, Edit, ExternalLink, Heart, ImagePlus, MessageSquare, MoreVertical, Trash2, X } from "lucide-react";
+import { Clock, Edit, ExternalLink, Heart, ImagePlus, Maximize2, MessageSquare, MoreVertical, Trash2, X } from "lucide-react";
 import { CommentsSection } from "./CommentsSection";
 import { useAuthStore } from "@/hooks/store/authStore";
 import { likeRepo } from "@/repositories/likeRepo";
@@ -95,6 +95,7 @@ export const PostCard = ({
 }: PostCardProps) => {
   const { user, isAuthenticated } = useAuthStore();
   const { isConnected, on } = useSocket(postId);
+  const navigate = useNavigate();
 
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -104,6 +105,7 @@ export const PostCard = ({
   const [likeCount, setLikeCount] = useState(initialLikeCount);
   const [commentCount, setCommentCount] = useState(initialCommentCount);
   const [isLiking, setIsLiking] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   useEffect(() => {
     setLikeCount(initialLikeCount);
@@ -126,8 +128,8 @@ export const PostCard = ({
   const displayName = isAdmin ? "Admin" : authorName || "User";
   const avatarText = displayName.charAt(0).toUpperCase();
 
-  const isVideo = (url: string) => {
-    return url?.match(/\.(mp4|webm|mov|mkv)$/i);
+  const isVideo = (url: string): boolean => {
+    return !!url?.match(/\.(mp4|webm|mov|mkv)$/i);
   };
 
   const getOptimizedImageUrl = (url: string) => {
@@ -175,8 +177,23 @@ export const PostCard = ({
     }
   }, [postId]);
 
+  const renderDescription = (text: string) => {
+    if (!text) return null;
 
+    // Split by ** to find bold sections
+    const parts = text.split(/(\*\*.*?\*\*)/g);
 
+    return parts.map((part, index) => {
+      if (typeof part === 'string' && part.startsWith('**') && part.endsWith('**')) {
+        return <strong key={index} className="font-black text-foreground">{part.slice(2, -2)}</strong>;
+      }
+      return part;
+    });
+  };
+
+  const getWordCount = (text: string) => {
+    return text.trim().split(/\s+/).filter(word => word.length > 0).length;
+  };
 
   const formatTimeAgo = (dateString: string) => {
     const seconds = Math.floor((Date.now() - new Date(dateString).getTime()) / 1000);
@@ -253,12 +270,21 @@ export const PostCard = ({
   const isMobile = useIsMobile();
 
   const renderEditForm = () => (
-    <div className="space-y-4 py-4">
+    <div className="space-y-4 py-4 min-w-0 overflow-hidden">
       <div className="space-y-2">
-        <Label htmlFor="edit-title">Title</Label>
+        <div className="flex justify-between items-center">
+          <Label htmlFor="edit-title">Title</Label>
+          <span className={cn(
+            "text-[10px] font-bold px-2 py-0.5 rounded-full",
+            editForm.title.length >= 50 ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"
+          )}>
+            {editForm.title.length}/50
+          </span>
+        </div>
         <Input
           id="edit-title"
           value={editForm.title}
+          maxLength={50}
           onChange={(e) =>
             setEditForm({ ...editForm, title: e.target.value })
           }
@@ -266,7 +292,20 @@ export const PostCard = ({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="edit-description">Description</Label>
+        <div className="flex justify-between items-center">
+          <Label htmlFor="edit-description">Description</Label>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] text-muted-foreground font-medium">
+              Use **text** for <b>bold</b>
+            </span>
+            <span className={cn(
+              "text-[10px] font-bold px-2 py-0.5 rounded-full",
+              editForm.description.length >= 5000 ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"
+            )}>
+              {editForm.description.length}/5000
+            </span>
+          </div>
+        </div>
         <Textarea
           id="edit-description"
           rows={4}
@@ -274,6 +313,7 @@ export const PostCard = ({
           onChange={(e) =>
             setEditForm({ ...editForm, description: e.target.value })
           }
+          maxLength={5000}
           className="resize-none"
         />
       </div>
@@ -342,7 +382,7 @@ export const PostCard = ({
 
   return (
     <>
-      <div className="group py-6 sm:py-8 border-b border-primary/5 transition-all duration-300">
+      <div className="group py-6 sm:py-6 border-b border-primary/5 transition-all duration-300">
         <div className="space-y-4">
           <div className="flex items-start justify-between px-1">
             <div className="flex items-center gap-2 sm:gap-3">
@@ -355,20 +395,20 @@ export const PostCard = ({
                 />
               </Link>
 
-              <div className="space-y-0.5">
+              <div className="space-y-0.5 min-w-0">
                 <div className="flex items-center gap-2">
                   {isAdmin ? (
                     <p className="font-semibold text-sm leading-none">{displayName}</p>
                   ) : (
-                    <Link to={`/user/${authorId}`} className="hover:text-primary transition-colors">
-                      <p className="font-black text-sm sm:text-base leading-none tracking-tight">{displayName}</p>
+                    <Link to={`/user/${authorId}`} className="hover:text-primary transition-colors min-w-0">
+                      <p className="font-black text-sm sm:text-base leading-none tracking-tight truncate">{displayName}</p>
                     </Link>
                   )}
                 </div>
-                <div className="flex items-center text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                  <span>{title}</span>
-                  <span className="mx-2 opacity-50">•</span>
-                  <span>{formatTimeAgo(createdAt)}</span>
+                <div className="flex items-center text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider overflow-hidden">
+                  <span className="truncate max-w-[120px] sm:max-w-[200px]">{title}</span>
+                  <span className="mx-2 opacity-50 flex-shrink-0">•</span>
+                  <span className="flex-shrink-0">{formatTimeAgo(createdAt)}</span>
                 </div>
               </div>
             </div>
@@ -443,32 +483,60 @@ export const PostCard = ({
           </div>
 
           <div className="space-y-4">
-            {/* Post Content */}
-            <div className="px-1">
-              <p className="text-sm sm:text-base text-foreground/80 leading-relaxed font-medium">
-                {description}
-              </p>
-            </div>
+            {/* Navigates to dedicated page */}
+            <div
+              onClick={() => navigate(`/posts/${postId}`)}
+              className="cursor-pointer group/content transition-all duration-300"
+            >
+              <div className="space-y-4">
+                {/* Post Content */}
+                <div className="px-1 overflow-hidden">
+                  <div className="text-sm sm:text-base text-foreground/80 leading-relaxed font-medium whitespace-pre-wrap break-words">
+                    {renderDescription(
+                      description.length > 500 && !isExpanded
+                        ? description.slice(0, 500) + "..."
+                        : description
+                    )}
+                    {description.length > 500 && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIsExpanded(!isExpanded);
+                        }}
+                        className="ml-1 text-primary hover:underline font-bold text-xs sm:text-sm flex-shrink-0"
+                      >
+                        {isExpanded ? "Show Less" : "Read More"}
+                      </button>
+                    )}
+                  </div>
+                </div>
 
-            {/* Post Media (Image or Video) */}
-            {image && (
-              <div className="rounded-2xl sm:rounded-3xl overflow-hidden bg-black/5 aspect-[16/9] border border-primary/5 shadow-premium-soft">
-                {isVideo(image) ? (
-                  <VideoPlayer
-                    src={image}
-                    className="w-full h-full object-cover"
-                    playOnHover
-                  />
-                ) : (
-                  <img
-                    src={getOptimizedImageUrl(image)}
-                    alt={title}
-                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
-                    loading="lazy"
-                  />
+                {/* Post Media (Image or Video) */}
+                {image && (
+                  <div className="rounded-2xl sm:rounded-3xl overflow-hidden bg-black/5 aspect-[16/9] border border-primary/5 shadow-premium-soft relative group/media">
+                    {isVideo(image) ? (
+                      <VideoPlayer
+                        src={image}
+                        className="w-full h-full object-cover"
+                        playOnView
+                      />
+                    ) : (
+                      <img
+                        src={getOptimizedImageUrl(image)}
+                        alt={title}
+                        className="w-full h-full object-cover group-hover/media:scale-105 transition-transform duration-700"
+                        loading="lazy"
+                      />
+                    )}
+                    <div className="absolute inset-0 bg-black/0 group-hover/media:bg-black/10 transition-colors duration-300 flex items-center justify-center opacity-0 group-hover/media:opacity-100 pointer-events-none">
+                      <div className="p-3 rounded-full bg-white/20 backdrop-blur-md text-white border border-white/30 shadow-2xl scale-90 group-hover/media:scale-100 transition-all duration-500">
+                        <Maximize2 className="w-5 h-5" />
+                      </div>
+                    </div>
+                  </div>
                 )}
               </div>
-            )}
+            </div>
 
             {/* Link */}
             {link && (
@@ -519,7 +587,7 @@ export const PostCard = ({
             {/* Comments Section */}
             {showComments && postId && (
               <div className="mt-6 pt-6 border-t border-primary/5 animate-in fade-in slide-in-from-top-2 duration-300">
-                <CommentsSection postId={postId} />
+                <CommentsSection postId={postId} compact />
               </div>
             )}
           </div>

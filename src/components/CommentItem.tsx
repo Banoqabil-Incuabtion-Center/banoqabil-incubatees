@@ -44,6 +44,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
     const { user } = useAuthStore();
     const [isReplying, setIsReplying] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
+    const [isExpanded, setIsExpanded] = useState(false);
     const [replyContent, setReplyContent] = useState("");
     const [editContent, setEditContent] = useState(comment.content);
 
@@ -66,7 +67,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
         }
     };
 
-    const handleEdit = () => {
+    const handleEditSubmission = () => {
         if (editContent.trim()) {
             onEdit(comment._id, editContent);
             setIsEditing(false);
@@ -80,12 +81,12 @@ export const CommentItem: React.FC<CommentItemProps> = ({
 
     return (
         <div className="space-y-3">
-            <div className="flex gap-3">
+            <div className="flex gap-2 sm:gap-3">
                 <Link to={`/user/${comment.user?._id}`} className="hover:opacity-80 transition-opacity flex-shrink-0">
                     <UserAvatar
                         src={comment.user?.avatar}
                         name={comment.user?.name}
-                        className="h-8 w-8 sm:h-10 sm:w-10 border-2 border-primary/10 shadow-soft"
+                        className="h-7 w-7 sm:h-9 sm:w-9 border-2 border-primary/10 shadow-soft"
                         fallbackColor="bg-primary"
                         size="sm"
                     />
@@ -93,16 +94,16 @@ export const CommentItem: React.FC<CommentItemProps> = ({
 
                 <div className="flex-1 min-w-0">
                     <div className="flex items-start gap-2 max-w-full">
-                        <div className="bg-primary/5 hover:bg-primary/[0.08] transition-colors rounded-2xl rounded-tl-none px-4 py-3 shadow-soft group relative min-w-[120px]">
-                            <div className="flex items-center justify-between gap-2 mb-1">
+                        <div className="bg-primary/5 hover:bg-primary/[0.08] transition-colors rounded-2xl rounded-tl-none px-3 sm:px-4 py-2 sm:py-3 shadow-soft group relative min-w-[80px]">
+                            <div className="flex items-center justify-between gap-1 mb-0.5 sm:mb-1">
                                 <Link to={`/user/${comment.user?._id}`} className="hover:text-primary transition-colors">
-                                    <p className="text-xs font-black tracking-tight leading-none">{comment.user?.name}</p>
+                                    <p className="text-[10px] sm:text-xs font-black tracking-tight leading-none truncate max-w-[120px]">{comment.user?.name}</p>
                                 </Link>
 
                                 {user?._id === comment.user?._id && (
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
-                                            <Button variant="ghost" size="icon" className="h-6 w-6 -mr-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <Button variant="ghost" size="icon" className="h-5 w-5 sm:h-6 sm:w-6 -mr-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                                 <MoreVertical className="h-3 w-3 text-muted-foreground" />
                                             </Button>
                                         </DropdownMenuTrigger>
@@ -125,14 +126,25 @@ export const CommentItem: React.FC<CommentItemProps> = ({
 
                             {isEditing ? (
                                 <div className="space-y-2 mt-2">
-                                    <Textarea
-                                        value={editContent}
-                                        onChange={(e) => setEditContent(e.target.value)}
-                                        className="min-h-[60px] resize-none bg-background border-primary/10 rounded-xl text-xs"
-                                        rows={2}
-                                    />
+                                    <div className="relative">
+                                        <Textarea
+                                            value={editContent}
+                                            onChange={(e) => setEditContent(e.target.value)}
+                                            className="min-h-[60px] resize-none bg-background border-primary/10 rounded-xl text-xs"
+                                            rows={2}
+                                            maxLength={1000}
+                                        />
+                                        <div className="absolute bottom-1 right-2">
+                                            <span className={cn(
+                                                "text-[8px] font-bold",
+                                                editContent.length >= 1000 ? "text-destructive" : "text-muted-foreground/50"
+                                            )}>
+                                                {editContent.length}/1000
+                                            </span>
+                                        </div>
+                                    </div>
                                     <div className="flex gap-2">
-                                        <Button size="sm" onClick={handleEdit} className="h-7 text-[10px] rounded-lg">
+                                        <Button size="sm" onClick={handleEditSubmission} className="h-7 text-[10px] rounded-lg">
                                             <Send className="w-3 h-3 mr-1" />
                                             Save
                                         </Button>
@@ -143,18 +155,29 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                                     </div>
                                 </div>
                             ) : (
-                                <p className="text-sm leading-relaxed text-foreground/90 break-words font-medium">
-                                    {comment.content}
-                                </p>
+                                <div className="text-xs sm:text-sm leading-relaxed text-foreground/90 break-words font-medium">
+                                    {comment.content.length > 300 && !isExpanded
+                                        ? comment.content.slice(0, 300) + "..."
+                                        : comment.content
+                                    }
+                                    {comment.content.length > 300 && (
+                                        <button
+                                            onClick={() => setIsExpanded(!isExpanded)}
+                                            className="ml-1 text-primary hover:underline font-bold text-[10px]"
+                                        >
+                                            {isExpanded ? "Show Less" : "Read More"}
+                                        </button>
+                                    )}
+                                </div>
                             )}
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-4 px-2 mt-1.5">
+                    <div className="flex items-center gap-3 sm:gap-4 px-2 mt-1">
                         <button
                             onClick={() => onLike(comment._id)}
                             className={cn(
-                                "text-[11px] font-bold flex items-center gap-1.5 transition-all hover:scale-105",
+                                "text-[10px] sm:text-[11px] font-bold flex items-center gap-1 transition-all hover:scale-105",
                                 comment.userLiked ? "text-red-500" : "text-muted-foreground/60 hover:text-red-500"
                             )}
                         >
@@ -169,21 +192,21 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                         {canReply && !isReplying && (
                             <button
                                 onClick={() => setIsReplying(true)}
-                                className="text-[11px] font-bold text-muted-foreground/60 hover:text-primary flex items-center gap-1.5 transition-all hover:scale-105"
+                                className="text-[10px] sm:text-[11px] font-bold text-muted-foreground/60 hover:text-primary flex items-center gap-1 transition-all hover:scale-105"
                             >
                                 <Reply className="w-3 h-3" />
                                 Reply
                             </button>
                         )}
 
-                        <span className="text-[10px] font-bold text-muted-foreground/40 font-mono tracking-tighter">
+                        <span className="text-[9px] sm:text-[10px] font-bold text-muted-foreground/40 font-mono tracking-tighter">
                             {formatTimeAgo(comment.createdAt)}
                         </span>
                     </div>
 
                     {isReplying && (
-                        <div className="space-y-2 pt-3 pl-2">
-                            <div className="flex gap-3 items-start">
+                        <div className="space-y-2 pt-3 pl-1 sm:pl-2">
+                            <div className="flex gap-2 sm:gap-3 items-start">
                                 <UserAvatar
                                     src={user?.avatar}
                                     name={user?.name}
@@ -191,7 +214,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                                     fallbackColor="bg-primary"
                                     size="sm"
                                 />
-                                <div className="flex-1 space-y-2">
+                                <div className="flex-1 space-y-1">
                                     <div className="bg-muted/30 border border-primary/5 rounded-2xl p-1 flex gap-2 items-center">
                                         <input
                                             placeholder={`Reply to ${comment.user?.name}...`}
@@ -203,15 +226,16 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                                                     handleReply();
                                                 }
                                             }}
-                                            className="flex-1 bg-transparent border-none focus:ring-0 text-xs py-1.5 px-3 outline-none font-medium"
+                                            className="flex-1 bg-transparent border-none focus:ring-0 text-[11px] py-1 px-2 outline-none font-medium"
+                                            maxLength={1000}
                                         />
                                         <Button
                                             size="icon"
                                             disabled={!replyContent.trim()}
                                             onClick={handleReply}
-                                            className="h-7 w-7 rounded-lg bg-primary shadow-md shadow-primary/10 shrink-0"
+                                            className="h-6 w-6 sm:h-7 sm:w-7 rounded-lg bg-primary shadow-md shadow-primary/10 shrink-0"
                                         >
-                                            <Send className="w-3 h-3 text-white" />
+                                            <Send className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
                                         </Button>
                                         <Button
                                             size="icon"
@@ -220,11 +244,21 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                                                 setIsReplying(false);
                                                 setReplyContent("");
                                             }}
-                                            className="h-7 w-7 rounded-lg shrink-0"
+                                            className="h-6 w-6 sm:h-7 sm:w-7 rounded-lg shrink-0"
                                         >
-                                            <X className="w-3 h-3" />
+                                            <X className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                                         </Button>
                                     </div>
+                                    {replyContent.length > 800 && (
+                                        <div className="flex justify-end px-2">
+                                            <span className={cn(
+                                                "text-[8px] font-bold",
+                                                replyContent.length >= 1000 ? "text-destructive" : "text-muted-foreground/50"
+                                            )}>
+                                                {replyContent.length}/1000
+                                            </span>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -232,9 +266,9 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                 </div>
             </div>
 
-            {/* Nested Replies */}
+            {/* Nested Replies - Responsive Indentation */}
             {comment.replies && comment.replies.length > 0 && (
-                <div className="ml-6 sm:ml-9 space-y-4 border-l-2 border-primary/5 pl-4 sm:pl-6 mt-2">
+                <div className="ml-4 sm:ml-6 space-y-4 border-l-2 border-primary/5 pl-3 sm:pl-4 mt-1 sm:mt-2">
                     {comment.replies.map((reply) => (
                         <CommentItem
                             key={reply._id}

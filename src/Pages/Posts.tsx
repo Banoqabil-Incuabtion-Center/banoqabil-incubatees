@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useCallback, memo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import {
   Plus,
   User,
@@ -98,6 +98,7 @@ const CreatePostDialog = memo(({
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+
     if (errors[name]) {
       setErrors((prev: any) => {
         const newErrors = { ...prev };
@@ -169,34 +170,56 @@ const CreatePostDialog = memo(({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-[580px]">
+      <DialogContent className="sm:max-w-[580px] overflow-hidden">
         <DialogHeader>
-          <DialogTitle className="text-xl">Create New Post</DialogTitle>
+          <DialogTitle className="text-xl break-words">Create New Post</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-5 py-4">
+        <div className="space-y-5 py-4 min-w-0">
           <div className="space-y-2">
-            <Label htmlFor="title" className="text-sm font-medium">
-              Title <span className="text-destructive">*</span>
-            </Label>
+            <div className="flex justify-between items-center">
+              <Label htmlFor="title" className="text-sm font-medium">
+                Title <span className="text-destructive">*</span>
+              </Label>
+              <span className={cn(
+                "text-[10px] font-bold px-2 py-0.5 rounded-full",
+                formData.title.length >= 50 ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"
+              )}>
+                {formData.title.length}/50
+              </span>
+            </div>
             <Input
               id="title"
               name="title"
               value={formData.title}
               onChange={handleChange}
               disabled={isCreating}
+              maxLength={50}
               placeholder="Enter an engaging title..."
               className={errors.title ? "border-destructive" : ""}
             />
             {errors.title && (
-              <p className="text-xs text-destructive">{errors.title}</p>
+              <p className="text-xs text-destructive font-medium">{errors.title}</p>
             )}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description" className="text-sm font-medium">
-              Description <span className="text-destructive">*</span>
-            </Label>
+            <div className="flex justify-between items-center">
+              <Label htmlFor="description" className="text-sm font-medium">
+                Description <span className="text-destructive">*</span>
+              </Label>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] text-muted-foreground font-medium">
+                  Use **text** for <b>bold</b>
+                </span>
+                <span className={cn(
+                  "text-[10px] font-bold px-2 py-0.5 rounded-full",
+                  formData.description.length >= 5000 ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"
+                )}>
+                  {formData.description.length}/5000
+                </span>
+              </div>
+            </div>
             <Textarea
               id="description"
               name="description"
@@ -204,11 +227,12 @@ const CreatePostDialog = memo(({
               value={formData.description}
               onChange={handleChange}
               disabled={isCreating}
+              maxLength={5000}
               placeholder="Share your thoughts, ideas, or updates..."
               className={`resize-none ${errors.description ? "border-destructive" : ""}`}
             />
             {errors.description && (
-              <p className="text-xs text-destructive">{errors.description}</p>
+              <p className="text-xs text-destructive font-medium">{errors.description}</p>
             )}
           </div>
 
@@ -371,18 +395,6 @@ const Posts = () => {
   }, []);
 
   const handlePostCreated = useCallback(() => {
-    // No manual refresh needed as socket or optimistic update handles it
-    // But if we want to be safe, we could invalidate queries or re-fetch first page
-    // The previous implementation refreshed the list.
-    // Given we have sockets, we might not need to do anything if the socket sends the new post back.
-    // If we want to rely on the Repo call adding it we can.
-    // However, existing code suggests createPost doesn't return the full post object with user population always populated for the list? 
-    // Let's rely on the socket for the definitive update OR the store's addPost.
-    // The store doesn't seem to have a manual 'refresh' method exposed easily without clearing.
-    // Let's assume socket 'post:created' handles it or the user manually refreshes if needed. 
-    // Actually, createPostDialog's handleCreate does NOT update store locally in current code. 
-    // Existing socket hook `usePostSocket` listens to `post:created` and calls `addPost`. 
-    // So we should be good if the backend emits the event.
   }, []);
 
   const handleDelete = useCallback(async (postId: string) => {
