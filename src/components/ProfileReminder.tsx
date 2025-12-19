@@ -192,19 +192,19 @@ export function ProfileReminder() {
                                 ))}
                             </div>
 
-                            <DialogFooter className="flex flex-col gap-2">
-                                <Button
-                                    onClick={() => setView(missingFields[0].id as any)}
-                                    className="w-full h-14 rounded-2xl font-black shadow-lg shadow-primary/20 bg-primary hover:scale-[1.02] active:scale-[0.98] transition-all"
-                                >
-                                    Finish Setup
-                                </Button>
+                            <DialogFooter className="flex flex-col-reverse items-baseline sm:flex-row sm:justify-end gap-2">
                                 <Button
                                     variant="ghost"
                                     onClick={handleDismiss}
-                                    className="w-full h-10 rounded-xl text-muted-foreground font-semibold hover:bg-transparent hover:text-foreground"
+                                    className="w-full sm:w-auto h-10 rounded-xl text-muted-foreground font-semibold hover:bg-transparent hover:text-foreground"
                                 >
                                     Remind Me Later
+                                </Button>
+                                <Button
+                                    onClick={() => setView(missingFields[0].id as any)}
+                                    className="w-full sm:w-auto h-14 sm:h-12 rounded-2xl font-black shadow-lg shadow-primary/20 bg-primary hover:scale-[1.02] active:scale-[0.98] transition-all"
+                                >
+                                    Finish Setup
                                 </Button>
                             </DialogFooter>
                         </>
