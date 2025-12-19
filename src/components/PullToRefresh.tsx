@@ -10,11 +10,12 @@ interface PullToRefreshProps {
 const PullToRefresh: React.FC<PullToRefreshProps> = ({
     children,
     onRefresh,
-    threshold = 100
+    threshold = 120 // Increased default threshold
 }) => {
     const [startY, setStartY] = useState(0);
     const [currentY, setCurrentY] = useState(0);
     const [refreshing, setRefreshing] = useState(false);
+    const [isPulling, setIsPulling] = useState(false);
     const contentRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -22,46 +23,69 @@ const PullToRefresh: React.FC<PullToRefreshProps> = ({
         if (!element) return;
 
         const handleTouchStart = (e: TouchEvent) => {
-            // Check element scroll position instead of window
-            if (element.scrollTop === 0) {
+            // Only capture start if we are at the very top
+            if (element.scrollTop <= 0) {
                 setStartY(e.touches[0].clientY);
+                setIsPulling(true);
+            } else {
+                setIsPulling(false);
             }
         };
 
         const handleTouchMove = (e: TouchEvent) => {
+            if (!isPulling || startY === 0) return;
+
             const touchY = e.touches[0].clientY;
             const diff = touchY - startY;
 
-            // Only scroll if we started at the top and are pulling down
-            if (element.scrollTop === 0 && diff > 0 && startY > 0) {
-                // Add resistance/damping to the pull
-                const dampenedDiff = Math.min(diff * 0.5, threshold * 1.5);
+            // Only act if we are at the top and pulling DOWN
+            if (element.scrollTop <= 0 && diff > 0) {
+                // Add stronger resistance/damping
+                // diff * 0.4 instead of 0.5 for better feel
+                const dampenedDiff = Math.min(diff * 0.4, threshold * 1.8);
                 setCurrentY(dampenedDiff);
 
-                // Prevent default scrolling only if we are actively pulling down
-                if (dampenedDiff > 10) {
+                // Prevent default scrolling (native refresh) only if we've pulled significantly
+                if (dampenedDiff > 15) {
                     if (e.cancelable) e.preventDefault();
                 }
+            } else if (diff < 0) {
+                // If they start pulling UP, stop the pull tracking
+                setStartY(0);
+                setCurrentY(0);
+                setIsPulling(false);
             }
         };
 
         const handleTouchEnd = async () => {
-            // ... existing logic ...
-            if (currentY > threshold) {
+            if (!isPulling) return;
+
+            // Only refresh if the pull exceeded the threshold significantly
+            if (currentY >= threshold) {
                 setRefreshing(true);
                 setCurrentY(threshold);
 
-                if (onRefresh) {
-                    await onRefresh();
-                } else {
-                    window.location.reload();
+                try {
+                    if (onRefresh) {
+                        await onRefresh();
+                    } else {
+                        // Small delay before reload for visual feedback
+                        await new Promise(resolve => setTimeout(resolve, 500));
+                        window.location.reload();
+                    }
+                } catch (error) {
+                    console.error("Refresh failed:", error);
+                } finally {
+                    setRefreshing(false);
+                    setCurrentY(0);
                 }
-
-                setRefreshing(false);
+            } else {
+                // Reset smoothly
+                setCurrentY(0);
             }
 
-            setCurrentY(0);
             setStartY(0);
+            setIsPulling(false);
         };
 
         element.addEventListener('touchstart', handleTouchStart);
@@ -73,7 +97,7 @@ const PullToRefresh: React.FC<PullToRefreshProps> = ({
             element.removeEventListener('touchmove', handleTouchMove);
             element.removeEventListener('touchend', handleTouchEnd);
         };
-    }, [startY, currentY, threshold, onRefresh]);
+    }, [startY, currentY, threshold, onRefresh, isPulling]);
 
     return (
         <div ref={contentRef} className="h-full overflow-y-auto relative overscroll-y-contain">
