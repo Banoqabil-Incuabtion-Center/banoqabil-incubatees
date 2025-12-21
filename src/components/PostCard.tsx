@@ -57,6 +57,7 @@ import { commentRepo } from "@/repositories/commentRepo";
 import { useSocket } from "@/hooks/useSocket";
 import { toast } from "sonner";
 import { VideoPlayer } from "./VideoPlayer";
+import { PostActions } from "./PostActions";
 
 interface PostCardProps {
   postId: string;
@@ -101,19 +102,10 @@ export const PostCard = ({
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [showComments, setShowComments] = useState(false);
-  const [liked, setLiked] = useState(initialUserLiked);
-  const [likeCount, setLikeCount] = useState(initialLikeCount);
-  const [commentCount, setCommentCount] = useState(initialCommentCount);
+  // Removed local like/comment count state as they are now handled via props and store/PostActions
+
   const [isLiking, setIsLiking] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
-
-  useEffect(() => {
-    setLikeCount(initialLikeCount);
-  }, [initialLikeCount]);
-
-  useEffect(() => {
-    setCommentCount(initialCommentCount);
-  }, [initialCommentCount]);
 
   const [editForm, setEditForm] = useState({
     title,
@@ -222,26 +214,7 @@ export const PostCard = ({
     }
   };
 
-  const handleLike = async () => {
-    if (!isAuthenticated) return;
-
-    // Optimistic update immediately
-    const previousLiked = liked;
-    const previousCount = likeCount;
-
-    const newLikedState = !liked;
-    setLiked(newLikedState);
-    setLikeCount(prev => newLikedState ? prev + 1 : Math.max(0, prev - 1));
-
-    try {
-      await likeRepo.toggleLike(postId);
-    } catch (error) {
-      // Revert if failed
-      setLiked(previousLiked);
-      setLikeCount(previousCount);
-      console.error("Failed to toggle like:", error);
-    }
-  };
+  // Removed handleLike as it's now in PostActions
 
   const isMobile = useIsMobile();
 
@@ -533,31 +506,14 @@ export const PostCard = ({
 
             {/* Action Buttons */}
             <div className="flex pt-2 px-1">
-              <div className="flex items-center gap-6">
-                <button
-                  className={cn(
-                    "flex items-center gap-1.5 text-sm font-bold transition-all hover:scale-105 active:scale-95",
-                    liked ? "text-red-500" : "text-muted-foreground hover:text-red-500"
-                  )}
-                  onClick={handleLike}
-                >
-                  <Heart
-                    className={cn("w-5 h-5 transition-transform duration-300", liked && "fill-current")}
-                  />
-                  <span>{likeCount > 0 ? likeCount : "Like"}</span>
-                </button>
-
-                <button
-                  className={cn(
-                    "flex items-center gap-1.5 text-sm font-bold transition-all hover:scale-105 active:scale-95",
-                    showComments ? "text-primary" : "text-muted-foreground hover:text-primary"
-                  )}
-                  onClick={() => setShowComments(!showComments)}
-                >
-                  <MessageSquare className="w-5 h-5" />
-                  <span>{commentCount > 0 ? commentCount : "Comment"}</span>
-                </button>
-              </div>
+              <PostActions
+                postId={postId}
+                initialLikeCount={initialLikeCount}
+                initialCommentCount={initialCommentCount}
+                initialUserLiked={initialUserLiked}
+                onCommentClick={() => setShowComments(!showComments)}
+                compact
+              />
             </div>
 
             {/* Comments Section */}

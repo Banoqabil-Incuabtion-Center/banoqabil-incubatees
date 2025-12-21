@@ -19,6 +19,7 @@ import {
 import { likeRepo } from "@/repositories/likeRepo";
 import { useAuthStore } from "@/hooks/store/authStore";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PostActions } from "@/components/PostActions";
 
 export const PostDetail = () => {
     const { id } = useParams<{ id: string }>();
@@ -28,9 +29,8 @@ export const PostDetail = () => {
     const [post, setPost] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+
     const [imgLoaded, setImgLoaded] = useState(false);
-    const [liked, setLiked] = useState(false);
-    const [likeCount, setLikeCount] = useState(0);
 
     useEffect(() => {
         const fetchPostDetail = async () => {
@@ -38,9 +38,15 @@ export const PostDetail = () => {
             try {
                 setLoading(true);
                 const res = await postRepo.getUserPostById(id);
+                console.log("DEBUG: PostDetail fetched post:", res.post);
+                console.log("DEBUG: PostDetail userLiked check:", {
+                    userLiked: res.post.userLiked,
+                    liked: res.post.liked,
+                    isLiked: res.post.isLiked,
+                    likesCount: res.post.likesCount,
+                    likeCount: res.post.likeCount
+                });
                 setPost(res.post);
-                setLikeCount(res.post.likesCount || 0);
-                setLiked(res.post.userLiked || false);
                 setError(null);
             } catch (err) {
                 console.error("Failed to fetch post:", err);
@@ -68,21 +74,7 @@ export const PostDetail = () => {
         });
     };
 
-    const handleLike = async () => {
-        if (!isAuthenticated || !post) return;
-        const previousState = { liked, likeCount };
-        const newLiked = !liked;
-        setLiked(newLiked);
-        setLikeCount(prev => newLiked ? prev + 1 : Math.max(0, prev - 1));
-
-        try {
-            await likeRepo.toggleLike(post._id);
-        } catch (err) {
-            setLiked(previousState.liked);
-            setLikeCount(previousState.likeCount);
-            console.error("Like failed:", err);
-        }
-    };
+    // Removed handleLike as it's now in PostActions
 
     const formatTimeAgo = (dateString: string) => {
         const seconds = Math.floor((Date.now() - new Date(dateString).getTime()) / 1000);
@@ -220,20 +212,13 @@ export const PostDetail = () => {
                             {/* Interaction Stats */}
                             <div className="flex items-center justify-between py-3 border-y border-primary/5">
                                 <div className="flex items-center gap-6">
-                                    <button
-                                        onClick={handleLike}
-                                        className={cn(
-                                            "flex items-center gap-1.5 transition-all hover:scale-110 active:scale-95",
-                                            liked ? "text-red-500" : "text-muted-foreground hover:text-red-500"
-                                        )}
-                                    >
-                                        <Heart className={cn("w-5 h-5", liked && "fill-current")} />
-                                        <span className="text-[10px] font-black pt-0.5 uppercase tracking-tighter">{likeCount} Likes</span>
-                                    </button>
-                                    <div className="flex items-center gap-1.5 text-muted-foreground">
-                                        <MessageSquare className="w-5 h-5" />
-                                        <span className="text-[10px] font-black pt-0.5 uppercase tracking-tighter">{post.commentsCount || 0} Comments</span>
-                                    </div>
+                                    <PostActions
+                                        postId={post._id}
+                                        initialLikeCount={post.likesCount ?? post.likeCount ?? 0}
+                                        initialCommentCount={post.commentsCount || 0}
+                                        initialUserLiked={post.userLiked ?? post.liked ?? post.isLiked ?? false}
+                                        showCommentCount={true}
+                                    />
                                 </div>
                                 <button className="text-muted-foreground hover:text-primary transition-all active:rotate-12">
                                     <Share2 className="w-5 h-5" />

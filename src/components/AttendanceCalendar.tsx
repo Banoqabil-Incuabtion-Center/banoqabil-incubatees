@@ -243,7 +243,10 @@ const AttendanceCalendar: React.FC<Props> = ({ userId }) => {
                                         {day.getDate()}
                                     </span>
                                     {record && record.status === 'Absent' ? (
-                                        <span className="text-[9px] font-bold uppercase text-red-500 mt-1">Absent</span>
+                                        <div className={cn(
+                                            "w-1.5 h-1.5 rounded-full mt-1.5 shadow-sm group-hover:scale-125 transition-transform",
+                                            getStatusColor(record.status)
+                                        )} />
                                     ) : record && (
                                         <div className={cn(
                                             "w-1.5 h-1.5 rounded-full mt-1.5 shadow-sm group-hover:scale-125 transition-transform",
