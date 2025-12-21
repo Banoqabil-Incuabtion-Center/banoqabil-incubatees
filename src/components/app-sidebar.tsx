@@ -72,90 +72,26 @@ export function AppSidebar(props) {
 
         <NavMain items={data.navMain} />
         <div className="mt-auto p-4">
-          <DropdownMenu>
-            <DropdownMenuTrigger className="w-full focus-visible:outline-none">
-              <div className="flex items-center gap-3 p-3 rounded-2xl bg-card border border-primary/5 shadow-soft hover:shadow-premium hover:border-primary/10 hover:translate-y-[-2px] transition-all group">
-                <UserAvatar
-                  src={user?.avatar}
-                  name={user?.name}
-                  className="h-10 w-10 border-2 border-primary/10 shadow-soft"
-                  fallbackColor="bg-primary"
-                />
+          <Link
+            to="/profile"
+            className="flex items-center gap-3 p-3 rounded-2xl bg-card border border-primary/5 shadow-soft hover:shadow-premium hover:border-primary/10 hover:translate-y-[-2px] transition-all group"
+          >
+            <UserAvatar
+              src={user?.avatar}
+              name={user?.name}
+              className="h-10 w-10 border-2 border-primary/10 shadow-soft"
+              fallbackColor="bg-primary"
+            />
 
-                <div className="flex flex-col items-start flex-1 min-w-0">
-                  <span className="text-xs font-black truncate w-full text-left tracking-tight">
-                    {isLoading ? "Loading..." : user?.name}
-                  </span>
-                  <span className="text-[10px] text-muted-foreground truncate w-full text-left font-bold uppercase tracking-wider">
-                    {isLoading ? "Loading..." : "Student"}
-                  </span>
-                </div>
-
-                <ChevronUp className="w-4 h-4 text-muted-foreground/30 group-hover:text-primary transition-colors" />
-              </div>
-            </DropdownMenuTrigger>
-
-            <DropdownMenuContent
-              side="top"
-              align="end"
-              className="w-56 mb-2"
-            >
-              <DropdownMenuLabel className="p-3">
-                <div className="flex items-center gap-3">
-                  <UserAvatar
-                    src={user?.avatar}
-                    name={user?.name}
-                    className="h-9 w-9"
-                    fallbackColor="bg-primary"
-                  />
-                  <div className="flex flex-col space-y-0.5">
-                    <p className="text-sm font-black leading-none tracking-tight">
-                      {user?.name}
-                    </p>
-                    <p className="text-[10px] font-bold leading-none text-muted-foreground truncate max-w-[120px]">
-                      {user?.email}
-                    </p>
-                  </div>
-                </div>
-              </DropdownMenuLabel>
-
-              <DropdownMenuSeparator />
-
-              {isInstallable && (
-                <>
-                  <DropdownMenuItem onClick={installPwa} className="cursor-pointer font-medium py-2 rounded-lg">
-                    <Download className="mr-2 h-4 w-4 text-primary" />
-                    <span>Install App</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                </>
-              )}
-
-              <DropdownMenuItem asChild>
-                <Link to="/profile" className="cursor-pointer font-medium py-2 rounded-lg">
-                  <User className="mr-2 h-4 w-4 text-muted-foreground" />
-                  <span>Profile</span>
-                </Link>
-              </DropdownMenuItem>
-
-              <DropdownMenuItem asChild>
-                <Link to="/activities" className="cursor-pointer font-medium py-2 rounded-lg">
-                  <History className="mr-2 h-4 w-4 text-muted-foreground" />
-                  <span>Activities</span>
-                </Link>
-              </DropdownMenuItem>
-
-              <DropdownMenuSeparator />
-
-              <DropdownMenuItem
-                onClick={triggerLogout}
-                className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50"
-              >
-                <LogOut className="mr-2 h-4 w-4" />
-                <span>Logout</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+            <div className="flex flex-col items-start flex-1 min-w-0">
+              <span className="text-xs font-black truncate w-full text-left tracking-tight">
+                {isLoading ? "Loading..." : user?.name}
+              </span>
+              <span className="text-[10px] text-muted-foreground truncate w-full text-left font-bold uppercase tracking-wider">
+                {isLoading ? "Loading..." : (user?.status || user?.course)}
+              </span>
+            </div>
+          </Link>
         </div>
 
         <Logout />

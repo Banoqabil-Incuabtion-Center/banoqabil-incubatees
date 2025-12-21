@@ -21,7 +21,7 @@ const PrivateRoute = ({ children }: PrivateRouteProps) => {
 
       try {
         const res = await userRepo.profile()
-        setUser(res.data)
+        setUser(res.user || res)
         setIsChecking(false)
       } catch (err) {
         console.error("Auth verification failed:", err)

@@ -375,7 +375,7 @@ const Posts = () => {
     observerRef.current = new IntersectionObserver(entries => {
       if (entries[0].isIntersecting) {
         if (hasMoreUser) {
-          fetchPosts(pageUser + 1, 10, 'user');
+          fetchPosts(pageUser + 1, 1, 'user');
         }
       }
     });
@@ -386,7 +386,7 @@ const Posts = () => {
   // Initial fetch
   useEffect(() => {
     if (userPosts.length === 0) {
-      fetchPosts(1, 10, 'user');
+      fetchPosts(1, 1, 'user');
     }
   }, [fetchPosts, userPosts.length]);
 

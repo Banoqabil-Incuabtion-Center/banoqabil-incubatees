@@ -7,10 +7,12 @@ interface User {
   name: string
   email: string
   bq_id: string
+  incubation_id?: string
   phone: string
   CNIC: string
   course: string
   shift?: 'Morning' | 'Evening'
+  workingDays?: number[]
   avatar?: string
   bio?: string
   status?: string

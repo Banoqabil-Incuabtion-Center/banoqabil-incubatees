@@ -150,7 +150,7 @@ export function DirectSidebar({ className, activeUserId, onUserSelect }: DirectS
                                             variant="ghost"
                                             onClick={() => handleUserSelect(user._id)}
                                             className={cn(
-                                                "w-full justify-start items-center px-3 py-7 rounded-2xl transition-all duration-300 group relative",
+                                                "w-full justify-start items-center px-3 py-7 rounded-2xl transition-all duration-300 group relative overflow-hidden",
                                                 activeUserId === user._id
                                                     ? "bg-primary/10 text-primary shadow-soft"
                                                     : "hover:bg-primary/5 text-muted-foreground hover:text-foreground hover:translate-x-1"
@@ -182,16 +182,16 @@ export function DirectSidebar({ className, activeUserId, onUserSelect }: DirectS
                                     variant="ghost"
                                     onClick={() => onUserSelect('announcements')}
                                     className={cn(
-                                        "w-full justify-start px-3 py-7 rounded-2xl transition-all duration-300 group relative",
+                                        "w-full justify-start px-3 py-7 rounded-2xl transition-all duration-300 group relative overflow-hidden",
                                         activeUserId === 'announcements'
                                             ? "bg-primary/10 text-primary shadow-soft"
                                             : "hover:bg-primary/5 text-muted-foreground hover:text-foreground hover:translate-x-1"
                                     )}
                                 >
-                                    <div className="h-10 w-10 flex items-center justify-center rounded-2xl bg-primary/10 text-primary mr-3 shadow-soft border border-primary/5">
+                                    <div className="h-10 w-10 flex items-center justify-center rounded-2xl bg-primary/10 text-primary mr-3 shadow-soft border border-primary/5 shrink-0">
                                         <Megaphone className="h-5 w-5" />
                                     </div>
-                                    <div className="font-bold text-sm">Announcements</div>
+                                    <div className="font-bold text-sm truncate">Announcements</div>
                                 </Button>
                             </div>
 
@@ -207,16 +207,16 @@ export function DirectSidebar({ className, activeUserId, onUserSelect }: DirectS
                                             variant="ghost"
                                             onClick={() => onUserSelect(group.id)}
                                             className={cn(
-                                                "w-full justify-start px-3 py-7 rounded-2xl transition-all duration-300 group relative",
+                                                "w-full justify-start px-3 py-7 rounded-2xl transition-all duration-300 group relative overflow-hidden",
                                                 activeUserId === group.id
                                                     ? "bg-primary/10 text-primary shadow-soft"
                                                     : "hover:bg-primary/5 text-muted-foreground hover:text-foreground hover:translate-x-1"
                                             )}
                                         >
-                                            <div className="h-10 w-10 flex items-center justify-center rounded-2xl bg-muted/50 text-muted-foreground text-[10px] font-bold mr-3 border border-primary/5">
+                                            <div className="h-10 w-10 flex items-center justify-center rounded-2xl bg-muted/50 text-muted-foreground text-[10px] font-bold mr-3 border border-primary/5 shrink-0">
                                                 <Hash className="w-5 h-5" />
                                             </div>
-                                            <div className="flex-1 text-left truncate font-bold text-sm">
+                                            <div className="flex-1 text-left truncate font-bold text-sm min-w-0">
                                                 {group.name}
                                             </div>
                                         </Button>
@@ -263,7 +263,7 @@ export function DirectSidebar({ className, activeUserId, onUserSelect }: DirectS
                                                     variant="ghost"
                                                     onClick={() => handleUserSelect(otherUser._id)}
                                                     className={cn(
-                                                        "w-full justify-start items-center px-3 py-7 rounded-2xl transition-all duration-300 group relative",
+                                                        "w-full justify-start items-center px-3 py-7 rounded-2xl transition-all duration-300 group relative overflow-hidden",
                                                         isActive
                                                             ? "bg-primary/10 text-primary shadow-soft"
                                                             : "hover:bg-primary/5 text-muted-foreground hover:text-foreground hover:translate-x-1"
@@ -277,15 +277,19 @@ export function DirectSidebar({ className, activeUserId, onUserSelect }: DirectS
                                                     </div>
 
                                                     <div className="flex-1 min-w-0 overflow-hidden text-left">
-                                                        <div className={cn("text-sm truncate flex justify-between items-center mb-0.5", isUnread ? "font-black text-foreground" : "font-bold text-muted-foreground/90")}>
-                                                            <span>{otherUser.name}</span>
-                                                            {isUnread && <span className="h-2 w-2 rounded-full bg-primary animate-pulse shrink-0 ml-2" />}
+                                                        <div className={cn("text-sm flex justify-between items-center mb-0.5 gap-2", isUnread ? "font-black text-foreground" : "font-bold text-muted-foreground/90")}>
+                                                            <span className="block">
+                                                                {otherUser.name.length > 20 ? `${otherUser.name.slice(0, 20)}...` : otherUser.name}
+                                                            </span>
+                                                            {isUnread && <span className="h-2 w-2 rounded-full bg-primary animate-pulse shrink-0" />}
                                                         </div>
-                                                        <div className={cn("text-xs truncate font-medium", isUnread ? "text-foreground" : "text-muted-foreground/60")}>
-                                                            {conversation.lastMessage?.text ? (
-                                                                conversation.lastMessage.text
-                                                            ) : "Started a conversation"}
-                                                        </div>
+                                                        <p className={cn("text-xs font-medium", isUnread ? "text-foreground" : "text-muted-foreground/60")}>
+                                                            {conversation.lastMessage?.text
+                                                                ? (conversation.lastMessage.text.length > 30
+                                                                    ? `${conversation.lastMessage.text.slice(0, 30)}...`
+                                                                    : conversation.lastMessage.text)
+                                                                : "Started a conversation"}
+                                                        </p>
                                                     </div>
                                                 </Button>
                                             );

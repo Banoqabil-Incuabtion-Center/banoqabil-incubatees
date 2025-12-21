@@ -115,13 +115,13 @@ export const useChatStore = create<ChatState>((set, get) => ({
         set({ isLoadingConversations: true, conversationPage: 1, hasMoreConversations: true });
         try {
             const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-            const response = await axios.get(`${SERVER_URL}/api/messages/conversations?page=1&limit=10`, {
+            const response = await axios.get(`${SERVER_URL}/api/messages/conversations?page=1&limit=5`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             set({
                 conversations: response.data,
                 isLoadingConversations: false,
-                hasMoreConversations: response.data.length === 10
+                hasMoreConversations: response.data.length === 5
             });
         } catch (error) {
             console.error('Error fetching conversations:', error);
@@ -138,12 +138,12 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
         try {
             const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-            const response = await axios.get(`${SERVER_URL}/api/messages/conversations?page=${nextPage}&limit=10`, {
+            const response = await axios.get(`${SERVER_URL}/api/messages/conversations?page=${nextPage}&limit=5`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
 
             const newConversations = response.data;
-            const hasMore = newConversations.length === 10;
+            const hasMore = newConversations.length === 5;
 
             set((state) => ({
                 conversations: [...state.conversations, ...newConversations],
