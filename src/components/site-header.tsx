@@ -10,6 +10,7 @@ import { UserAvatar } from "./UserAvatar"
 import { useNotificationStore } from "@/hooks/useNotificationStore"
 
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import { Download, Bell } from "lucide-react"
 import { usePwaInstall } from "@/hooks/usePwaInstall"
 
@@ -66,9 +67,9 @@ export function SiteHeader() {
                   : "text-muted-foreground/60 group-hover:text-primary"
               )} />
               {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white border-2 border-background animate-in zoom-in-0 duration-300">
+                <Badge variant="destructive" className="absolute -top-1 -right-1 h-4 min-w-4 px-1 text-[10px] font-bold border-2 border-background animate-in zoom-in-0 duration-300">
                   {unreadCount > 9 ? '9+' : unreadCount}
-                </span>
+                </Badge>
               )}
             </Link>
           </Button>

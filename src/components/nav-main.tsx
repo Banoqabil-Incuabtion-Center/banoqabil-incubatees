@@ -9,8 +9,12 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
+import { Badge } from "@/components/ui/badge"
 import { Link, useLocation } from "react-router-dom"
 import { useNavigate } from "react-router-dom"
+import { useChatStore, getUnreadConversationsCount } from "@/hooks/store/useChatStore"
+import { useAuthStore } from "@/hooks/store/authStore"
+
 export function NavMain({
   items,
 }: {
@@ -23,6 +27,8 @@ export function NavMain({
 
   const navigate = useNavigate()
   const location = useLocation()
+  const { user } = useAuthStore()
+  const unreadCount = useChatStore(state => getUnreadConversationsCount(state, user?._id))
 
   return (
     <SidebarGroup>
@@ -30,8 +36,9 @@ export function NavMain({
         <SidebarMenu className="gap-1">
           {items.map((item) => {
             const isActive = location.pathname === item.url
+            const showBadge = item.url === '/direct' && unreadCount > 0
             return (
-              <SidebarMenuItem key={item.title}>
+              <SidebarMenuItem key={item.title} className="relative">
                 <SidebarMenuButton
                   isActive={isActive}
                   className={cn(
@@ -45,6 +52,11 @@ export function NavMain({
                 >
                   {item.icon && <item.icon className={cn("size-5", isActive && "text-primary")} />}
                   <span className="text-sm font-bold tracking-tight">{item.title}</span>
+                  {showBadge && (
+                    <Badge variant="destructive" className="ml-auto h-5 min-w-5 px-1.5 text-[10px] font-bold">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </Badge>
+                  )}
                 </SidebarMenuButton>
               </SidebarMenuItem>
             )

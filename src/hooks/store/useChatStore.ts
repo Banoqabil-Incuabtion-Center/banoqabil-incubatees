@@ -61,6 +61,22 @@ interface ChatState {
     removeOnlineUser: (userId: string) => void;
 }
 
+// Helper selector to get unread conversations count
+export const getUnreadConversationsCount = (state: ChatState, currentUserId: string | undefined): number => {
+    if (!currentUserId) return 0;
+    return state.conversations.filter(conv => {
+        const lastMessage = conv.lastMessage;
+        if (!lastMessage) return false;
+        // Check if last message is NOT from current user AND not seen by current user
+        const senderId = typeof lastMessage.sender === 'object'
+            ? (lastMessage.sender as User)._id
+            : lastMessage.sender;
+        const isFromOther = senderId !== currentUserId;
+        const isUnread = !lastMessage.seenBy.includes(currentUserId);
+        return isFromOther && isUnread;
+    }).length;
+};
+
 export const useChatStore = create<ChatState>((set, get) => ({
     conversations: [],
     messages: [],
