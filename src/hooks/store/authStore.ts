@@ -31,8 +31,10 @@ interface AuthState {
   user: User | null
   isAuthenticated: boolean
   isLoading: boolean
+  isLogoutDialogOpen: boolean
   setUser: (user: User | null) => void
   setLoading: (loading: boolean) => void
+  setLogoutDialogOpen: (open: boolean) => void
   logout: () => void
 }
 
@@ -42,6 +44,7 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       isAuthenticated: false,
       isLoading: true,
+      isLogoutDialogOpen: false,
       setUser: (user) =>
         set({
           user,
@@ -49,11 +52,13 @@ export const useAuthStore = create<AuthState>()(
           isLoading: false,
         }),
       setLoading: (loading) => set({ isLoading: loading }),
+      setLogoutDialogOpen: (open) => set({ isLogoutDialogOpen: open }),
       logout: () =>
         set({
           user: null,
           isAuthenticated: false,
           isLoading: false,
+          isLogoutDialogOpen: false,
         }),
     }),
     {

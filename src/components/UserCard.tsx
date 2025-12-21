@@ -133,36 +133,7 @@ export const UserCard: React.FC<UserCardProps> = ({ user, authUser, isPublic = f
                     </div>
                 )}
 
-                {!isPublic && (
-                    <div className="w-full mt-10 space-y-3">
-                        <Button
-                            asChild
-                            className={cn(
-                                "w-full rounded-2xl h-14 font-black transition-all shadow-premium",
-                                accentColor === 'primary' ? "bg-primary hover:bg-primary/90" : `bg-${accentColor}-500 hover:bg-${accentColor}-400`
-                            )}
-                        >
-                            <Link to="/profile/edit">
-                                <Edit3 className="w-4 h-4 mr-2" />
-                                Edit Profile
-                            </Link>
-                        </Button>
-
-                        <Button
-                            variant="outline"
-                            onClick={() => navigate(`/user/${authUser?._id}`)}
-                            className={cn(
-                                "w-full h-14 rounded-2xl font-black gap-2 transition-all border-2 bg-transparent",
-                                accentColor === 'primary'
-                                    ? "border-primary/10 text-primary hover:bg-primary/5 hover:border-primary/20"
-                                    : `border-${accentColor}-500/10 text-${accentColor}-500 hover:bg-${accentColor}-500/5 hover:border-${accentColor}-500/20`
-                            )}
-                        >
-                            <User2 className="w-4 h-4" />
-                            View Public
-                        </Button>
-                    </div>
-                )}
+                {/* Action buttons removed from here - moved to Profile page */}
             </CardContent>
         </Card>
     );

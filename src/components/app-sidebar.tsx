@@ -38,11 +38,11 @@ const data = {
 
 export function AppSidebar(props) {
 
-  const { user, setUser, isLoading, setLoading } = useAuthStore()
+  const { user, setUser, isLoading, setLoading, setLogoutDialogOpen } = useAuthStore()
   const { isInstallable, installPwa } = usePwaInstall()
 
   const triggerLogout = () => {
-    document.getElementById("logoutBtn")?.click()
+    setLogoutDialogOpen(true)
   }
 
 

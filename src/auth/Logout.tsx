@@ -16,8 +16,7 @@ import {
 
 const Logout = () => {
   const navigate = useNavigate()
-  const { logout } = useAuthStore()
-  const [open, setOpen] = useState(false)
+  const { logout, isLogoutDialogOpen, setLogoutDialogOpen } = useAuthStore()
 
   const performLogout = async () => {
     try {
@@ -30,38 +29,30 @@ const Logout = () => {
       navigate("/login")
     } catch (err) {
       toast.error("Logout failed")
+      setLogoutDialogOpen(false)
     }
   }
 
   return (
-    <>
-      <button
-        id="logoutBtn"
-        className="hidden"
-        onClick={() => setOpen(true)}
-      >
-      </button>
-
-      <AlertDialog open={open} onOpenChange={setOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Do you really want to logout from your account?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={performLogout}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Logout
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
+    <AlertDialog open={isLogoutDialogOpen} onOpenChange={setLogoutDialogOpen}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Do you really want to logout from your account?
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={performLogout}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            Logout
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   )
 }
 

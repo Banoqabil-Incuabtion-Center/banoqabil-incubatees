@@ -44,7 +44,7 @@ import { PostCard } from "../components/PostCard"
 
 export default function ProfilePage() {
   const navigate = useNavigate()
-  const { user: authUser, setUser: setAuthUser } = useAuthStore()
+  const { user: authUser, setUser: setAuthUser, setLogoutDialogOpen } = useAuthStore()
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [activities, setActivities] = useState<any[]>([])
@@ -96,7 +96,7 @@ export default function ProfilePage() {
   }, [authUser?._id])
 
   const triggerLogout = () => {
-    document.getElementById("logoutBtn")?.click()
+    setLogoutDialogOpen(true)
   }
 
   if (loading) {
@@ -131,24 +131,45 @@ export default function ProfilePage() {
             onUpdate={(updatedData) => setUser(updatedData)}
           />
 
-          {/* Account Actions Card (Desktop) */}
-          <Card className="hidden lg:block border-none shadow-sm overflow-hidden bg-muted/30">
-            <CardContent className="p-2">
-              <button
-                onClick={triggerLogout}
-                className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-destructive/10 rounded-xl transition-colors group text-destructive"
+          {/* Account Actions (Edit, Public, Logout) */}
+          <div className="space-y-3 animate-in fade-in slide-in-from-left-6 duration-700 delay-200">
+            <div className="grid grid-cols-2 gap-3">
+              <Button
+                onClick={() => navigate("/profile/edit")}
+                className="flex-1 h-12 rounded-2xl bg-primary shadow-soft hover:shadow-premium font-bold gap-2 transition-all hover:scale-[1.02] active:scale-[0.98]"
               >
-                <div className="p-2 rounded-lg bg-destructive/10 group-hover:bg-destructive group-hover:text-white transition-colors">
-                  <LogOut className="w-5 h-5" />
-                </div>
-                <div className="flex-1">
-                  <p className="font-semibold text-sm">Logout</p>
-                  <p className="text-xs opacity-70">Sign out of account</p>
-                </div>
-                <ChevronRight className="w-4 h-4 opacity-30" />
-              </button>
-            </CardContent>
-          </Card>
+                <Edit3 className="w-4 h-4" />
+                <span className="truncate">Edit Profile</span>
+              </Button>
+
+              <Button
+                variant="outline"
+                onClick={() => navigate(`/user/${authUser?._id}`)}
+                className="flex-1 h-12 rounded-2xl font-bold gap-2 border-primary/10 text-primary hover:bg-primary/5 transition-all hover:scale-[1.02] active:scale-[0.98]"
+              >
+                <User2 className="w-4 h-4" />
+                <span className="truncate">Public View</span>
+              </Button>
+            </div>
+
+            <Card className="border-none shadow-sm overflow-hidden bg-muted/30">
+              <CardContent className="p-2">
+                <button
+                  onClick={triggerLogout}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-destructive/10 rounded-xl transition-colors group text-destructive"
+                >
+                  <div className="p-2 rounded-lg bg-destructive/10 group-hover:bg-destructive group-hover:text-white transition-colors">
+                    <LogOut className="w-5 h-5" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-semibold text-sm">Logout</p>
+                    <p className="text-xs opacity-70">Sign out of account</p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 opacity-30" />
+                </button>
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
         {/* Right Column: Details & Activity */}
@@ -313,35 +334,7 @@ export default function ProfilePage() {
             </TabsContent>
           </Tabs>
 
-          {/* Logout Helper (Mobile Only) */}
-          <div className="lg:hidden mt-8 space-y-3">
-            <Button
-              onClick={() => navigate("/profile/edit")}
-              className="w-full h-11 rounded-xl bg-primary shadow-lg shadow-primary/20 font-bold gap-2"
-            >
-              <Edit3 className="w-4 h-4" />
-              Edit Profile
-            </Button>
-
-            <Button
-              variant="outline"
-              onClick={() => navigate(`/user/${authUser?._id}`)}
-              className="w-full h-11 rounded-xl font-bold gap-2 border-primary/20 text-primary hover:bg-primary/5"
-            >
-              <User2 className="w-4 h-4" />
-              View Public Profile
-            </Button>
-
-            <Button
-              variant="outline"
-              size="lg"
-              onClick={triggerLogout}
-              className="w-full gap-2 h-12 rounded-xl text-destructive hover:bg-destructive/10 hover:text-destructive border-dashed"
-            >
-              <LogOut className="w-4 h-4" />
-              Logout from account
-            </Button>
-          </div>
+          {/* Mobile actions removed - now consolidated in left column */}
         </div>
       </div>
 
