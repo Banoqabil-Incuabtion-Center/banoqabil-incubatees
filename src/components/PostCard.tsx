@@ -150,32 +150,8 @@ export const PostCard = ({
     return url;
   };
 
-  // Fetch initial like status and comment count
-  useEffect(() => {
-    const fetchLikes = async () => {
-      try {
-        const res = await likeRepo.getLikesByPost(postId, 1, 1);
-        setLikeCount(res.pagination.totalItems);
-        setLiked(res.userLiked);
-      } catch (error) {
-        console.error("Failed to fetch likes:", error);
-      }
-    };
-
-    const fetchCommentCount = async () => {
-      try {
-        const res = await commentRepo.getCommentsByPost(postId, 1, 1);
-        setCommentCount(res.pagination?.totalItems || 0);
-      } catch (error) {
-        console.error("Failed to fetch comment count:", error);
-      }
-    };
-
-    if (postId) {
-      fetchLikes();
-      fetchCommentCount();
-    }
-  }, [postId]);
+  // No redundant effect needed - counts and liked status are managed by props and store
+  /* Removed redundant API calls on mount as data is provided by parent list */
 
   const renderDescription = (text: string) => {
     if (!text) return null;

@@ -374,11 +374,11 @@ const Posts = () => {
 
     observerRef.current = new IntersectionObserver(entries => {
       if (entries[0].isIntersecting) {
-        if (hasMoreUser) {
-          fetchPosts(pageUser + 1, 1, 'user');
+        if (hasMoreUser && !loading) {
+          fetchPosts(pageUser + 1, 10, 'user');
         }
       }
-    });
+    }, { rootMargin: '400px', threshold: 0.1 });
 
     if (node) observerRef.current.observe(node);
   }, [loading, hasMoreUser, pageUser, fetchPosts]);
@@ -386,7 +386,7 @@ const Posts = () => {
   // Initial fetch
   useEffect(() => {
     if (userPosts.length === 0) {
-      fetchPosts(1, 1, 'user');
+      fetchPosts(1, 10, 'user');
     }
   }, [fetchPosts, userPosts.length]);
 

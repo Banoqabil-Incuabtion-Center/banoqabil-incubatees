@@ -33,7 +33,7 @@ export const usePostStore = create<PostState>((set, get) => ({
     pageAdmin: 1,
     pageUser: 1,
 
-    fetchPosts: async (page, limit, type) => {
+    fetchPosts: async (page, limit = 10, type) => {
         const state = get();
 
         // Prevent duplicate fetches
