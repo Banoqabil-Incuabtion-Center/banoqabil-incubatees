@@ -6,6 +6,7 @@ export interface ShiftTiming {
   lateAfter: string
   earlyLeaveBefore: string
   minHours: number
+  workingDays?: number[]
 }
 
 export interface AttendanceSettings {
@@ -59,6 +60,7 @@ export interface CalendarHistoryResponse {
     name: string
     email: string
     shift: string
+    workingDays?: number[]
   }
   records: HistoryRecord[]
   stats: CalendarStats

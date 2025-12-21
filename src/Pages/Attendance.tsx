@@ -149,7 +149,9 @@ const Attendance: React.FC = () => {
       width: 110,
       render: (val: string, record) => (
         <span className="flex items-center gap-1">
-          {val ? new Date(val).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : <span className="text-red-500">Missing</span>}
+          {val ? new Date(val).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : (
+            record.status === 'Absent' ? "—" : <span className="text-red-500">Missing</span>
+          )}
           {val && record.isEarlyLeave && <Tag color="orange" className="text-xs ml-1">Early</Tag>}
         </span>
       ),
@@ -367,6 +369,22 @@ const Attendance: React.FC = () => {
               <div className="bg-muted/30 border border-primary/5 p-4 rounded-2xl group hover:border-primary/20 transition-colors">
                 <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-1.5">Min Hours</p>
                 <p className="font-bold text-base tracking-tight text-primary">{currentShiftInfo.minHours}h</p>
+              </div>
+              <div className="bg-muted/30 border border-primary/5 p-4 rounded-2xl group hover:border-primary/20 transition-colors col-span-2 lg:col-span-4 mt-2">
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-1.5">Working Days</p>
+                <div className="flex gap-2 flex-wrap">
+                  {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, index) => {
+                    const isWorkingDay = currentShiftInfo.workingDays?.includes(index) || false;
+                    return (
+                      <div key={day} className={cn(
+                        "px-2.5 py-1 rounded-lg text-xs font-bold transition-colors",
+                        isWorkingDay ? "bg-primary/10 text-primary border border-primary/20" : "bg-muted text-muted-foreground/40"
+                      )}>
+                        {day}
+                      </div>
+                    )
+                  })}
+                </div>
               </div>
             </div>
           ) : shiftTiming ? (

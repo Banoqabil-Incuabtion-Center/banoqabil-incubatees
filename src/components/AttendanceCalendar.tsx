@@ -29,6 +29,8 @@ const AttendanceCalendar: React.FC<Props> = ({ userId }) => {
     const [selectedRecord, setSelectedRecord] = useState<HistoryRecord | null>(null)
     const [dialogOpen, setDialogOpen] = useState(false)
 
+    const [workingDays, setWorkingDays] = useState<number[]>([1, 2, 3, 4, 5]) // Default Mon-Fri
+
     const fetchCalendarData = async (month?: number, year?: number) => {
         if (!userId) return
         setIsLoading(true)
@@ -36,6 +38,9 @@ const AttendanceCalendar: React.FC<Props> = ({ userId }) => {
             const res = await attRepo.getCalendarHistory(userId, month, year)
             setRecords(res.records)
             setStats(res.stats)
+            if (res.user?.workingDays) {
+                setWorkingDays(res.user.workingDays)
+            }
             if (res.startDate) {
                 setStartDate(new Date(res.startDate))
             }
@@ -213,17 +218,22 @@ const AttendanceCalendar: React.FC<Props> = ({ userId }) => {
                             const record = recordMap.get(dateKey)
                             const isToday = day.toDateString() === new Date().toDateString()
                             const isFuture = day > today
+                            const isWorkingDay = workingDays.includes(day.getDay())
 
                             return (
                                 <button
                                     key={dateKey}
                                     onClick={() => handleDayClick(day)}
-                                    disabled={isFuture || !record}
+                                    disabled={isFuture || (!record && !isWorkingDay)}
                                     className={cn(
                                         "aspect-square flex flex-col items-center justify-center rounded-[1.5rem] text-sm sm:text-base transition-all duration-300 relative border group",
                                         isToday ? "ring-2 ring-primary ring-offset-2 border-primary bg-primary/5" : "border-transparent",
                                         isFuture ? "text-muted-foreground/20 cursor-default" : "text-foreground",
-                                        record ? "cursor-pointer hover:bg-primary/10 hover:border-primary/20 hover:shadow-soft" : "cursor-default"
+                                        record
+                                            ? "cursor-pointer hover:bg-primary/10 hover:border-primary/20 hover:shadow-soft"
+                                            : !isWorkingDay && !isFuture
+                                                ? "bg-muted/30 text-muted-foreground/40 cursor-default border-dashed border-muted-foreground/10" // Visual for Off Day
+                                                : "cursor-default"
                                     )}
                                 >
                                     <span className={cn(
@@ -232,11 +242,16 @@ const AttendanceCalendar: React.FC<Props> = ({ userId }) => {
                                     )}>
                                         {day.getDate()}
                                     </span>
-                                    {record && (
+                                    {record && record.status === 'Absent' ? (
+                                        <span className="text-[9px] font-bold uppercase text-red-500 mt-1">Absent</span>
+                                    ) : record && (
                                         <div className={cn(
                                             "w-1.5 h-1.5 rounded-full mt-1.5 shadow-sm group-hover:scale-125 transition-transform",
                                             getStatusColor(record.status)
                                         )} />
+                                    )}
+                                    {!record && !isWorkingDay && !isFuture && (
+                                        <span className="text-[9px] font-bold uppercase text-muted-foreground/30 mt-0.5">Off</span>
                                     )}
                                 </button>
                             )
