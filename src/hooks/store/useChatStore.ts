@@ -45,14 +45,16 @@ interface ChatState {
     searchResults: User[];
 
     onlineUsers: string[];
+    unreadCount: number;
 
     fetchConversations: () => Promise<void>;
     loadMoreConversations: () => Promise<void>;
     fetchMessages: (receiverId: string, before?: string) => Promise<void>;
     sendMessage: (receiverId: string, text: string) => Promise<void>;
     searchUsers: (query: string) => Promise<void>;
+    fetchUnreadCount: () => Promise<void>;
     setActiveUser: (userId: string | null) => void;
-    addMessage: (message: Message) => void;
+    addMessage: (message: Message, currentUserId?: string) => void;
     updateTypingStatus: (userId: string, isTyping: boolean) => void;
     markMessageAsRead: (conversationId: string, readerId: string) => Promise<void>;
 
@@ -93,6 +95,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     searchResults: [],
 
     onlineUsers: [],
+    unreadCount: 0,
 
     setOnlineUsers: (users) => set({ onlineUsers: users }),
 
@@ -173,6 +176,18 @@ export const useChatStore = create<ChatState>((set, get) => ({
         } catch (error) {
             console.error("Error searching users:", error);
             set({ isSearching: false });
+        }
+    },
+
+    fetchUnreadCount: async () => {
+        try {
+            const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+            const response = await axios.get(`${SERVER_URL}/api/messages/unread-count`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            set({ unreadCount: response.data.unreadCount });
+        } catch (error) {
+            console.error("Error fetching unread count:", error);
         }
     },
 
@@ -276,34 +291,16 @@ export const useChatStore = create<ChatState>((set, get) => ({
         set({ activeUserId: userId });
     },
 
-    addMessage: (message: Message) => {
+    addMessage: (message: Message, currentUserId?: string) => {
         // Ensure defaults
         if (!message.seenBy) message.seenBy = [];
 
-        const activeUserIdState = get().activeUserId; // keep using get() for simple read access if needed, or pass via closure if inside functional set
-
         set((state) => {
-            const { activeUserId, messages, conversations } = state;
+            const { activeUserId, messages, conversations, unreadCount } = state;
             const updates: Partial<ChatState> = {};
 
             // Check if sender is activeUser OR if user is sender (loopback)
             const senderId = typeof message.sender === 'object' ? (message.sender as any)._id : message.sender;
-
-            // Logic:
-            // 1. If currently chatting with the SENDER of the message -> append
-            // 2. If currently chatting with the RECEIVER (myself, from another tab) -> append
-            // Basically if conversationId matches active conversation (if we had it populated), or if sender/receiver matches activeUserId.
-
-            // Current simplified logic: If activeUserId matches senderId, or if *I* sent it (senderId == myId) and activeUserId matches receiver? 
-            // Ideally we should match by conversationId if possible, but we don't always have activeConversation populated.
-            // Relying on activeUserId:
-            // If I am chatting with User A (activeUserId = A)
-            // and I receive a message FROM A -> Show it.
-            // OR I sent a message TO A (from another tab) -> Show it.
-
-            // We need to know my own ID to confirm "I sent it TO A".
-            // But we don't have my ID easily here without get(). (It's not in store state directly explicitly as 'me').
-            // However, checks:
 
             if (senderId === activeUserId) {
                 // Message FROM the person I'm chatting with
@@ -311,25 +308,35 @@ export const useChatStore = create<ChatState>((set, get) => ({
                     updates.messages = [...messages, message];
                 }
             } else {
-                // Check if it's a message I SENT to the active user (from another device)
-                // OR if it simply belongs to the current conversation context.
-
-                // Fallback: Check against activeConversation directly (most reliable)
+                // Check if message belongs to current conversation context.
                 const activeConv = state.activeConversation;
-
-                // If we have an active conversation and the message belongs to it
                 if (activeConv && activeConv._id === message.conversationId) {
                     if (!messages.some(m => m._id === message._id)) {
                         updates.messages = [...messages, message];
                     }
                 } else {
-                    // Fallback 2: Check conversation list (old logic)
                     const conversationWithActiveUser = conversations.find(c => c.participants.some(p => p._id === activeUserId));
                     if (conversationWithActiveUser && conversationWithActiveUser._id === message.conversationId) {
                         if (!messages.some(m => m._id === message._id)) {
                             updates.messages = [...messages, message];
                         }
                     }
+                }
+            }
+
+            // Update unread count if message is from other and not currently being read
+            const isMsgFromOther = senderId !== currentUserId;
+            if (isMsgFromOther) {
+                // If we are NOT in the conversation where message arrived, we might need to increment unreadCount
+                // But only if this conversation wasn't already unread.
+                const conv = conversations.find(c => c._id === message.conversationId);
+                const wasReadBefore = !conv || !conv.lastMessage || conv.lastMessage.seenBy.includes(currentUserId || '');
+
+                // Also check if we are currently looking at this conversation
+                const isCurrentlyViewing = activeUserId === senderId || (state.activeConversation && state.activeConversation._id === message.conversationId);
+
+                if (wasReadBefore && !isCurrentlyViewing) {
+                    updates.unreadCount = unreadCount + 1;
                 }
             }
 
@@ -361,23 +368,33 @@ export const useChatStore = create<ChatState>((set, get) => ({
     markMessageAsRead: async (conversationId, readerId) => {
         try {
             // Optimistic/Immediate update to UI to prevent waiting for API
-            set((state) => ({
-                messages: state.messages.map(msg => {
-                    if (msg.conversationId === conversationId && !msg.seenBy.includes(readerId)) {
-                        return { ...msg, seenBy: [...msg.seenBy, readerId] };
-                    }
-                    return msg;
-                }),
-                conversations: state.conversations.map(c => {
-                    if (c._id === conversationId && c.lastMessage && !c.lastMessage.seenBy.includes(readerId)) {
-                        return {
-                            ...c,
-                            lastMessage: { ...c.lastMessage, seenBy: [...c.lastMessage.seenBy, readerId] }
-                        };
-                    }
-                    return c;
-                })
-            }));
+            set((state) => {
+                const alreadyUnread = state.conversations.some(c =>
+                    c._id === conversationId &&
+                    c.lastMessage &&
+                    c.lastMessage.sender !== readerId &&
+                    !c.lastMessage.seenBy.includes(readerId)
+                );
+
+                return {
+                    unreadCount: alreadyUnread ? Math.max(0, state.unreadCount - 1) : state.unreadCount,
+                    messages: state.messages.map(msg => {
+                        if (msg.conversationId === conversationId && !msg.seenBy.includes(readerId)) {
+                            return { ...msg, seenBy: [...msg.seenBy, readerId] };
+                        }
+                        return msg;
+                    }),
+                    conversations: state.conversations.map(c => {
+                        if (c._id === conversationId && c.lastMessage && !c.lastMessage.seenBy.includes(readerId)) {
+                            return {
+                                ...c,
+                                lastMessage: { ...c.lastMessage, seenBy: [...c.lastMessage.seenBy, readerId] }
+                            };
+                        }
+                        return c;
+                    })
+                };
+            });
 
             // Send request to backend
             const token = localStorage.getItem('token') || sessionStorage.getItem('token');

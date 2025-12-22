@@ -17,7 +17,7 @@ const navItems = [
 export function BottomNav() {
     const location = useLocation()
     const { user } = useAuthStore()
-    const unreadCount = useChatStore(state => getUnreadConversationsCount(state, user?._id))
+    const unreadCount = useChatStore(state => state.unreadCount)
 
     return (
         <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-sidebar-border bg-white md:hidden safe-area-bottom shadow-[0_-1px_10px_rgba(0,0,0,0.02)]">

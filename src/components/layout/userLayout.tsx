@@ -9,6 +9,7 @@ import PullToRefresh from '../PullToRefresh'
 import { cn } from '@/lib/utils'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { useChatStore } from '@/hooks/store/useChatStore'
+import { useAuthStore } from '@/hooks/store/authStore'
 import { useNotificationStore } from '@/hooks/useNotificationStore'
 import { useSocket } from '@/hooks/useSocket'
 import { ProfileReminder } from '../ProfileReminder'
@@ -23,21 +24,28 @@ const UserLayout = () => {
     // Hide Header and Footer only when in an active chat on mobile
     const hideUI = isDirectPage && !!activeUserId && isMobile;
 
-    const addNotification = useNotificationStore(state => state.addNotification);
-    const fetchNotifications = useNotificationStore(state => state.fetchNotifications);
+    const { addNotification, fetchNotifications } = useNotificationStore();
+    const { fetchUnreadCount, addMessage } = useChatStore();
+    const { user } = useAuthStore();
     const { on } = useSocket();
 
     useEffect(() => {
         fetchNotifications();
+        fetchUnreadCount();
 
-        const unsubscribe = on('new_notification', (notification) => {
+        const unsubNotif = on('new_notification', (notification) => {
             addNotification(notification);
         });
 
+        const unsubMsg = on('newMessage', (message) => {
+            addMessage(message, user?._id);
+        });
+
         return () => {
-            unsubscribe();
+            unsubNotif();
+            unsubMsg();
         };
-    }, [on, addNotification, fetchNotifications]);
+    }, [on, addNotification, fetchNotifications, fetchUnreadCount, addMessage, user?._id]);
 
     return (
         <SidebarProvider

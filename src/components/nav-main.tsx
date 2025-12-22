@@ -28,7 +28,7 @@ export function NavMain({
   const navigate = useNavigate()
   const location = useLocation()
   const { user } = useAuthStore()
-  const unreadCount = useChatStore(state => getUnreadConversationsCount(state, user?._id))
+  const unreadCount = useChatStore(state => state.unreadCount)
 
   return (
     <SidebarGroup>
