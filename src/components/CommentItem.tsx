@@ -92,9 +92,9 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                     />
                 </Link>
 
-                <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-0 max-w-full">
                     <div className="flex items-start gap-2 max-w-full">
-                        <div className="bg-primary/5 hover:bg-primary/[0.08] transition-colors rounded-2xl rounded-tl-none px-3 sm:px-4 py-2 sm:py-3 shadow-soft group relative min-w-[80px]">
+                        <div className="bg-primary/5 hover:bg-primary/[0.08] transition-colors rounded-2xl rounded-tl-none px-3 sm:px-4 py-2 sm:py-3 shadow-soft group relative min-w-[80px] max-w-full">
                             <div className="flex items-center justify-between gap-1 mb-0.5 sm:mb-1">
                                 <Link to={`/user/${comment.user?._id}`} className="hover:text-primary transition-colors">
                                     <p className="text-[10px] sm:text-xs font-black tracking-tight leading-none truncate max-w-[120px]">{comment.user?.name}</p>
@@ -155,7 +155,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                                     </div>
                                 </div>
                             ) : (
-                                <div className="text-xs sm:text-sm leading-relaxed text-foreground/90 break-words font-medium">
+                                <div className="text-xs sm:text-sm leading-relaxed text-foreground/90 break-all sm:break-words font-medium overflow-hidden">
                                     {comment.content.length > 300 && !isExpanded
                                         ? comment.content.slice(0, 300) + "..."
                                         : comment.content
@@ -268,7 +268,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
 
             {/* Nested Replies - Responsive Indentation */}
             {comment.replies && comment.replies.length > 0 && (
-                <div className="ml-4 sm:ml-6 space-y-4 border-l-2 border-primary/5 pl-3 sm:pl-4 mt-1 sm:mt-2">
+                <div className="ml-2 sm:ml-6 space-y-4 border-l-2 border-primary/5 pl-2 sm:pl-4 mt-1 sm:mt-2">
                     {comment.replies.map((reply) => (
                         <CommentItem
                             key={reply._id}

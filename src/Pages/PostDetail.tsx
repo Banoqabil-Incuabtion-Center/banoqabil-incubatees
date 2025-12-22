@@ -220,9 +220,9 @@ export const PostDetail = () => {
                                         showCommentCount={true}
                                     />
                                 </div>
-                                <button className="text-muted-foreground hover:text-primary transition-all active:rotate-12">
+                                {/* <button className="text-muted-foreground hover:text-primary transition-all active:rotate-12">
                                     <Share2 className="w-5 h-5" />
-                                </button>
+                                </button> */}
                             </div>
 
                             {/* Comments Feed Area */}
