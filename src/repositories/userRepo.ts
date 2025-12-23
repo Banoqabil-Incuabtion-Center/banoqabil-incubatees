@@ -60,6 +60,11 @@ export class UserRepo {
     const response = await api.get(`/api/user/public/${id}`)
     return response.data
   }
+
+  async getActiveUsers() {
+    const response = await api.get("/api/user/active-users")
+    return response.data
+  }
 }
 
 export const userRepo = new UserRepo();

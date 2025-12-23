@@ -23,6 +23,10 @@ import {
   Video,
   Image as ImageIcon,
   Smile,
+  Sparkles,
+  ChevronLeft,
+  ChevronRight,
+  Users,
 } from "lucide-react";
 import { useAuthStore } from "@/hooks/store/authStore";
 import { UserAvatar } from "@/components/UserAvatar";
@@ -34,6 +38,15 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePostStore } from "@/hooks/store/usePostStore";
 import { usePostSocket } from "@/hooks/usePostSocket";
+import { UserCard, UserCardSkeleton } from "@/components/UserCard";
+import { userRepo } from "@/repositories/userRepo";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 
 const PostSkeleton = () => {
   return (
@@ -348,6 +361,26 @@ const Posts = () => {
   // const [activeTab, setActiveTab] = useState("admin"); // Removed activeTab
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { user } = useAuthStore();
+  const [suggestedUsers, setSuggestedUsers] = useState<any[]>([]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+
+  // Fetch suggested/active users
+  useEffect(() => {
+    const fetchSuggestions = async () => {
+      try {
+        setLoadingSuggestions(true);
+        const res = await userRepo.getActiveUsers();
+        // Filter out current user from suggestions
+        const filtered = (res.activeUsers || []).filter((u: any) => u.user?._id !== user?._id);
+        setSuggestedUsers(filtered.map((item: any) => item.user));
+      } catch (error) {
+        console.error("Failed to fetch suggestions:", error);
+      } finally {
+        setLoadingSuggestions(false);
+      }
+    };
+    fetchSuggestions();
+  }, [user?._id]);
 
   // Connect to socket events
   usePostSocket();
@@ -451,6 +484,53 @@ const Posts = () => {
             </div>
           </div>
         </div>
+
+        {/* Community Suggestions */}
+        {(loadingSuggestions || suggestedUsers.length > 0) && (
+          <div className="space-y-4 mb-12">
+            <div className="flex items-center justify-between px-1">
+              <h2 className="text-xl font-black tracking-tight flex items-center gap-2">
+                <Users className="w-6 h-6 text-primary" />
+                Community Suggestions
+              </h2>
+            </div>
+
+            <Carousel
+              opts={{
+                align: "start",
+                loop: true,
+              }}
+              className="w-full relative group"
+            >
+              <CarouselContent>
+                {loadingSuggestions ? (
+                  [...Array(4)].map((_, i) => (
+                    <CarouselItem key={i} className="basis-[85%] sm:basis-[45%] md:basis-[350px]">
+                      <div className="p-1 h-full">
+                        <UserCardSkeleton className="h-full border border-primary/10 shadow-premium" />
+                      </div>
+                    </CarouselItem>
+                  ))
+                ) : (
+                  suggestedUsers.map((suggestedUser) => (
+                    <CarouselItem key={suggestedUser._id} className="basis-[85%] sm:basis-[45%] md:basis-[350px]">
+                      <div className="p-1 h-full">
+                        <UserCard
+                          user={suggestedUser}
+                          className="h-full border border-primary/10 shadow-premium hover:shadow-hover-card hover:translate-y-[-4px] transition-all duration-500"
+                        />
+                      </div>
+                    </CarouselItem>
+                  ))
+                )}
+              </CarouselContent>
+              <div className="hidden sm:block">
+                <CarouselPrevious className="absolute -left-12 top-1/2 -translate-y-1/2 bg-background/50 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity" />
+                <CarouselNext className="absolute -right-12 top-1/2 -translate-y-1/2 bg-background/50 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+            </Carousel>
+          </div>
+        )}
         {/* Loading when empty */}
         {loading && postsToRender.length === 0 && (
           <div className="space-y-4">
