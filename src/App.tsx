@@ -14,6 +14,7 @@ import Direct from "./Pages/Direct"
 import Activities from "./Pages/Activities"
 import Notifications from "./Pages/Notifications"
 import { PostDetail } from "./Pages/PostDetail"
+import CustomizeCard from "./Pages/CustomizeCard"
 
 import { Toaster } from "@/components/ui/sonner"
 
@@ -36,6 +37,7 @@ const App = () => {
           <Route path="/direct" element={<Direct />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/profile/edit" element={<EditProfile />} />
+          <Route path="/profile/customize" element={<CustomizeCard />} />
           <Route path="/user/:id" element={<UserPublicProfile />} />
           <Route path="/activities" element={<Activities />} />
           <Route path="/notifications" element={<Notifications />} />

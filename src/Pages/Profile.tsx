@@ -37,10 +37,10 @@ import { userRepo } from "../repositories/userRepo"
 import { postRepo } from "../repositories/postRepo"
 import { useAuthStore } from "@/hooks/store/authStore"
 import { UserCard } from "../components/UserCard"
-import { CardCustomizer } from "../components/CardCustomizer"
 import Logout from "@/auth/Logout"
 import { Link, useNavigate } from "react-router-dom"
 import { PostCard } from "../components/PostCard"
+import { Palette } from "lucide-react"
 
 export default function ProfilePage() {
   const navigate = useNavigate()
@@ -127,10 +127,14 @@ export default function ProfilePage() {
         <div className="lg:col-span-4 space-y-6 animate-in fade-in slide-in-from-left-4 duration-500">
           <UserCard user={user} authUser={authUser} />
 
-          <CardCustomizer
-            user={user}
-            onUpdate={(updatedData) => setUser(updatedData)}
-          />
+          <Button
+            onClick={() => navigate("/profile/customize")}
+            variant="outline"
+            className="w-full gap-2 rounded-2xl h-12 border-dashed hover:border-primary transition-all font-bold"
+          >
+            <Palette className="w-4 h-4 text-primary" />
+            Customize Profile Card
+          </Button>
 
           {/* Account Actions (Edit, Public, Logout) */}
           <div className="space-y-3 animate-in fade-in slide-in-from-left-6 duration-700 delay-200">
