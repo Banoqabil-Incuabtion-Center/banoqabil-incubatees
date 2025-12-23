@@ -126,7 +126,7 @@ export const UserCard: React.FC<UserCardProps> = ({ user, authUser, isPublic = f
                 <div className="flex flex-wrap items-center justify-center gap-2 animate-in slide-in-from-bottom-2 duration-700">
                     <Badge {...badgeStyle}>
                         <IdCard className="w-3 h-3" />
-                        {user?.incubation_id || user?.bq_id || "STUDENT"}
+                        {user?.incubation_id}
                     </Badge>
                     {user?.shift && (
                         <Badge {...badgeStyle}>
