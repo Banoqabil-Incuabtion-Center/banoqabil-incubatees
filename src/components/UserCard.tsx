@@ -91,7 +91,7 @@ export const UserCard: React.FC<UserCardProps> = ({ user, authUser, isPublic = f
             className={cn(
                 "relative group overflow-hidden transition-all duration-700 active:scale-[0.99] cursor-pointer",
                 themeClasses[currentTheme],
-                settings.borderRadius || "rounded-3xl",
+                "rounded-2xl",
                 className
             )}
             style={settings.backgroundColor ? { backgroundColor: settings.backgroundColor } : {}}
