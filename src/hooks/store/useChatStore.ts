@@ -1,6 +1,13 @@
 import { create } from 'zustand';
 import axios from 'axios';
 import { SOCKET_URL as SERVER_URL } from '@/lib/constant';
+import {
+    initializeEncryption,
+    getOrDeriveSharedKey,
+    encryptMessage,
+    decryptMessage,
+    getStoredPublicKey,
+} from '@/lib/crypto';
 
 export interface User {
     _id: string;
@@ -25,6 +32,9 @@ export interface Message {
     text: string;
     createdAt: string;
     seenBy: string[];
+    // E2E Encryption fields
+    iv?: string | null;
+    isEncrypted?: boolean;
 }
 
 interface ChatState {
@@ -47,6 +57,11 @@ interface ChatState {
     onlineUsers: string[];
     unreadCount: number;
 
+    // E2E Encryption state
+    myKeyPair: CryptoKeyPair | null;
+    isEncryptionReady: boolean;
+    userPublicKeys: Map<string, string>; // userId -> publicKey
+
     fetchConversations: () => Promise<void>;
     loadMoreConversations: () => Promise<void>;
     fetchMessages: (receiverId: string, before?: string) => Promise<void>;
@@ -61,6 +76,11 @@ interface ChatState {
     setOnlineUsers: (users: string[]) => void;
     addOnlineUser: (userId: string) => void;
     removeOnlineUser: (userId: string) => void;
+
+    // E2E Encryption methods
+    initEncryption: () => Promise<void>;
+    fetchUserPublicKey: (userId: string) => Promise<string | null>;
+    decryptMessageText: (msg: Message, otherUserId: string) => Promise<string>;
 }
 
 // Helper selector to get unread conversations count
@@ -96,6 +116,11 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
     onlineUsers: [],
     unreadCount: 0,
+
+    // E2E Encryption state
+    myKeyPair: null,
+    isEncryptionReady: false,
+    userPublicKeys: new Map(),
 
     setOnlineUsers: (users) => set({ onlineUsers: users }),
 
@@ -234,10 +259,45 @@ export const useChatStore = create<ChatState>((set, get) => ({
     sendMessage: async (receiverId: string, text: string) => {
         set({ isSendingMessage: true });
         try {
+            const { myKeyPair, isEncryptionReady } = get();
             const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+
+            let messagePayload: { receiverId: string; message: string; iv?: string; isEncrypted?: boolean } = {
+                receiverId,
+                message: text,
+            };
+
+            // Encrypt message if encryption is ready
+            console.log('🔐 E2E: Checking encryption', { isEncryptionReady, hasKeyPair: !!myKeyPair });
+            if (isEncryptionReady && myKeyPair) {
+                const theirPublicKey = await get().fetchUserPublicKey(receiverId);
+                console.log('🔐 E2E: Fetched their public key', { hasKey: !!theirPublicKey, keyLength: theirPublicKey?.length });
+                if (theirPublicKey) {
+                    try {
+                        const sharedKey = await getOrDeriveSharedKey(
+                            myKeyPair.privateKey,
+                            theirPublicKey,
+                            receiverId
+                        );
+                        const { ciphertext, iv } = await encryptMessage(sharedKey, text);
+                        messagePayload = {
+                            receiverId,
+                            message: ciphertext,
+                            iv,
+                            isEncrypted: true,
+                        };
+                        console.log('🔐 E2E: Message encrypted successfully', { ciphertextLength: ciphertext.length });
+                    } catch (encErr) {
+                        console.warn('❌ E2E: Encryption failed, sending plain text:', encErr);
+                    }
+                } else {
+                    console.log('⚠️ E2E: Receiver has no public key, sending plain text');
+                }
+            }
+
             const response = await axios.post(
                 `${SERVER_URL}/api/messages/send`,
-                { receiverId, message: text },
+                messagePayload,
                 { headers: { Authorization: `Bearer ${token}` } }
             );
 
@@ -248,6 +308,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
             // Ensure defaults
             if (!newMessage.seenBy) newMessage.seenBy = [];
 
+            // Store plain text locally for optimistic UI (we know what we sent)
+            const localMessage = { ...newMessage, text: text, _decryptedText: text };
+
             set((state) => {
                 const currentMessages = state.messages;
                 // Avoid duplicates if socket already added it
@@ -256,7 +319,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
                 }
 
                 return {
-                    messages: [...currentMessages, newMessage],
+                    messages: [...currentMessages, localMessage],
                     isSendingMessage: false
                 };
             });
@@ -266,7 +329,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
                 const conversations = state.conversations.map(c => {
                     const isParticipant = c.participants.some(p => p._id === receiverId);
                     if (isParticipant) {
-                        return { ...c, lastMessage: newMessage, updatedAt: newMessage.createdAt };
+                        return { ...c, lastMessage: localMessage, updatedAt: newMessage.createdAt };
                     }
                     return c;
                 });
@@ -413,5 +476,97 @@ export const useChatStore = create<ChatState>((set, get) => ({
             // Ideally revert here, but strict revert logic is complex. 
             // For read receipts, occasional sync error is acceptable vs disappearance.
         }
+    },
+
+    // E2E Encryption: Initialize encryption on app start
+    initEncryption: async () => {
+        try {
+            const { keyPair, publicKeyBase64, isNew } = await initializeEncryption();
+            set({ myKeyPair: keyPair, isEncryptionReady: true });
+
+            // Always upload public key to server (to ensure it's synced)
+            const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+            if (token) {
+                try {
+                    await axios.put(
+                        `${SERVER_URL}/api/messages/public-key`,
+                        { publicKey: publicKeyBase64 },
+                        { headers: { Authorization: `Bearer ${token}` } }
+                    );
+                    console.log('✅ E2E: Public key uploaded to server');
+                } catch (uploadErr) {
+                    console.warn('⚠️ E2E: Failed to upload public key:', uploadErr);
+                }
+            }
+
+            console.log('✅ E2E Encryption initialized', { isNew, keyLength: publicKeyBase64.length });
+        } catch (error) {
+            console.error('❌ Error initializing encryption:', error);
+        }
+    },
+
+    // E2E Encryption: Fetch user's public key
+    fetchUserPublicKey: async (userId: string) => {
+        const { userPublicKeys } = get();
+
+        // Check cache first
+        if (userPublicKeys.has(userId)) {
+            return userPublicKeys.get(userId)!;
+        }
+
+        try {
+            const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+            const response = await axios.get(`${SERVER_URL}/api/messages/public-key/${userId}`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+
+            const publicKey = response.data.publicKey;
+            if (publicKey) {
+                // Cache it
+                const newMap = new Map(userPublicKeys);
+                newMap.set(userId, publicKey);
+                set({ userPublicKeys: newMap });
+            }
+
+            return publicKey;
+        } catch (error) {
+            console.error('Error fetching user public key:', error);
+            return null;
+        }
+    },
+
+    // E2E Encryption: Decrypt a message
+    decryptMessageText: async (msg: Message, otherUserId: string) => {
+        const { myKeyPair, isEncryptionReady } = get();
+
+        // If not encrypted, return plain text
+        if (!msg.isEncrypted || !msg.iv) {
+            return msg.text;
+        }
+
+        // If encryption not ready, return placeholder
+        if (!isEncryptionReady || !myKeyPair) {
+            return '[Encrypted message - loading...]';
+        }
+
+        try {
+            const theirPublicKey = await get().fetchUserPublicKey(otherUserId);
+            if (!theirPublicKey) {
+                return '[Encrypted message - key not available]';
+            }
+
+            const sharedKey = await getOrDeriveSharedKey(
+                myKeyPair.privateKey,
+                theirPublicKey,
+                otherUserId
+            );
+
+            const decrypted = await decryptMessage(sharedKey, msg.text, msg.iv);
+            return decrypted;
+        } catch (error) {
+            console.error('Error decrypting message:', error);
+            return '[Decryption failed]';
+        }
     }
 }));
+

@@ -2,12 +2,53 @@ import { useRef, useEffect, useState } from "react";
 import { UserAvatar } from "@/components/UserAvatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Hash, Phone, Video, PlusCircle, SendHorizontal, CheckCheck, Loader2, ArrowLeft } from "lucide-react";
+import { Hash, Phone, Video, PlusCircle, SendHorizontal, CheckCheck, Loader2, ArrowLeft, Lock } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { useAuthStore } from "@/hooks/store/authStore";
-import { useChatStore } from "@/hooks/store/useChatStore";
+import { useChatStore, Message } from "@/hooks/store/useChatStore";
 import { useSocket } from "@/hooks/useSocket";
 import { cn } from "@/lib/utils";
+
+// Component to handle async decryption of a single message
+function DecryptedMessageText({ msg, otherUserId }: { msg: Message & { _decryptedText?: string }; otherUserId: string }) {
+    const { decryptMessageText, isEncryptionReady } = useChatStore();
+    const [text, setText] = useState<string>(msg._decryptedText || msg.text);
+    const [isDecrypting, setIsDecrypting] = useState(false);
+
+    useEffect(() => {
+        // If already has decrypted text (sent by us), use it
+        if (msg._decryptedText) {
+            setText(msg._decryptedText);
+            return;
+        }
+
+        // If not encrypted, use plain text
+        if (!msg.isEncrypted) {
+            setText(msg.text);
+            return;
+        }
+
+        // Decrypt the message
+        if (isEncryptionReady) {
+            setIsDecrypting(true);
+            decryptMessageText(msg, otherUserId)
+                .then(decrypted => {
+                    setText(decrypted);
+                    setIsDecrypting(false);
+                })
+                .catch(() => {
+                    setText('[Decryption error]');
+                    setIsDecrypting(false);
+                });
+        }
+    }, [msg, otherUserId, isEncryptionReady, decryptMessageText]);
+
+    if (isDecrypting) {
+        return <span className="animate-pulse">🔐 Decrypting...</span>;
+    }
+
+    return <>{text}</>;
+}
 
 interface ChatAreaProps {
     activeUserId?: string;
@@ -19,9 +60,14 @@ interface ChatAreaProps {
 export function ChatArea({ activeUserId, userName = "Select a User", userAvatar, onBack }: ChatAreaProps) {
     const scrollRef = useRef<HTMLDivElement>(null);
     const { user } = useAuthStore();
-    const { messages, fetchMessages, sendMessage, isLoadingMessages, markMessageAsRead, isSendingMessage, onlineUsers, hasMoreMessages } = useChatStore();
+    const { messages, fetchMessages, sendMessage, isLoadingMessages, markMessageAsRead, isSendingMessage, onlineUsers, hasMoreMessages, initEncryption, isEncryptionReady } = useChatStore();
     const [inputValue, setInputValue] = useState("");
     const { socket, on, emit } = useSocket();
+
+    // Initialize E2E Encryption
+    useEffect(() => {
+        initEncryption();
+    }, [initEncryption]);
 
     // Listen for read receipts
     useEffect(() => {
@@ -173,10 +219,10 @@ export function ChatArea({ activeUserId, userName = "Select a User", userAvatar,
 
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 md:p-6 custom-scrollbar" ref={scrollRef} onScroll={handleScroll}>
-                <div className="flex flex-col gap-6 pb-4">
+                <div className="flex flex-col gap-3 pb-4">
                     {/* Welcome message - Only show if no more messages (start of history) */}
                     {!hasMoreMessages && !isLoadingMessages && (
-                        <div className="mt-12 mb-12 px-6 py-10 rounded-[2.5rem] bg-primary/5 border border-primary/5 flex flex-col items-center text-center shadow-soft">
+                        <div className="mt-4 mb-4 px-6 py-6 rounded-[2rem] bg-primary/5 border border-primary/5 flex flex-col items-center text-center shadow-soft">
                             <div className="relative mb-6">
                                 <UserAvatar src={userAvatar} name={userName} className="h-24 w-24 border-2 border-primary/20 shadow-premium" />
                                 <div className="absolute -bottom-2 -right-2 bg-primary text-primary-foreground p-2 rounded-full shadow-lg">
@@ -234,12 +280,15 @@ export function ChatArea({ activeUserId, userName = "Select a User", userAvatar,
                                             }`}
                                             style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
                                             <p className="text-[14.5px] leading-relaxed font-medium">
-                                                {msg.text}
+                                                <DecryptedMessageText msg={msg} otherUserId={activeUserId || ''} />
                                             </p>
                                         </div>
 
                                         {isLastInGroup && (
                                             <div className="flex items-center gap-1.5 mt-1.5 px-1">
+                                                {msg.isEncrypted && (
+                                                    <Lock className="w-2.5 h-2.5 text-muted-foreground/40" />
+                                                )}
                                                 <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40">
                                                     {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                 </span>

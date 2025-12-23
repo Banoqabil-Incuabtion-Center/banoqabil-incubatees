@@ -2,13 +2,65 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { UserAvatar } from "@/components/UserAvatar";
 import { cn } from "@/lib/utils";
-import { Search, Megaphone, Hash } from "lucide-react";
+import { Search, Megaphone, Hash, Lock } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { useChatStore } from "@/hooks/store/useChatStore";
+import { useChatStore, Message } from "@/hooks/store/useChatStore";
 import { useAuthStore } from "@/hooks/store/authStore";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useSocket } from "@/hooks/useSocket";
+
+// Component to decrypt last message for sidebar preview
+function DecryptedLastMessage({ message, otherUserId }: { message: Message & { _decryptedText?: string }; otherUserId: string }) {
+    const { decryptMessageText, isEncryptionReady } = useChatStore();
+    const [text, setText] = useState<string>('');
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        // If already has decrypted text, use it
+        if (message._decryptedText) {
+            setText(message._decryptedText);
+            setIsLoading(false);
+            return;
+        }
+
+        // If not encrypted, use plain text
+        if (!message.isEncrypted) {
+            setText(message.text);
+            setIsLoading(false);
+            return;
+        }
+
+        // Decrypt the message
+        if (isEncryptionReady) {
+            decryptMessageText(message, otherUserId)
+                .then(decrypted => {
+                    setText(decrypted);
+                    setIsLoading(false);
+                })
+                .catch(() => {
+                    setText('🔐 Encrypted');
+                    setIsLoading(false);
+                });
+        } else {
+            setText('🔐 Encrypted');
+            setIsLoading(false);
+        }
+    }, [message, otherUserId, isEncryptionReady, decryptMessageText]);
+
+    if (isLoading) {
+        return <span className="animate-pulse">...</span>;
+    }
+
+    const displayText = text.length > 30 ? `${text.slice(0, 30)}...` : text;
+
+    return (
+        <>
+            {message.isEncrypted && <Lock className="w-3 h-3 mr-1 inline-block opacity-50" />}
+            {displayText}
+        </>
+    );
+}
 
 interface DirectSidebarProps {
     className?: string;
@@ -284,10 +336,8 @@ export function DirectSidebar({ className, activeUserId, onUserSelect }: DirectS
                                                             {isUnread && <span className="h-2 w-2 rounded-full bg-primary animate-pulse shrink-0" />}
                                                         </div>
                                                         <p className={cn("text-xs font-medium", isUnread ? "text-foreground" : "text-muted-foreground/60")}>
-                                                            {conversation.lastMessage?.text
-                                                                ? (conversation.lastMessage.text.length > 30
-                                                                    ? `${conversation.lastMessage.text.slice(0, 30)}...`
-                                                                    : conversation.lastMessage.text)
+                                                            {conversation.lastMessage
+                                                                ? <DecryptedLastMessage message={conversation.lastMessage as Message} otherUserId={otherUser._id} />
                                                                 : "Started a conversation"}
                                                         </p>
                                                     </div>
