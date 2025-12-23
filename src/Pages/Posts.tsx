@@ -499,12 +499,13 @@ const Posts = () => {
               opts={{
                 align: "start",
                 loop: true,
+                dragFree: true, // Makes it much smoother on mobile
               }}
               className="w-full relative group"
             >
               <CarouselContent>
                 {suggestedUsers.map((suggestedUser) => (
-                  <CarouselItem key={suggestedUser._id} className="basis-[85%] sm:basis-[45%] md:basis-[350px]">
+                  <CarouselItem key={suggestedUser._id} className="basis-full sm:basis-[66%] md:basis-1/2">
                     <div className="p-1 h-full">
                       <UserCard
                         user={suggestedUser}

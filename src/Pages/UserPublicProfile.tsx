@@ -119,8 +119,8 @@ export default function UserPublicProfile() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
 
                 {/* Left Column: Profile Summary */}
-                <div className="lg:col-span-4 space-y-6 animate-in fade-in slide-in-from-left-4 duration-500">
-                    <UserCard user={user} isPublic={true} />
+                <div className="lg:col-span-4 space-y-6 animate-in fade-in slide-in-from-left-4 duration-500 flex justify-center lg:block">
+                    <UserCard user={user} isPublic={true} className="mx-0" />
                 </div>
 
                 {/* Right Column: Details & Posts */}

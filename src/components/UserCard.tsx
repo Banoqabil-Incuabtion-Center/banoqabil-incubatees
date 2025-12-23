@@ -92,6 +92,7 @@ export const UserCard: React.FC<UserCardProps> = ({ user, authUser, isPublic = f
                 "relative group overflow-hidden transition-all duration-700 active:scale-[0.99] cursor-pointer",
                 themeClasses[currentTheme],
                 "rounded-2xl",
+                "w-full max-w-[380px] min-h-[460px] sm:min-h-[520px] mx-auto flex flex-col justify-center", // Responsive standardized sizing
                 className
             )}
             style={settings.backgroundColor ? { backgroundColor: settings.backgroundColor } : {}}
@@ -107,7 +108,7 @@ export const UserCard: React.FC<UserCardProps> = ({ user, authUser, isPublic = f
             </div>
 
             <CardContent className={cn(
-                "flex flex-col items-center text-center relative z-10 p-8 sm:p-10 gap-6"
+                "flex flex-col items-center text-center relative z-10 p-6 sm:p-10 gap-4 sm:gap-6" // Reduced padding and gap on mobile
             )}>
                 <div className="relative">
                     <div className={cn(
