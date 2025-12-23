@@ -224,7 +224,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
         try {
             const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-            let url = `${SERVER_URL}/api/messages/${receiverId}?limit=5`; // Default limit
+            let url = `${SERVER_URL}/api/messages/${receiverId}?limit=50`; // Default limit
             if (before) {
                 url += `&before=${before}`;
             }
@@ -247,7 +247,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
                 return {
                     messages: updatedMessages,
                     isLoadingMessages: false,
-                    hasMoreMessages: newMessages.length === 5 // If we got full limit, likely more exists
+                    hasMoreMessages: newMessages.length === 50 // If we got full limit, likely more exists
                 };
             });
         } catch (error) {

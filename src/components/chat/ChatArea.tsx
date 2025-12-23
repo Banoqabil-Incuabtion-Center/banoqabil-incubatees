@@ -148,7 +148,7 @@ export function ChatArea({ activeUserId, userName = "Select a User", userAvatar,
         const { scrollTop, scrollHeight } = scrollRef.current;
 
         // If scrolled to top and not loading and has more messages
-        if (scrollTop === 0 && !isLoadingMessages && hasMoreMessages && messages.length >= 5) {
+        if (scrollTop === 0 && !isLoadingMessages && !isLoadingMore && hasMoreMessages && messages.length > 0) {
             // We need a way to know if there are truly more messages, 
             // but for now we can try fetching if we have a significant amount.
             // Ideally store should expose `hasMoreMessages`.
