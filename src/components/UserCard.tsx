@@ -6,7 +6,6 @@ import { useAuthStore } from '@/hooks/store/authStore';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
 import { UserAvatar } from "./UserAvatar";
 
 interface UserCardProps {
@@ -92,6 +91,7 @@ export const UserCard: React.FC<UserCardProps> = ({ user, authUser, isPublic = f
             className={cn(
                 "relative group overflow-hidden transition-all duration-700 active:scale-[0.99] cursor-pointer",
                 themeClasses[currentTheme],
+                settings.borderRadius || "rounded-3xl",
                 className
             )}
             style={settings.backgroundColor ? { backgroundColor: settings.backgroundColor } : {}}
@@ -181,42 +181,4 @@ export const UserCard: React.FC<UserCardProps> = ({ user, authUser, isPublic = f
         </Card>
     );
 };
-export function UserCardSkeleton({ className }: { className?: string }) {
-    const { user } = useAuthStore();
-    const settings = { ...DEFAULT_SETTINGS, ...(user?.cardSettings || {}) };
 
-    return (
-        <Card className={cn(
-            "relative overflow-hidden p-8 sm:p-10 flex flex-col items-center text-center gap-6",
-            settings.borderRadius || "rounded-3xl",
-            className
-        )}>
-            {/* Avatar Skeleton */}
-            <div className="relative">
-                <Skeleton className={cn(
-                    "w-24 h-24 sm:w-32 sm:h-32 border-4 border-background",
-                    settings.borderRadius || "rounded-3xl"
-                )} />
-            </div>
-
-            {/* Badges Skeleton */}
-            <div className="flex flex-wrap items-center justify-center gap-2">
-                <Skeleton className="h-6 w-20 rounded-full" />
-                <Skeleton className="h-6 w-24 rounded-full" />
-                <Skeleton className="h-6 w-28 rounded-full" />
-            </div>
-
-            {/* Name and Bio Skeleton */}
-            <div className="flex flex-col gap-2 items-center w-full">
-                <Skeleton className="h-8 w-3/4 rounded-lg" />
-                <Skeleton className="h-8 w-1/2 rounded-lg" />
-            </div>
-
-            <div className="flex flex-col gap-2 w-full mt-4">
-                <Skeleton className="h-4 w-full rounded-md" />
-                <Skeleton className="h-4 w-5/6 rounded-md" />
-                <Skeleton className="h-4 w-4/6 rounded-md" />
-            </div>
-        </Card>
-    );
-}

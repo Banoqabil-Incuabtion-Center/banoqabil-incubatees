@@ -38,7 +38,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePostStore } from "@/hooks/store/usePostStore";
 import { usePostSocket } from "@/hooks/usePostSocket";
-import { UserCard, UserCardSkeleton } from "@/components/UserCard";
+import { UserCard } from "@/components/UserCard";
 import { userRepo } from "@/repositories/userRepo";
 import {
   Carousel,
@@ -485,8 +485,8 @@ const Posts = () => {
           </div>
         </div>
 
-        {/* Community Suggestions */}
-        {(loadingSuggestions || suggestedUsers.length > 0) && (
+        {/* Community Suggestions Section */}
+        {!loadingSuggestions && suggestedUsers.length > 0 && (
           <div className="space-y-4 mb-12">
             <div className="flex items-center justify-between px-1">
               <h2 className="text-xl font-black tracking-tight flex items-center gap-2">
@@ -503,26 +503,16 @@ const Posts = () => {
               className="w-full relative group"
             >
               <CarouselContent>
-                {loadingSuggestions ? (
-                  [...Array(4)].map((_, i) => (
-                    <CarouselItem key={i} className="basis-[85%] sm:basis-[45%] md:basis-[350px]">
-                      <div className="p-1 h-full">
-                        <UserCardSkeleton className="h-full border border-primary/10 shadow-premium" />
-                      </div>
-                    </CarouselItem>
-                  ))
-                ) : (
-                  suggestedUsers.map((suggestedUser) => (
-                    <CarouselItem key={suggestedUser._id} className="basis-[85%] sm:basis-[45%] md:basis-[350px]">
-                      <div className="p-1 h-full">
-                        <UserCard
-                          user={suggestedUser}
-                          className="h-full border border-primary/10 shadow-premium hover:shadow-hover-card hover:translate-y-[-4px] transition-all duration-500"
-                        />
-                      </div>
-                    </CarouselItem>
-                  ))
-                )}
+                {suggestedUsers.map((suggestedUser) => (
+                  <CarouselItem key={suggestedUser._id} className="basis-[85%] sm:basis-[45%] md:basis-[350px]">
+                    <div className="p-1 h-full">
+                      <UserCard
+                        user={suggestedUser}
+                        className="h-full border border-primary/10 shadow-premium hover:shadow-hover-card hover:translate-y-[-4px] transition-all duration-500"
+                      />
+                    </div>
+                  </CarouselItem>
+                ))}
               </CarouselContent>
               <div className="hidden sm:block">
                 <CarouselPrevious className="absolute -left-12 top-1/2 -translate-y-1/2 bg-background/50 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity" />
