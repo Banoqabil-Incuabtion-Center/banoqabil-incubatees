@@ -39,11 +39,11 @@ function DecryptedLastMessage({ message, otherUserId }: { message: Message & { _
                     setIsLoading(false);
                 })
                 .catch(() => {
-                    setText('🔐 Encrypted');
+                    setText('Encrypted');
                     setIsLoading(false);
                 });
         } else {
-            setText('🔐 Encrypted');
+            setText('Encrypted');
             setIsLoading(false);
         }
     }, [message, otherUserId, isEncryptionReady, decryptMessageText]);

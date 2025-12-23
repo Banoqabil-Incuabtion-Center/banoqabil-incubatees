@@ -97,6 +97,84 @@ export async function deriveSharedKey(privateKey: CryptoKey, publicKey: CryptoKe
     );
 }
 
+/**
+ * BACKUP & RECOVERY LOGIC
+ * We use PBKDF2 to derive a symmetric key from a user password, 
+ * which is then used to encrypt the private key before uploading to server.
+ */
+
+// Derive a backup key from a password
+async function deriveBackupKey(password: string, salt: Uint8Array): Promise<CryptoKey> {
+    const encoder = new TextEncoder();
+    const baseKey = await crypto.subtle.importKey(
+        'raw',
+        encoder.encode(password),
+        'PBKDF2',
+        false,
+        ['deriveKey']
+    );
+
+    return await crypto.subtle.deriveKey(
+        {
+            name: 'PBKDF2',
+            salt: salt as any,
+            iterations: 100000,
+            hash: 'SHA-256'
+        },
+        baseKey,
+        { name: 'AES-GCM', length: 256 },
+        false,
+        ['encrypt', 'decrypt']
+    );
+}
+
+// Encrypt private key for backup
+export async function backupPrivateKey(privateKey: CryptoKey, password: string): Promise<{ ciphertext: string; iv: string; salt: string }> {
+    const jwk = await exportPrivateKey(privateKey);
+    const encoder = new TextEncoder();
+    const data = encoder.encode(JSON.stringify(jwk));
+
+    const salt = crypto.getRandomValues(new Uint8Array(16));
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const backupKey = await deriveBackupKey(password, salt);
+
+    const encrypted = await crypto.subtle.encrypt(
+        { name: 'AES-GCM', iv },
+        backupKey,
+        data
+    );
+
+    return {
+        ciphertext: arrayBufferToBase64(encrypted),
+        iv: arrayBufferToBase64(iv.buffer),
+        salt: arrayBufferToBase64(salt.buffer)
+    };
+}
+
+// Decrypt and restore private key from backup
+export async function restorePrivateKey(
+    ciphertext: string,
+    password: string,
+    ivBase64: string,
+    saltBase64: string
+): Promise<CryptoKey> {
+    const encryptedData = base64ToArrayBuffer(ciphertext);
+    const iv = new Uint8Array(base64ToArrayBuffer(ivBase64));
+    const salt = new Uint8Array(base64ToArrayBuffer(saltBase64));
+
+    const backupKey = await deriveBackupKey(password, salt);
+
+    const decrypted = await crypto.subtle.decrypt(
+        { name: 'AES-GCM', iv },
+        backupKey,
+        encryptedData
+    );
+
+    const decoder = new TextDecoder();
+    const jwk = JSON.parse(decoder.decode(decrypted));
+    return await importPrivateKey(jwk);
+}
+
 // Encrypt message using AES-GCM
 export async function encryptMessage(sharedKey: CryptoKey, plaintext: string): Promise<{ ciphertext: string; iv: string }> {
     const encoder = new TextEncoder();
@@ -199,9 +277,10 @@ export async function getOrDeriveSharedKey(
     theirPublicKeyBase64: string,
     userId: string
 ): Promise<CryptoKey> {
-    // Check cache first
-    if (sharedKeyCache.has(userId)) {
-        return sharedKeyCache.get(userId)!;
+    // Check cache first - use both userId and public key to avoid stale keys
+    const cacheKey = `${userId}:${theirPublicKeyBase64}`;
+    if (sharedKeyCache.has(cacheKey)) {
+        return sharedKeyCache.get(cacheKey)!;
     }
 
     // Derive new shared key
@@ -209,7 +288,7 @@ export async function getOrDeriveSharedKey(
     const sharedKey = await deriveSharedKey(privateKey, theirPublicKey);
 
     // Cache it
-    sharedKeyCache.set(userId, sharedKey);
+    sharedKeyCache.set(cacheKey, sharedKey);
 
     return sharedKey;
 }

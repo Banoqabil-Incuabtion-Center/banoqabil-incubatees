@@ -7,7 +7,29 @@ import {
     encryptMessage,
     decryptMessage,
     getStoredPublicKey,
+    generateKeyPair,
+    getStoredKeyPair,
+    storeKeyPair,
+    exportPublicKey,
+    importPublicKey,
+    backupPrivateKey,
+    restorePrivateKey,
+    clearSharedKeyCache,
 } from '@/lib/crypto';
+
+// Helper to safely decode JWT payload
+const decodeJWTPayload = (token: string) => {
+    try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function (c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+        return JSON.parse(jsonPayload);
+    } catch (e) {
+        return null;
+    }
+};
 
 export interface User {
     _id: string;
@@ -61,6 +83,8 @@ interface ChatState {
     myKeyPair: CryptoKeyPair | null;
     isEncryptionReady: boolean;
     userPublicKeys: Map<string, string>; // userId -> publicKey
+    needsRecovery: boolean;
+    backupData: { encryptedPrivateKey: string; iv: string; salt: string } | null;
 
     fetchConversations: () => Promise<void>;
     loadMoreConversations: () => Promise<void>;
@@ -81,6 +105,8 @@ interface ChatState {
     initEncryption: () => Promise<void>;
     fetchUserPublicKey: (userId: string) => Promise<string | null>;
     decryptMessageText: (msg: Message, otherUserId: string) => Promise<string>;
+    recoverKeys: (password: string) => Promise<boolean>;
+    setupRecovery: (password: string) => Promise<void>;
 }
 
 // Helper selector to get unread conversations count
@@ -121,6 +147,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
     myKeyPair: null,
     isEncryptionReady: false,
     userPublicKeys: new Map(),
+    needsRecovery: false,
+    backupData: null,
 
     setOnlineUsers: (users) => set({ onlineUsers: users }),
 
@@ -481,27 +509,153 @@ export const useChatStore = create<ChatState>((set, get) => ({
     // E2E Encryption: Initialize encryption on app start
     initEncryption: async () => {
         try {
-            const { keyPair, publicKeyBase64, isNew } = await initializeEncryption();
-            set({ myKeyPair: keyPair, isEncryptionReady: true });
-
-            // Always upload public key to server (to ensure it's synced)
             const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-            if (token) {
+            if (!token) return;
+
+            // 1. Get current user's profile info from server (includes backup)
+            const decodedToken = decodeJWTPayload(token);
+            if (!decodedToken) {
+                console.error('🔐 E2E: Failed to decode token');
+                return;
+            }
+            const myUserId = decodedToken.userId || decodedToken.id;
+
+            console.log('🔐 E2E: Initializing for user', myUserId);
+            let currentUserBackupData = null;
+            try {
+                // We use the public-key endpoint with own ID to get backup info
+                const response = await axios.get(`${SERVER_URL}/api/messages/public-key/${myUserId}`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                console.log('🔐 E2E: Server backup status:', { hasBackup: !!response.data.backup?.encryptedPrivateKey });
+                if (response.data.backup?.encryptedPrivateKey) {
+                    currentUserBackupData = response.data.backup;
+                }
+            } catch (err) {
+                console.warn('⚠️ E2E: Failed to fetch own backup info:', err);
+            }
+
+            // 2. Try to get local key pair
+            let keyPair = await getStoredKeyPair();
+
+            if (!keyPair) {
+                // No local key. If we have a backup, we need recovery.
+                if (currentUserBackupData) {
+                    console.log('🔐 E2E: Local key missing but backup found. Recovery needed.');
+                    set({
+                        needsRecovery: true,
+                        backupData: currentUserBackupData,
+                        isEncryptionReady: false
+                    });
+                    return;
+                } else {
+                    // No local key and no backup. Generate new one.
+                    console.log('🔐 E2E: No local key or backup found. Generating new pair.');
+                    keyPair = await generateKeyPair();
+                    await storeKeyPair(keyPair);
+                    clearSharedKeyCache(); // Clear cache for the new local key
+                }
+            }
+
+            // 3. Sync public key ONLY if no backup exists OR we just generated a new one
+            // This prevents overwriting a valid public key on the server before recovery
+            if (!currentUserBackupData) {
+                const publicKeyBase64 = await exportPublicKey(keyPair.publicKey);
                 try {
                     await axios.put(
                         `${SERVER_URL}/api/messages/public-key`,
                         { publicKey: publicKeyBase64 },
                         { headers: { Authorization: `Bearer ${token}` } }
                     );
-                    console.log('✅ E2E: Public key uploaded to server');
-                } catch (uploadErr) {
-                    console.warn('⚠️ E2E: Failed to upload public key:', uploadErr);
+                    console.log('🔐 E2E: Public key synced to server');
+                } catch (err) {
+                    console.error('❌ E2E: Public key sync failed:', err);
                 }
             }
 
-            console.log('✅ E2E Encryption initialized', { isNew, keyLength: publicKeyBase64.length });
+            set({
+                myKeyPair: keyPair,
+                isEncryptionReady: true,
+                needsRecovery: false,
+                backupData: currentUserBackupData // Keep backupData reference for UI checks
+            });
+            console.log('✅ E2E Encryption initialized');
         } catch (error) {
             console.error('❌ Error initializing encryption:', error);
+        }
+    },
+
+    // Recover keys from backup using password
+    recoverKeys: async (password: string) => {
+        const { backupData } = get();
+        if (!backupData) return false;
+
+        try {
+            console.log('🔐 E2E: Attempting recovery with password...');
+            const { encryptedPrivateKey, iv, salt } = backupData;
+            const privateKey = await restorePrivateKey(encryptedPrivateKey, password, iv, salt);
+
+            // We also need the public key. Fetch from server.
+            const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+            const decodedToken = decodeJWTPayload(token!);
+            if (!decodedToken) throw new Error('Failed to decode token during recovery');
+            const myUserId = decodedToken.userId || decodedToken.id;
+
+            console.log('🔐 E2E: Fetching public key for owner', myUserId);
+            const response = await axios.get(`${SERVER_URL}/api/messages/public-key/${myUserId}`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            const publicKeyBase64 = response.data.publicKey;
+
+            if (!publicKeyBase64) {
+                console.error('🔐 E2E: Public key missing on server');
+                throw new Error("Public key not found on server");
+            }
+
+            const publicKey = await importPublicKey(publicKeyBase64);
+            const keyPair = { privateKey, publicKey };
+
+            // Store locally
+            await storeKeyPair(keyPair);
+            clearSharedKeyCache(); // Clear cache to use the recovered private key
+            set({ myKeyPair: keyPair, isEncryptionReady: true, needsRecovery: false });
+
+            console.log('✅ E2E: Keys recovered successfully');
+            return true;
+        } catch (error) {
+            console.error('❌ E2E: Recovery failed:', error);
+            return false;
+        }
+    },
+
+    // Setup backup for the first time
+    setupRecovery: async (password: string) => {
+        const { myKeyPair } = get();
+        if (!myKeyPair) return;
+
+        try {
+            console.log('🔐 E2E: Setting up recovery backup...');
+            const backup = await backupPrivateKey(myKeyPair.privateKey, password);
+            const publicKeyBase64 = await exportPublicKey(myKeyPair.publicKey);
+
+            const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+            const backupPayload = {
+                encryptedPrivateKey: backup.ciphertext,
+                iv: backup.iv,
+                salt: backup.salt
+            };
+
+            await axios.put(
+                `${SERVER_URL}/api/messages/public-key`,
+                { publicKey: publicKeyBase64, backup: backupPayload },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+
+            console.log('✅ E2E: Recovery backup created');
+            set({ backupData: backupPayload });
+        } catch (error) {
+            console.error('❌ E2E: Setup recovery failed:', error);
+            throw error;
         }
     },
 

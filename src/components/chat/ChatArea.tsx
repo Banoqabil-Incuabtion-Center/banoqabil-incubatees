@@ -93,6 +93,8 @@ interface ChatAreaProps {
     onBack?: () => void;
 }
 
+import { EncryptionRecovery } from "./EncryptionRecovery";
+
 export function ChatArea({ activeUserId, userName = "Select a User", userAvatar, onBack }: ChatAreaProps) {
     const scrollRef = useRef<HTMLDivElement>(null);
     const { user } = useAuthStore();
@@ -215,6 +217,9 @@ export function ChatArea({ activeUserId, userName = "Select a User", userAvatar,
 
     return (
         <div className="flex flex-col flex-1 h-full bg-background/50 relative min-h-0">
+            {/* E2E Recovery / Setup UI */}
+            <EncryptionRecovery />
+
             {/* Header */}
             <div className="h-16 border-b border-primary/5 flex items-center justify-between px-6 shadow-soft bg-white/80 backdrop-blur-md sticky top-0 z-10 transition-all duration-300">
                 <div className="flex items-center gap-4">
