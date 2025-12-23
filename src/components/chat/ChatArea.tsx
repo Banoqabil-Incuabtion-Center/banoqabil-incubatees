@@ -12,19 +12,34 @@ import { cn } from "@/lib/utils";
 // Component to handle async decryption of a single message
 function DecryptedMessageText({ msg, otherUserId }: { msg: Message & { _decryptedText?: string }; otherUserId: string }) {
     const { decryptMessageText, isEncryptionReady } = useChatStore();
-    const [text, setText] = useState<string>(msg._decryptedText || msg.text);
-    const [isDecrypting, setIsDecrypting] = useState(false);
+
+    // For encrypted messages without decrypted text, start with empty string
+    // so we don't flash the encrypted ciphertext
+    const getInitialText = () => {
+        if (msg._decryptedText) return msg._decryptedText;
+        if (!msg.isEncrypted) return msg.text;
+        return ''; // Don't show encrypted text
+    };
+
+    const [text, setText] = useState<string>(getInitialText());
+    // Start as decrypting if message is encrypted and not already decrypted
+    const [isDecrypting, setIsDecrypting] = useState(msg.isEncrypted && !msg._decryptedText);
+    const [isExpanded, setIsExpanded] = useState(false);
+
+    const MAX_LENGTH = 200; // Characters before truncation
 
     useEffect(() => {
         // If already has decrypted text (sent by us), use it
         if (msg._decryptedText) {
             setText(msg._decryptedText);
+            setIsDecrypting(false);
             return;
         }
 
         // If not encrypted, use plain text
         if (!msg.isEncrypted) {
             setText(msg.text);
+            setIsDecrypting(false);
             return;
         }
 
@@ -43,11 +58,32 @@ function DecryptedMessageText({ msg, otherUserId }: { msg: Message & { _decrypte
         }
     }, [msg, otherUserId, isEncryptionReady, decryptMessageText]);
 
-    // if (isDecrypting) {
-    //     return <span className="animate-pulse">🔐 Decrypting...</span>;
-    // }
+    // Show truncated text with Read More
+    const shouldTruncate = text.length > MAX_LENGTH && !isExpanded;
+    const displayText = shouldTruncate ? text.substring(0, MAX_LENGTH) + '...' : text;
 
-    return <>{text}</>;
+    return (
+        <>
+            {isDecrypting ? (
+                <div className="flex gap-1 items-center">
+                    <div className="h-3 w-16 bg-muted-foreground/20 rounded animate-pulse" />
+                    <div className="h-3 w-10 bg-muted-foreground/15 rounded animate-pulse" />
+                </div>
+            ) : (
+                <>
+                    {displayText}
+                    {text.length > MAX_LENGTH && (
+                        <button
+                            onClick={() => setIsExpanded(!isExpanded)}
+                            className="text-primary hover:underline text-xs font-semibold ml-1"
+                        >
+                            {isExpanded ? 'Show less' : 'Read more'}
+                        </button>
+                    )}
+                </>
+            )}
+        </>
+    );
 }
 
 interface ChatAreaProps {
@@ -112,7 +148,7 @@ export function ChatArea({ activeUserId, userName = "Select a User", userAvatar,
         const { scrollTop, scrollHeight } = scrollRef.current;
 
         // If scrolled to top and not loading and has more messages
-        if (scrollTop === 0 && !isLoadingMessages && hasMoreMessages && messages.length >= 30) {
+        if (scrollTop === 0 && !isLoadingMessages && hasMoreMessages && messages.length >= 5) {
             // We need a way to know if there are truly more messages, 
             // but for now we can try fetching if we have a significant amount.
             // Ideally store should expose `hasMoreMessages`.
