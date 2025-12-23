@@ -103,9 +103,9 @@ export const UserCard: React.FC<UserCardProps> = ({ user, authUser, isPublic = f
             </div>
 
             <CardContent className={cn(
-                "flex flex-col items-center text-center relative z-10 p-8 sm:p-10"
+                "flex flex-col items-center text-center relative z-10 p-8 sm:p-10 gap-6"
             )}>
-                <div className="relative mb-6">
+                <div className="relative">
                     <div className={cn(
                         "w-24 h-24 sm:w-32 sm:h-32 overflow-hidden border-4 border-background bg-muted relative z-10 transition-all duration-700",
                         settings.borderRadius || "rounded-3xl"
@@ -119,7 +119,7 @@ export const UserCard: React.FC<UserCardProps> = ({ user, authUser, isPublic = f
                     </div>
                 </div>
 
-                <div className="flex flex-wrap items-center justify-center gap-2 mb-6 animate-in slide-in-from-bottom-2 duration-700">
+                <div className="flex flex-wrap items-center justify-center gap-2 animate-in slide-in-from-bottom-2 duration-700">
                     <Badge {...badgeStyle}>
                         <IdCard className="w-3 h-3" />
                         {user?.incubation_id || user?.bq_id || "STUDENT"}
@@ -138,27 +138,29 @@ export const UserCard: React.FC<UserCardProps> = ({ user, authUser, isPublic = f
                     )}
                 </div>
 
-                <h1
-                    className={cn(
-                        "text-2xl sm:text-3xl font-black tracking-tight leading-none mb-1 transition-all duration-500",
-                        !settings.textColor && (currentTheme === 'dark' ? "text-white" : "text-foreground")
-                    )}
-                    style={settings.textColor ? { color: settings.textColor } : {}}
-                >
-                    {user?.name || "Member Name"}
-                </h1>
-
-                {user?.bio && (
-                    <p
+                <div className="flex flex-col gap-2">
+                    <h1
                         className={cn(
-                            "text-sm mt-3 max-w-[280px] leading-relaxed font-medium mx-auto line-clamp-2 transition-all duration-500 opacity-90",
-                            !settings.textColor && (currentTheme === 'dark' ? "text-zinc-400" : "text-muted-foreground")
+                            "text-2xl sm:text-3xl font-black tracking-tight leading-none transition-all duration-500",
+                            !settings.textColor && (currentTheme === 'dark' ? "text-white" : "text-foreground")
                         )}
                         style={settings.textColor ? { color: settings.textColor } : {}}
                     >
-                        {user?.bio}
-                    </p>
-                )}
+                        {user?.name || "Member Name"}
+                    </h1>
+
+                    {user?.bio && (
+                        <p
+                            className={cn(
+                                "text-sm max-w-[280px] leading-relaxed font-medium mx-auto line-clamp-2 transition-all duration-500 opacity-90",
+                                !settings.textColor && (currentTheme === 'dark' ? "text-zinc-400" : "text-muted-foreground")
+                            )}
+                            style={settings.textColor ? { color: settings.textColor } : {}}
+                        >
+                            {user?.bio}
+                        </p>
+                    )}
+                </div>
 
                 {user?.status && settings.showStatus !== false && (
                     <div
