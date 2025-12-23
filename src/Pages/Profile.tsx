@@ -116,6 +116,7 @@ export default function ProfilePage() {
     { label: "Phone Number", value: user?.phone, icon: Phone },
     { label: "CNIC", value: user?.CNIC, icon: CreditCard },
     { label: "Course", value: user?.course, icon: GraduationCap },
+    { label: "Location", value: user?.location, icon: MapPin },
   ]
 
   return (

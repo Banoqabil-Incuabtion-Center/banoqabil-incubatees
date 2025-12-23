@@ -40,6 +40,7 @@ const signUpSchema = z.object({
   course: z.string().min(1, "Course is required"),
   gender: z.string().min(1, "Gender is required"),
   shift: z.string().min(1, "Shift is required"),
+  location: z.string().min(1, "Location is required"),
   dob: z.string().refine((val) => {
     const dobDate = new Date(val);
     const today = new Date();
@@ -62,6 +63,7 @@ const SignUp: React.FC = () => {
   const [courses, setCourses] = useState<string[]>([]);
   const [genders, setGenders] = useState<string[]>([]);
   const [shifts, setShifts] = useState<string[]>([]);
+  const [locations, setLocations] = useState<string[]>([]);
 
   const navigate = useNavigate();
 
@@ -86,6 +88,7 @@ const SignUp: React.FC = () => {
       course: "",
       gender: "",
       shift: "",
+      location: "",
       dob: "", // Added default value
       termsAccepted: false,
     },
@@ -101,6 +104,7 @@ const SignUp: React.FC = () => {
         setCourses(res.courses || []);
         setGenders(res.genders || []);
         setShifts(res.shifts || []);
+        setLocations(res.locations || []);
       } catch (err) {
         toast.error("Failed to load options");
       }
@@ -214,7 +218,7 @@ const SignUp: React.FC = () => {
                   <Label htmlFor="bq_id" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">BQ ID</Label>
                   <Input
                     id="bq_id"
-                    placeholder="BQ-12345"
+                    placeholder="12345"
                     className={cn(
                       "h-12 rounded-xl border-muted/50 bg-muted/5 px-4 focus-visible:ring-primary/20",
                       errors.bq_id ? "border-red-500" : ""
@@ -312,6 +316,32 @@ const SignUp: React.FC = () => {
                 {errors.dob && <p className="text-red-500 text-[10px] font-bold mt-1 ml-1">{errors.dob.message}</p>}
               </div>
 
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Location</Label>
+                <Controller
+                  name="location"
+                  control={control}
+                  render={({ field }) => (
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <SelectTrigger className={cn(
+                        "h-12 rounded-xl border-muted/50 bg-muted/5 focus:ring-primary/20",
+                        errors.location ? "border-red-500" : ""
+                      )}>
+                        <SelectValue placeholder="Select Location" />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-xl border-muted/20">
+                        {locations.map((l) => (
+                          <SelectItem key={l} value={l} className="rounded-lg">
+                            {l}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {errors.location && <p className="text-red-500 text-[10px] font-bold mt-1 ml-1">{errors.location.message}</p>}
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Course</Label>
@@ -404,18 +434,17 @@ const SignUp: React.FC = () => {
                   control={control}
                   render={({ field }) => (
                     <Checkbox
-                      id="terms"
-                      className="rounded-md h-5 w-5 border-muted/50 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                      className="rounded-md h-5 w-5 border-muted/50 data-[state=checked]:bg-primary data-[state=checked]:border-primary cursor-pointer border-primary"
                       checked={field.value}
                       onCheckedChange={field.onChange}
                     />
                   )}
                 />
-                <Label htmlFor="terms" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground leading-snug cursor-pointer select-none">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground leading-snug cursor-pointer select-none">
                   I accept the {" "}
                   <Dialog>
                     <DialogTrigger asChild>
-                      <span className="text-primary hover:opacity-70 transition-opacity">terms and conditions & privacy policy</span>
+                      <span className="text-primary hover:opacity-70 transition-opacity cursor-pointer underline">terms and conditions & privacy policy</span>
                     </DialogTrigger>
                     <DialogContent className="max-h-[85vh] overflow-y-auto rounded-[2rem] border-muted/20">
                       <DialogHeader className="space-y-4">

@@ -100,6 +100,7 @@ export default function UserPublicProfile() {
         { label: "Bano Qabil ID", value: user.bq_id, icon: IdCard },
         { label: "Email Address", value: user.email, icon: Mail },
         { label: "Course", value: user.course, icon: GraduationCap },
+        { label: "Location", value: user.location, icon: MapPin },
         { label: "Gender", value: user.gender, icon: User2 },
     ]
 
@@ -118,7 +119,7 @@ export default function UserPublicProfile() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
 
                 {/* Left Column: Profile Summary */}
-                <div className="lg:col-span-4 space-y-6">
+                <div className="lg:col-span-4 space-y-6 animate-in fade-in slide-in-from-left-4 duration-500">
                     <UserCard user={user} isPublic={true} />
                 </div>
 

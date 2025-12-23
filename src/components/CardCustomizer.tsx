@@ -132,26 +132,35 @@ export function CardCustomizer({ user, onUpdate }: { user: any; onUpdate: (data:
                     Customize Profile Card
                 </Button>
             </SheetTrigger>
-            <SheetContent className="w-full sm:max-w-md overflow-y-auto px-6 pb-20">
-                <SheetHeader className="mb-8">
-                    <SheetTitle>Personalize Your Card</SheetTitle>
-                    <SheetDescription>
-                        Professionally customize how your profile appears to others.
-                    </SheetDescription>
-                </SheetHeader>
+            <SheetContent className="w-full sm:max-w-md p-0 flex flex-col overflow-hidden">
+                {/* Fixed Top Section: Header + Preview */}
+                <div className="bg-background/95 backdrop-blur-xl border-b z-30 px-6 py-6 shadow-sm shadow-black/5 animate-in fade-in slide-in-from-top-4 duration-700">
+                    <SheetHeader className="mb-6">
+                        <SheetTitle className="text-xl font-black tracking-tight">Personalize Your Card</SheetTitle>
+                        <SheetDescription className="text-xs font-medium">
+                            Professionally customize how your profile appears to others.
+                        </SheetDescription>
+                    </SheetHeader>
 
-                <div className="flex flex-col h-full">
-                    {/* Sticky Preview Section */}
-                    <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-md pb-6 pt-1 border-b mb-10 -mx-6 px-6">
-                        <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-4 block">Real-time Preview</Label>
-                        <div className="flex justify-center">
-                            <div className="scale-90 origin-top w-full">
-                                <UserCard user={{ ...user, cardSettings: settings }} authUser={authUser} isPublic />
-                            </div>
+                    <div className="flex items-center justify-between mb-4">
+                        <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-primary/60">Live Experience Preview</Label>
+                        <div className="flex gap-1">
+                            <div className="w-1.5 h-1.5 rounded-full bg-red-500/40" />
+                            <div className="w-1.5 h-1.5 rounded-full bg-amber-500/40" />
+                            <div className="w-1.5 h-1.5 rounded-full bg-green-500/40" />
                         </div>
                     </div>
 
-                    <div className="space-y-10 pb-10">
+                    <div className="flex justify-center">
+                        <div className="scale-[0.8] sm:scale-90 origin-top w-full transition-transform duration-500">
+                            <UserCard user={{ ...user, cardSettings: settings }} authUser={authUser} isPublic />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Scrollable Customization Content */}
+                <div className="flex-1 overflow-y-auto px-6 pb-32">
+                    <div className="space-y-10 pt-10">
                         {/* Section 1: Core Design */}
                         <div className="space-y-6">
                             <div className="flex items-center gap-2 mb-4">
@@ -328,6 +337,18 @@ export function CardCustomizer({ user, onUpdate }: { user: any; onUpdate: (data:
                                         </button>
                                     ))}
                                 </div>
+                                <div className="flex gap-2 items-center bg-muted/30 p-2 rounded-2xl border">
+                                    <div
+                                        className="w-10 h-10 rounded-xl border-2 border-white shadow-sm flex-shrink-0"
+                                        style={{ backgroundColor: settings.accentColor.startsWith("#") ? settings.accentColor : '#10b981' }}
+                                    />
+                                    <Input
+                                        placeholder="Accent HEX (e.g. #FF5500)"
+                                        value={settings.accentColor.startsWith("#") ? settings.accentColor : ""}
+                                        onChange={(e) => setSettings({ ...settings, accentColor: e.target.value })}
+                                        className="h-10 rounded-xl text-xs font-black uppercase font-mono border-none focus-visible:ring-1 focus-visible:ring-primary shadow-none bg-transparent"
+                                    />
+                                </div>
                             </div>
                         </div>
 
@@ -381,6 +402,6 @@ export function CardCustomizer({ user, onUpdate }: { user: any; onUpdate: (data:
                     </div>
                 </div>
             </SheetContent>
-        </Sheet>
+        </Sheet >
     );
 }

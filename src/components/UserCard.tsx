@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Edit3, User2, Sun, Moon, IdCard, Sparkles } from "lucide-react";
+import { Edit3, User2, Sun, Moon, IdCard, Sparkles, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,16 @@ interface UserCardProps {
 
 export const UserCard: React.FC<UserCardProps> = ({ user, authUser, isPublic = false, className }) => {
     const navigate = useNavigate();
-    const settings = user?.cardSettings || {};
+    const DEFAULT_SETTINGS = {
+        theme: 'default',
+        accentColor: 'primary',
+        borderRadius: 'rounded-2xl',
+        showStatus: true,
+        backgroundColor: '',
+        textColor: '',
+        gradient: '',
+    };
+    const settings = { ...DEFAULT_SETTINGS, ...(user?.cardSettings || {}) };
 
     const GRADIENTS: Record<string, string> = {
         // Linear Blends
@@ -43,11 +52,36 @@ export const UserCard: React.FC<UserCardProps> = ({ user, authUser, isPublic = f
     const selectedGradient = settings.gradient && GRADIENTS[settings.gradient] ? GRADIENTS[settings.gradient] : GRADIENTS.brand;
 
     const themeClasses = {
-        default: "bg-background border-none shadow-premium",
-        glass: "bg-background/40 backdrop-blur-xl border border-white/20 shadow-premium",
-        gradient: cn(selectedGradient, "border-none shadow-premium"),
-        dark: "bg-zinc-950 text-zinc-100 border-none shadow-2xl",
+        default: "bg-background border-none shadow-premium transition-colors duration-700",
+        glass: "bg-background/40 backdrop-blur-xl border border-white/20 shadow-premium transition-colors duration-700",
+        gradient: cn(selectedGradient, "border-none shadow-premium transition-all duration-700"),
+        dark: "bg-zinc-950 text-zinc-100 border-none shadow-2xl transition-colors duration-700",
     };
+
+    // Helper to get consistent badge styles
+    const getBadgeStyle = (accent: string) => {
+        const isHex = accent.startsWith("#");
+
+        const PRESETS: Record<string, { bg: string, text: string }> = {
+            primary: { bg: "#10b981", text: "#10b981" },
+            blue: { bg: "#3b82f6", text: "#3b82f6" },
+            purple: { bg: "#a855f7", text: "#a855f7" },
+            orange: { bg: "#f97316", text: "#f97316" },
+            rose: { bg: "#f43f5e", text: "#f43f5e" },
+        };
+
+        const color = isHex ? accent : (PRESETS[accent]?.text || "#10b981");
+
+        return {
+            style: {
+                backgroundColor: `${color}15`, // ~8% opacity
+                color: color,
+            },
+            className: "px-3 py-1 text-[10px] gap-1.5 font-black border-none tracking-widest uppercase"
+        };
+    };
+
+    const badgeStyle = getBadgeStyle(accentColor);
 
     return (
         <Card
@@ -80,23 +114,26 @@ export const UserCard: React.FC<UserCardProps> = ({ user, authUser, isPublic = f
                             src={user?.avatar}
                             name={user?.name}
                             className="w-full h-full border-0 rounded-none object-cover transition-transform duration-700"
-                            fallbackColor={`bg-${accentColor}`}
+                            fallbackColor={accentColor}
                         />
                     </div>
                 </div>
 
                 <div className="flex flex-wrap items-center justify-center gap-2 mb-6 animate-in slide-in-from-bottom-2 duration-700">
-                    <Badge className={cn(
-                        "px-3 py-1 text-[10px] gap-1.5 font-black border-none tracking-widest uppercase",
-                        accentColor === 'primary' ? "bg-primary/10 text-primary" : `bg-${accentColor}-500/10 text-${accentColor}-500`
-                    )}>
+                    <Badge {...badgeStyle}>
                         <IdCard className="w-3 h-3" />
-                        {user?.incubation_id || "STUDENT"}
+                        {user?.incubation_id || user?.bq_id || "STUDENT"}
                     </Badge>
                     {user?.shift && (
-                        <Badge className="px-3 py-1 text-[10px] gap-1.5 font-black bg-muted/50 text-muted-foreground border-none tracking-widest uppercase">
+                        <Badge {...badgeStyle}>
                             {user?.shift === "Morning" ? <Sun className="w-3 h-3" /> : <Moon className="w-3 h-3" />}
                             {user?.shift}
+                        </Badge>
+                    )}
+                    {user?.location && (
+                        <Badge {...badgeStyle}>
+                            <MapPin className="w-3 h-3" />
+                            {user?.location}
                         </Badge>
                     )}
                 </div>
@@ -124,10 +161,10 @@ export const UserCard: React.FC<UserCardProps> = ({ user, authUser, isPublic = f
                 )}
 
                 {user?.status && settings.showStatus !== false && (
-                    <div className={cn(
-                        "mt-4 px-4 py-1.5 rounded-full text-[10px] font-black tracking-widest uppercase bg-primary/5 text-primary border border-primary/10 flex items-center gap-2 hover:bg-primary/10 transition-colors cursor-default",
-                        accentColor === 'primary' ? "" : `text-${accentColor}-500 border-${accentColor}-500/10 bg-${accentColor}-500/5`
-                    )}>
+                    <div
+                        {...badgeStyle}
+                        className={cn(badgeStyle.className, "rounded-full py-1.5 flex items-center gap-2 hover:opacity-80 transition-opacity cursor-default")}
+                    >
                         <Sparkles className="w-3 h-3" />
                         {user?.status}
                     </div>

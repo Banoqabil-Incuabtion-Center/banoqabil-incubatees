@@ -8,6 +8,7 @@ import { useAuthStore } from "@/hooks/store/authStore";
 import { useChatStore, Message } from "@/hooks/store/useChatStore";
 import { useSocket } from "@/hooks/useSocket";
 import { cn } from "@/lib/utils";
+import { Link } from "react-router-dom";
 
 // Component to handle async decryption of a single message
 function DecryptedMessageText({ msg, otherUserId }: { msg: Message & { _decryptedText?: string }; otherUserId: string }) {
@@ -228,25 +229,27 @@ export function ChatArea({ activeUserId, userName = "Select a User", userAvatar,
                         <ArrowLeft className="h-5 w-5" />
                     </Button>
 
-                    <div className="relative">
-                        <UserAvatar src={userAvatar} name={userName} className="h-10 w-10 border border-primary/10" />
-                        {activeUserId && activeUserId !== 'announcements' && (
-                            <span className={cn("absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-background",
-                                onlineUsers.includes(activeUserId) ? "bg-primary" : "bg-gray-400"
-                            )} />
-                        )}
-                    </div>
+                    <Link to={`/user/${activeUserId}`} className="flex items-center gap-4 hover:opacity-80 transition-opacity">
+                        <div className="relative">
+                            <UserAvatar src={userAvatar} name={userName} className="h-10 w-10 border border-primary/10" />
+                            {activeUserId && activeUserId !== 'announcements' && (
+                                <span className={cn("absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-background",
+                                    onlineUsers.includes(activeUserId) ? "bg-primary" : "bg-gray-400"
+                                )} />
+                            )}
+                        </div>
 
-                    <div className="flex flex-col">
-                        <span className="font-black text-sm tracking-tight leading-none flex items-center gap-1.5">
-                            {userName}
-                        </span>
-                        {activeUserId && activeUserId !== 'announcements' && (
-                            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mt-1 flex items-center gap-1.5">
-                                {onlineUsers.includes(activeUserId) ? "Active Now" : "Offline"}
+                        <div className="flex flex-col">
+                            <span className="font-black text-sm tracking-tight leading-none flex items-center gap-1.5">
+                                {userName}
                             </span>
-                        )}
-                    </div>
+                            {activeUserId && activeUserId !== 'announcements' && (
+                                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mt-1 flex items-center gap-1.5">
+                                    {onlineUsers.includes(activeUserId) ? "Active Now" : "Offline"}
+                                </span>
+                            )}
+                        </div>
+                    </Link>
                 </div>
                 <div className="flex items-center gap-2 text-muted-foreground">
                     <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-primary/5 hover:text-primary transition-all">
@@ -264,18 +267,20 @@ export function ChatArea({ activeUserId, userName = "Select a User", userAvatar,
                     {/* Welcome message - Only show if no more messages (start of history) */}
                     {!hasMoreMessages && !isLoadingMessages && (
                         <div className="mt-4 mb-4 px-6 py-6 rounded-[2rem] bg-primary/5 border border-primary/5 flex flex-col items-center text-center shadow-soft">
-                            <div className="relative mb-6">
-                                <UserAvatar src={userAvatar} name={userName} className="h-24 w-24 border-2 border-primary/20 shadow-premium" />
-                                <div className="absolute -bottom-2 -right-2 bg-primary text-primary-foreground p-2 rounded-full shadow-lg">
-                                    <Hash className="w-5 h-5" />
+                            <Link to={`/user/${activeUserId}`} className="flex flex-col items-center group">
+                                <div className="relative mb-6">
+                                    <UserAvatar src={userAvatar} name={userName} className="h-24 w-24 border-2 border-primary/20 shadow-premium transition-transform group-hover:scale-105 duration-300" />
+                                    <div className="absolute -bottom-2 -right-2 bg-primary text-primary-foreground p-2 rounded-full shadow-lg">
+                                        <Hash className="w-5 h-5" />
+                                    </div>
                                 </div>
-                            </div>
-                            <div className="max-w-md space-y-3">
-                                <h1 className="text-2xl font-black tracking-tight">Chat with <span className="text-primary">{userName}</span></h1>
-                                <p className="text-sm text-muted-foreground font-medium leading-relaxed">
-                                    This is the start of your private conversation with {userName}. Keep it professional and polite!
-                                </p>
-                            </div>
+                                <div className="max-w-md space-y-3">
+                                    <h1 className="text-2xl font-black tracking-tight group-hover:text-primary transition-colors">Chat with <span className="text-primary">{userName}</span></h1>
+                                    <p className="text-sm text-muted-foreground font-medium leading-relaxed">
+                                        This is the start of your private conversation with {userName}. Keep it professional and polite!
+                                    </p>
+                                </div>
+                            </Link>
                         </div>
                     )}
 

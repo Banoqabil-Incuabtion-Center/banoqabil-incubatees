@@ -8,6 +8,7 @@ interface UserAvatarProps {
     className?: string;
     size?: "sm" | "md" | "lg" | "xl";
     fallbackColor?: string;
+    style?: React.CSSProperties;
 }
 
 export const UserAvatar: React.FC<UserAvatarProps> = ({
@@ -16,6 +17,7 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
     className,
     size = "md",
     fallbackColor,
+    style,
 }) => {
     const sizeClasses = {
         sm: "h-8 w-8",
@@ -54,10 +56,12 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
         return colors[index];
     };
 
-    const gradientClass = fallbackColor || `bg-gradient-to-br ${getGradient(name)}`;
+    const isHex = fallbackColor?.startsWith("#");
+    const bgStyle = isHex ? { backgroundColor: fallbackColor } : {};
+    const gradientClass = isHex ? "" : (fallbackColor || `bg-gradient-to-br ${getGradient(name)}`);
 
     return (
-        <Avatar className={cn(sizeClasses[size], " border-2 border-background rounded-full", className)}>
+        <Avatar className={cn(sizeClasses[size], " border-2 border-background rounded-full", className)} style={style}>
             <AvatarImage src={src || undefined} alt={name} className="object-cover" />
             <AvatarFallback
                 className={cn(
@@ -65,6 +69,7 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
                     gradientClass,
                     size === "sm" ? "text-xs" : size === "md" ? "text-sm" : "text-lg"
                 )}
+                style={bgStyle}
             >
                 {initials}
             </AvatarFallback>
