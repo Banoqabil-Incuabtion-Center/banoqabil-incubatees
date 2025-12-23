@@ -43,9 +43,9 @@ function DecryptedMessageText({ msg, otherUserId }: { msg: Message & { _decrypte
         }
     }, [msg, otherUserId, isEncryptionReady, decryptMessageText]);
 
-    if (isDecrypting) {
-        return <span className="animate-pulse">🔐 Decrypting...</span>;
-    }
+    // if (isDecrypting) {
+    //     return <span className="animate-pulse">🔐 Decrypting...</span>;
+    // }
 
     return <>{text}</>;
 }
