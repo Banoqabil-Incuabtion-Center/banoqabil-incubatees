@@ -154,16 +154,16 @@ export const CommentsSection: React.FC<CommentsSectionProps> = ({ postId, compac
                 </Button>
               </div>
             ) : !compact && (
-              <div ref={loadMoreRef} className="flex justify-center py-4">
+              <div ref={loadMoreRef} className="flex justify-center">
                 {isLoadingMore && (
                   <div className="flex items-center gap-2 text-primary animate-in fade-in zoom-in-95">
                     <Loader2 className="w-4 h-4 animate-spin" />
                     <span className="text-[10px] font-black uppercase tracking-widest">Loading older discussions...</span>
                   </div>
                 )}
-                {!hasMore && comments.length > 0 && (
+                {/* {!hasMore && comments.length > 0 && (
                   <p className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-[0.2em]">End of discussions</p>
-                )}
+                )} */}
               </div>
             )}
           </div>

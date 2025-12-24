@@ -182,7 +182,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                             )}
                         >
                             {comment.userLiked ? (
-                                <Heart className="w-3 h-3 fill-current shadow-sm" />
+                                <Heart className="w-3 h-3 fill-current" />
                             ) : (
                                 <Heart className="w-3 h-3" />
                             )}
