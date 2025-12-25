@@ -15,15 +15,15 @@ import { useSocket } from '@/hooks/useSocket'
 import { ProfileReminder } from '../ProfileReminder'
 
 const UserLayout = () => {
-    const location = useLocation();
     const isDirectPage = location.pathname.startsWith('/direct');
     const isEditProfilePage = location.pathname === '/profile/edit';
+    const isPostDetailPage = location.pathname.startsWith('/posts/') && location.pathname !== '/posts';
 
     const { activeUserId } = useChatStore();
     const isMobile = useIsMobile();
 
-    // Hide Header and Footer only when in an active chat on mobile OR editing profile on mobile
-    const hideUI = (isDirectPage && !!activeUserId && isMobile) || (isEditProfilePage && isMobile);
+    // Hide Header and Footer only when in an active chat on mobile OR editing profile on mobile OR viewing post detail on mobile
+    const hideUI = (isDirectPage && !!activeUserId && isMobile) || ((isEditProfilePage || isPostDetailPage) && isMobile);
 
     const { addNotification, fetchNotifications } = useNotificationStore();
     const { fetchUnreadCount, addMessage } = useChatStore();
