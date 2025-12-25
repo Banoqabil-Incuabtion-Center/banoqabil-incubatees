@@ -12,21 +12,17 @@ import { useAuthStore } from "@/hooks/store/authStore"
 import {
   CalendarCheck,
   Clock,
-  MessageSquare,
   FileText,
   TrendingUp,
-  CheckCircle2,
-  XCircle,
-  LogIn,
-  LogOut,
   Megaphone,
   Sun,
   Moon,
-  TimerIcon
+  TimerIcon,
+  Zap,
+  Activity,
+  ArrowUpRight
 } from "lucide-react"
 import {
-  BarChart,
-  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -35,9 +31,10 @@ import {
   PieChart,
   Pie,
   Cell,
-  Legend,
   AreaChart,
-  Area
+  Area,
+  BarChart,
+  Bar
 } from "recharts"
 
 interface AttendanceRecord {
@@ -117,12 +114,11 @@ const Dashboard = () => {
         const todayRes = await attRepo.getTodayStatus(user._id)
         setTodayAttendance(todayRes)
 
-        // ✅ FIXED: Fetch ALL attendance history using pagination
+        // Fetch ALL attendance history using pagination
         let allHistory: any[] = []
         let currentPage = 1
         let hasMoreData = true
         let fetchedTotalHours = 0
-
 
         let safetyCounter = 0;
         const MAX_PAGES = 50;
@@ -153,7 +149,7 @@ const Dashboard = () => {
         }
 
         setAttendanceHistory(allHistory)
-        // ✅ UPDATED: Calculate ALL attendance stats from complete history
+
         const presentCount = allHistory.filter((h: any) => h.status === 'Present').length
         const absentCount = allHistory.filter((h: any) => h.status === 'Absent').length
         const lateCount = allHistory.filter((h: any) => h.status?.includes('Late')).length
@@ -164,16 +160,11 @@ const Dashboard = () => {
           late: lateCount
         })
 
-        // ✅ OPTIMIZED: Fetch user's posts with stats in single query (no loops!)
+        // Fetch user's posts with stats in single query
         const postsRes = await postRepo.getUserPostsWithStats(1, 100, user._id);
         const userPosts = postsRes.data || [];
 
-        // Calculate totals from the aggregated data
-        let likesTotal = 0;
-        let commentsTotal = 0;
         const postsWithStats: PostStat[] = userPosts.slice(0, 10).map((post: any) => {
-          likesTotal += post.likeCount || 0;
-          commentsTotal += post.commentCount || 0;
           return {
             _id: post._id,
             title: post.title || 'Untitled',
@@ -184,16 +175,12 @@ const Dashboard = () => {
         });
 
         setMyPosts(postsWithStats);
-
-        // ✅ FIXED: Total Hours should be from attendance, not likes
         setTotalHours(fetchedTotalHours || 0);
         setTotalPosts(userPosts.length);
 
         // Fetch admin announcements
         const announcementsRes = await postRepo.getAllPosts(1, 5)
         setAnnouncements(announcementsRes.data || [])
-
-        // Use available announcements count or default to 0
         setTotalAnnouncements(announcementsRes?.pagination?.totalItems || announcementsRes?.data?.length || 0)
 
       } catch (err) {
@@ -206,32 +193,25 @@ const Dashboard = () => {
     fetchDashboardData()
   }, [user?._id])
 
-  // Only block if no user - otherwise show skeleton loading
   if (!user) {
-    return null // Let PrivateRoute handle the redirect
+    return null
   }
 
-  // Chart colors
-  const COLORS = ['#22c55e', '#ef4444', '#f59e0b', '#3b82f6']
+  // --- EVIL CHARTS CONFIG (Adapted for Light Mode) ---
+  const CHART_COLORS = {
+    primary: '#8b5cf6', // Violet
+    secondary: '#ec4899', // Pink
+    tertiary: '#06b6d4', // Cyan
+    success: '#10b981', // Emerald
+  };
 
-  // ✅ UPDATED: Attendance pie data (overall, not last 10 days)
   const attendancePieData = [
-    { name: 'Present', value: attendanceStats.present, color: '#22c55e' },
-    { name: 'Absent', value: attendanceStats.absent, color: '#ef4444' },
-    { name: 'Late', value: attendanceStats.late, color: '#f59e0b' },
+    { name: 'Present', value: attendanceStats.present, color: '#10b981' }, // Emerald
+    { name: 'Late', value: attendanceStats.late, color: '#f59e0b' },    // Amber
+    { name: 'Absent', value: attendanceStats.absent, color: '#ef4444' },  // Red
   ].filter(d => d.value > 0)
 
-  // ✅ ADDED: Total attendance count display
-  const totalAttendanceRecords = attendanceHistory.length
-
-  // Post engagement chart data
-  const postEngagementData = myPosts.slice(0, 5).map(post => ({
-    name: post.title.length > 15 ? post.title.substring(0, 15) + '...' : post.title,
-    likes: post.likeCount,
-    comments: post.commentCount
-  }))
-
-  // Weekly attendance data (last 7 records)
+  // Use theme-aware colors for charts
   const weeklyAttendanceData = attendanceHistory.slice(0, 7).reverse().map(record => ({
     date: new Date(record.createdAt).toLocaleDateString('en-US', { weekday: 'short' }),
     hours: record.hoursWorked || (record.checkInTime && record.checkOutTime
@@ -239,342 +219,339 @@ const Dashboard = () => {
       : 0)
   }))
 
-  const isCheckedIn = Boolean(todayAttendance?.checkInTime)
-  const isCheckedOut = Boolean(todayAttendance?.checkOutTime)
+  const postEngageData = myPosts.slice(0, 7).map(post => ({
+    name: post.title,
+    likes: post.likeCount,
+    comments: post.commentCount,
+    engagement: post.likeCount + post.commentCount
+  }))
+
+  const totalAnnouncementsCount = totalAnnouncements // Re-derived for safety if state update lagged (though state is preferable)
+
+  // Custom Toolkit (Themed)
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-popover border border-border p-4 rounded-xl shadow-xl">
+          <p className="text-foreground font-medium mb-2">{label}</p>
+          {payload.map((entry: any, index: number) => (
+            <div key={index} className="flex items-center gap-2 text-sm">
+              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
+              <span className="text-foreground font-bold">{entry.value}</span>
+              <span className="text-muted-foreground capitalize">{entry.name}</span>
+            </div>
+          ))}
+        </div>
+      );
+    }
+    return null;
+  };
 
   return (
-    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
-      {/* Welcome Section */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-8 rounded-2xl sm:rounded-[2rem] bg-gradient-to-br from-primary/10 via-background to-background border border-primary/5 shadow-soft">
-        <div>
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-foreground tracking-tight">
-            Hey, {user.name}! 👋
-          </h1>
-          <p className="text-sm sm:text-base text-muted-foreground mt-2 font-medium">
-            Ready to build something amazing today?
-          </p>
-        </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          {dashboardLoading ? (
-            // Skeleton for badges
-            <>
-              <Skeleton className="h-6 w-20 rounded-full" />
-              <Skeleton className="h-6 w-24 rounded-full" />
-            </>
-          ) : (
-            <>
-              <>
-                {todayAttendance?.shift && (
-                  <Badge className="gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 text-primary border-none font-bold text-[10px] uppercase tracking-wider">
-                    {todayAttendance.shift === 'Morning' ? <Sun className="w-3 h-3" /> : <Moon className="w-3 h-3" />}
-                    {todayAttendance.shift}
-                  </Badge>
-                )}
-                {/* Replaced static badges with MarkAttendance component */}
-                <MarkAttendance userId={user?._id} />
-              </>
-            </>
-          )}
+    <div className="w-full bg-background text-foreground p-4 sm:p-8 space-y-8 font-jakarta">
+      {/* Decorative Background Elements (Subtler for Light Mode) */}
+      <div className="fixed top-0 left-0 w-full h-[500px] bg-gradient-to-b from-primary/5 to-transparent pointer-events-none -z-10" />
+      <div className="fixed top-[-100px] right-[-100px] w-[500px] h-[500px] bg-pink-500/10 blur-[120px] rounded-full pointer-events-none -z-10" />
+      <div className="fixed bottom-0 left-[-100px] w-[600px] h-[600px] bg-blue-500/10 blur-[150px] rounded-full pointer-events-none -z-10" />
+
+      {/* Header Section */}
+      <div className="relative overflow-hidden rounded-[2.5rem] p-8 sm:p-12 border border-border/50 bg-card/50 backdrop-blur-xl shadow-sm">
+        <div className="absolute top-0 right-0 w-[400px] h-full bg-gradient-to-l from-primary/5 to-transparent" />
+
+        <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+          <div className="space-y-2">
+            <Badge variant="outline" className="border-pink-500/30 text-pink-600 px-3 py-1 rounded-full uppercase tracking-widest text-[10px] bg-pink-500/5">
+              Welcome Back
+            </Badge>
+            <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-foreground">
+              {user.name}
+            </h1>
+            <p className="text-muted-foreground text-lg max-w-xl">
+              Here's what's happening with your projects and attendance today.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            {todayAttendance?.shift && (
+              <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-background/80 border border-border backdrop-blur-md shadow-sm">
+                {todayAttendance.shift === 'Morning' ? <Sun className="w-4 h-4 text-amber-500" /> : <Moon className="w-4 h-4 text-indigo-500" />}
+                <span className="text-sm font-medium text-foreground">{todayAttendance.shift}</span>
+              </div>
+            )}
+            <div className="bg-background/80 border border-border rounded-full p-1 backdrop-blur-md shadow-sm">
+              <MarkAttendance userId={user?._id} />
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Stats Cards */}
-
-
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        {dashboardLoading ? (
-          // Skeleton loaders for stats
-          <>
-            {[...Array(4)].map((_, i) => (
-              <Card key={i} className="border-none shadow-premium rounded-2xl sm:rounded-3xl overflow-hidden">
-                <CardContent className="p-4 sm:p-6">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-2">
-                      <Skeleton className="h-3 w-16" />
-                      <Skeleton className="h-8 w-12 rounded-lg" />
-                    </div>
-                    <Skeleton className="h-12 w-12 rounded-2xl" />
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </>
-        ) : (
-          <>
-            <Card className="border-none shadow-premium rounded-2xl sm:rounded-3xl hover:translate-y-[-4px] transition-transform">
-              <CardContent className="p-4 sm:p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Total Posts</p>
-                    <h3 className="text-2xl sm:text-3xl font-black mt-1">{totalPosts}</h3>
-                  </div>
-                  <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center">
-                    <FileText className="h-6 w-6 text-primary" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-none shadow-premium rounded-2xl sm:rounded-3xl hover:translate-y-[-4px] transition-transform">
-              <CardContent className="p-4 sm:p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Total Hours</p>
-                    <h3 className="text-2xl sm:text-3xl font-black mt-1">{totalHours}</h3>
-                  </div>
-                  <div className="h-12 w-12 rounded-2xl bg-amber-500/10 flex items-center justify-center">
-                    <TimerIcon className="h-6 w-6 text-amber-500" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-none shadow-premium rounded-2xl sm:rounded-3xl hover:translate-y-[-4px] transition-transform">
-              <CardContent className="p-4 sm:p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Announcements</p>
-                    <h3 className="text-2xl sm:text-3xl font-black mt-1">{totalAnnouncements}</h3>
-                  </div>
-                  <div className="h-12 w-12 rounded-2xl bg-blue-500/10 flex items-center justify-center">
-                    <Megaphone className="h-6 w-6 text-blue-600" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-none shadow-premium rounded-2xl sm:rounded-3xl hover:translate-y-[-4px] transition-transform">
-              <CardContent className="p-4 sm:p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Attendance Rate</p>
-                    <h3 className="text-2xl sm:text-3xl font-black mt-1">
-                      {attendanceHistory.length > 0
-                        ? Math.round((attendanceStats.present / attendanceHistory.length) * 100)
-                        : 0}%
-                    </h3>
-                  </div>
-                  <div className="h-12 w-12 rounded-2xl bg-green-500/10 flex items-center justify-center">
-                    <CalendarCheck className="h-6 w-6 text-green-600" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </>
-        )}
+      {/* KPI Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 w-full overflow-hidden">
+        {[
+          {
+            title: 'Total Posts',
+            value: totalPosts,
+            icon: FileText,
+            color: 'text-violet-600',
+            bg: 'bg-violet-100 dark:bg-violet-900/20',
+            border: 'border-violet-200 dark:border-violet-800/30'
+          },
+          {
+            title: 'Total Hours',
+            value: totalHours,
+            icon: TimerIcon,
+            color: 'text-pink-600',
+            bg: 'bg-pink-100 dark:bg-pink-900/20',
+            border: 'border-pink-200 dark:border-pink-800/30'
+          },
+          {
+            title: 'Announcements',
+            value: totalAnnouncements,
+            icon: Megaphone,
+            color: 'text-cyan-600',
+            bg: 'bg-cyan-100 dark:bg-cyan-900/20',
+            border: 'border-cyan-200 dark:border-cyan-800/30'
+          },
+          {
+            title: 'Attendance Rate',
+            value: `${attendanceHistory.length > 0 ? Math.round((attendanceStats.present / attendanceHistory.length) * 100) : 0}%`,
+            icon: Activity,
+            color: 'text-emerald-600',
+            bg: 'bg-emerald-100 dark:bg-emerald-900/20',
+            border: 'border-emerald-200 dark:border-emerald-800/30'
+          },
+        ].map((stat, i) => (
+          <Card key={i} className={`bg-card/50 border ${stat.border} backdrop-blur-sm hover:shadow-md transition-all duration-300 group`}>
+            <CardContent className="p-6 flex items-center justify-between">
+              <div>
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1">{stat.title}</p>
+                <h3 className="text-3xl font-black text-foreground group-hover:scale-105 transition-transform origin-left">
+                  {dashboardLoading ? <Skeleton className="h-8 w-16" /> : stat.value}
+                </h3>
+              </div>
+              <div className={`h-12 w-12 rounded-xl ${stat.bg} ${stat.color} flex items-center justify-center`}>
+                <stat.icon className="h-6 w-6" />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-        {/* Admin Announcements Card */}
-        <Card className="rounded-2xl sm:rounded-3xl overflow-hidden border-none shadow-premium">
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full overflow-hidden">
+
+        {/* Main Chart - Weekly Activity (Span 2) */}
+        <Card className="lg:col-span-2 shadow-sm border-border overflow-hidden relative">
+          <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
+            <Zap className="w-32 h-32 text-primary" />
+          </div>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              {dashboardLoading ? (
-                <>
-                  <Skeleton className="h-5 w-5 rounded" />
-                  <Skeleton className="h-5 w-36" />
-                </>
-              ) : (
-                <>
-                  <Megaphone className="h-5 w-5" />
-                  Admin Announcements
-                </>
-              )}
+            <CardTitle className="flex items-center gap-2 text-foreground">
+              <Clock className="w-5 h-5 text-primary" />
+              Weekly Rhythm
             </CardTitle>
-            <CardDescription>
-              {dashboardLoading ? <Skeleton className="h-4 w-36" /> : "Latest updates from admin"}
-            </CardDescription>
+            <CardDescription>Your work hours over the last 7 days</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4 max-h-60 overflow-y-auto">
+            <div className="h-[300px] w-full mt-4">
               {dashboardLoading ? (
-                // Skeleton loaders for announcements
-                [...Array(3)].map((_, i) => (
-                  <div key={i} className="p-3 rounded-lg border">
-                    <div className="flex items-start gap-3">
-                      <Skeleton className="h-8 w-8 rounded-full" />
-                      <div className="flex-1 space-y-2">
-                        <Skeleton className="h-4 w-3/4" />
-                        <Skeleton className="h-3 w-full" />
-                        <Skeleton className="h-3 w-20" />
-                      </div>
-                    </div>
-                  </div>
-                ))
-              ) : announcements.length > 0 ? (
-                announcements.map((announcement) => (
-                  <div
-                    key={announcement._id}
-                    className="p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
-                  >
-                    <div className="flex items-start gap-3">
-                      <UserAvatar
-                        className="h-8 w-8 bg-primary"
-                        fallbackColor="bg-primary"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm truncate">{announcement.title}</p>
-                        <p className="text-xs text-muted-foreground line-clamp-2 mt-1">
-                          {announcement.description}
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-2">
-                          {new Date(announcement.createdAt).toLocaleDateString()}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ))
+                <Skeleton className="w-full h-full rounded-xl" />
               ) : (
-                <div className="flex flex-col items-center justify-center py-8">
-                  <Megaphone className="h-8 w-8 text-muted-foreground mb-2" />
-                  <p className="text-muted-foreground text-sm">No announcements yet</p>
-                </div>
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={weeklyAttendanceData}>
+                    <defs>
+                      <linearGradient id="colorHours" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="currentColor" className="text-muted/20" vertical={false} />
+                    <XAxis
+                      dataKey="date"
+                      stroke="currentColor"
+                      className="text-muted-foreground"
+                      fontSize={12}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <YAxis
+                      stroke="currentColor"
+                      className="text-muted-foreground"
+                      fontSize={12}
+                      tickLine={false}
+                      axisLine={false}
+                      tickFormatter={(value) => `${value}h`}
+                    />
+                    <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'currentColor', strokeWidth: 1, className: "text-muted/50" }} />
+                    <Area
+                      type="monotone"
+                      dataKey="hours"
+                      stroke="#8b5cf6"
+                      strokeWidth={3}
+                      fillOpacity={1}
+                      fill="url(#colorHours)"
+                      animationDuration={1500}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
               )}
             </div>
           </CardContent>
         </Card>
 
-        {/* Attendance Pie Chart with total count */}
-        <Card className="rounded-2xl sm:rounded-3xl overflow-hidden border-none shadow-premium">
+        {/* Engagement / Attendance Radial (Span 1) */}
+        <Card className="shadow-sm border-border relative overflow-hidden">
+          <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-emerald-500/10 blur-[50px] rounded-full" />
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              {dashboardLoading ? (
-                <>
-                  <Skeleton className="h-5 w-5 rounded" />
-                  <Skeleton className="h-5 w-36" />
-                </>
-              ) : (
-                <>
-                  <TrendingUp className="h-5 w-5" />
-                  Attendance Overview
-                </>
-              )}
+            <CardTitle className="flex items-center gap-2 text-foreground">
+              <TrendingUp className="w-5 h-5 text-emerald-500" />
+              Attendance Split
             </CardTitle>
-            <CardDescription>
-              {dashboardLoading ? (
-                <Skeleton className="h-4 w-56" />
-              ) : (
-                <>Your overall attendance distribution ({totalAttendanceRecords} total records)</>
-              )}
-            </CardDescription>
+            <CardDescription>Distribution of your attendance status</CardDescription>
           </CardHeader>
-          <CardContent>
-            {dashboardLoading ? (
-              // Skeleton for pie chart
-              <div className="space-y-4">
-                <div className="flex items-center justify-center h-[250px]">
-                  <Skeleton className="h-40 w-40 rounded-full" />
-                </div>
-                <div className="space-y-2">
-                  <Skeleton className="h-4 w-24" />
-                  <Skeleton className="h-4 w-20" />
-                </div>
-              </div>
-            ) : attendancePieData.length > 0 ? (
-              <div className="space-y-4">
-                <ResponsiveContainer width="100%" height={250}>
-                  <PieChart>
-                    <Pie
-                      data={attendancePieData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={50}
-                      outerRadius={80}
-                      paddingAngle={3}
-                      dataKey="value"
-                      label={({ name, value }) => `${name}: ${value}`}
-                    >
-                      {attendancePieData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
+          <CardContent className="flex flex-col items-center justify-center p-6">
+            <div className="h-[220px] w-full relative">
+              {dashboardLoading ? (
+                <Skeleton className="w-40 h-40 rounded-full mx-auto" />
+              ) : attendancePieData.length > 0 ? (
+                <>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={attendancePieData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={90}
+                        paddingAngle={5}
+                        dataKey="value"
+                        cornerRadius={6}
+                        stroke="none"
+                      >
+                        {attendancePieData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip content={<CustomTooltip />} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  {/* Center Text */}
+                  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                    <span className="text-3xl font-black text-foreground">{attendanceStats.present}</span>
+                    <span className="text-xs text-muted-foreground font-bold uppercase tracking-wider">Present</span>
+                  </div>
+                </>
+              ) : (
+                <div className="flex items-center justify-center h-full text-muted-foreground">No Data</div>
+              )}
+            </div>
 
-                {/* Summary stats below chart */}
-                <div className="grid grid-cols-1 gap-2 text-sm">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                    <span className="text-muted-foreground">Present: {attendanceStats.present}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                    <span className="text-muted-foreground">Late: {attendanceStats.late}</span>
-                  </div>
-                </div>
+            <div className="grid grid-cols-2 gap-4 w-full mt-6">
+              <div className="flex items-center gap-2 bg-secondary/50 p-2 rounded-lg border border-border">
+                <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                <span className="text-xs text-muted-foreground">On Time</span>
+                <span className="ml-auto text-xs font-bold text-foreground">{attendanceStats.present}</span>
               </div>
-            ) : (
-              <div className="flex items-center justify-center h-[200px]">
-                <p className="text-muted-foreground">No attendance data yet</p>
+              <div className="flex items-center gap-2 bg-secondary/50 p-2 rounded-lg border border-border">
+                <div className="w-2 h-2 rounded-full bg-amber-500" />
+                <span className="text-xs text-muted-foreground">Late</span>
+                <span className="ml-auto text-xs font-bold text-foreground">{attendanceStats.late}</span>
               </div>
-            )}
+            </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Weekly Hours */}
-      <div className="lg:grid-cols-2 gap-6">
-        {/* Weekly Hours Chart */}
-        <Card className="rounded-2xl sm:rounded-3xl overflow-hidden border-none shadow-premium">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              {dashboardLoading ? (
-                <>
-                  <Skeleton className="h-5 w-5 rounded" />
-                  <Skeleton className="h-5 w-28" />
-                </>
-              ) : (
-                <>
-                  <Clock className="h-5 w-5" />
-                  Weekly Hours
-                </>
-              )}
-            </CardTitle>
-            <CardDescription>
-              {dashboardLoading ? <Skeleton className="h-4 w-44" /> : "Hours worked in the last 7 days"}
-            </CardDescription>
+      {/* Row 3 - Announcements & Post Engagement */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full overflow-hidden">
+        {/* Announcements Feed */}
+        <Card className="shadow-sm border-border">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <div>
+              <CardTitle className="text-foreground flex items-center gap-2">
+                <Megaphone className="w-5 h-5 text-cyan-500" />
+                Announcements
+              </CardTitle>
+              <CardDescription>Latest updates from the team</CardDescription>
+            </div>
+            <Badge variant="secondary" className="bg-cyan-500/10 text-cyan-600 hover:bg-cyan-500/20 border-cyan-200">
+              {totalAnnouncementsCount} New
+              {/* Fixed variable usage */}
+            </Badge>
           </CardHeader>
           <CardContent>
-            {dashboardLoading ? (
-              // Skeleton for area chart
-              <div className="space-y-3">
-                <div className="flex items-end justify-between h-[200px] gap-2">
-                  {[...Array(7)].map((_, i) => (
-                    <div key={i} className="flex-1 flex flex-col items-center gap-2">
-                      <Skeleton className="w-full" style={{ height: `${Math.random() * 100 + 50}px` }} />
-                      <Skeleton className="h-3 w-8" />
+            <div className="space-y-4 max-h-[250px] overflow-y-auto pr-2 custom-scrollbar">
+              {dashboardLoading ? (
+                [...Array(3)].map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-lg" />)
+              ) : announcements.length > 0 ? (
+                announcements.map((ann, i) => (
+                  <div key={ann._id} className="p-4 rounded-xl bg-card border border-border hover:bg-accent/50 transition-colors group cursor-pointer shadow-sm">
+                    <div className="flex items-start gap-3">
+                      <UserAvatar className="h-8 w-8 ring-2 ring-cyan-500/20" fallbackColor="bg-cyan-600" />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between items-start">
+                          <h4 className="text-sm font-semibold text-foreground group-hover:text-cyan-600 transition-colors truncate">{ann.title}</h4>
+                          <span className="text-[10px] text-muted-foreground">{new Date(ann.createdAt).toLocaleDateString()}</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground line-clamp-2 mt-1">{ann.description}</p>
+                      </div>
+                      <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-cyan-600 opacity-0 group-hover:opacity-100 transition-all transform group-hover:translate-x-1 group-hover:-translate-y-1" />
                     </div>
-                  ))}
-                </div>
-              </div>
-            ) : weeklyAttendanceData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={200}>
-                <AreaChart data={weeklyAttendanceData}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                  <XAxis dataKey="date" />
-                  <YAxis />
-                  <Tooltip />
-                  <Area
-                    type="monotone"
-                    dataKey="hours"
-                    stroke="#3b82f6"
-                    fill="#3b82f6"
-                    fillOpacity={0.3}
-                    name="Hours"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="flex items-center justify-center h-[200px]">
-                <p className="text-muted-foreground">No attendance data available</p>
-              </div>
-            )}
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">No announcements yet</div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Post Engagement Bar Chart */}
+        <Card className="shadow-sm border-border">
+          <CardHeader>
+            <CardTitle className="text-foreground flex items-center gap-2">
+              <Activity className="w-5 h-5 text-pink-500" />
+              Top Engagement
+            </CardTitle>
+            <CardDescription>Your most active posts</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[250px]">
+              {dashboardLoading ? (
+                <Skeleton className="w-full h-full rounded-lg" />
+              ) : postEngageData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={postEngageData} layout="vertical" margin={{ left: -20, right: 10, top: 0, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="currentColor" className="text-muted/10" />
+                    <XAxis type="number" hide />
+                    <YAxis
+                      dataKey="name"
+                      type="category"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: 'currentColor', fontSize: 11, className: "text-muted-foreground" }}
+                      width={100}
+                      tickFormatter={(val) => val.length > 12 ? val.substr(0, 12) + '...' : val}
+                    />
+                    <Tooltip
+                      cursor={{ fill: 'currentColor', className: 'text-muted/5' }}
+                      content={<CustomTooltip />}
+                    />
+                    <Bar dataKey="engagement" radius={[0, 4, 4, 0]} barSize={20}>
+                      {postEngageData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={index % 2 === 0 ? '#ec4899' : '#8b5cf6'} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex items-center justify-center h-full text-muted-foreground">No posts yet</div>
+              )}
+            </div>
           </CardContent>
         </Card>
       </div>
-    </div >
+    </div>
   )
 }
 

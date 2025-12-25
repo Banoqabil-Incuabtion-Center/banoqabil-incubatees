@@ -49,6 +49,7 @@ const UserLayout = () => {
 
     return (
         <SidebarProvider
+            className="h-screen w-full overflow-hidden"
             style={
                 {
                     "--sidebar-width": "calc(var(--spacing) * 72)",
@@ -57,9 +58,10 @@ const UserLayout = () => {
             }
         >
             {/* Sidebar - hidden on mobile via CSS */}
-            <AppSidebar variant="inset" className="hidden md:flex" />
+            <AppSidebar variant="inset" className="hidden md:flex h-full" />
             <SidebarInset className={cn(
-                isDirectPage && "md:peer-data-[variant=inset]:m-0 md:peer-data-[variant=inset]:rounded-none md:peer-data-[variant=inset]:ml-0 h-svh overflow-hidden"
+                "h-svh overflow-hidden peer-data-[variant=inset]:min-h-[calc(100svh-theme(spacing.4))] md:peer-data-[variant=inset]:ml-0  md:peer-data-[variant=inset]:shadow",
+                isDirectPage && "md:peer-data-[variant=inset]:m-0 md:peer-data-[variant=inset]:rounded-none md:peer-data-[variant=inset]:ml-0"
             )}>
                 {!hideUI && <SiteHeader />}
                 {/* Add bottom padding on mobile for BottomNav, unless hidden */}

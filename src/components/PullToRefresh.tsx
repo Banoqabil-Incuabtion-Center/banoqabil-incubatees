@@ -100,7 +100,7 @@ const PullToRefresh: React.FC<PullToRefreshProps> = ({
     }, [startY, currentY, threshold, onRefresh, isPulling]);
 
     return (
-        <div ref={contentRef} className="h-full overflow-y-auto relative overscroll-y-contain">
+        <div ref={contentRef} className="h-full overflow-y-auto overflow-x-hidden relative overscroll-y-contain">
             {/* Pull Indicator */}
             <div
                 className="absolute top-0 left-0 w-full flex justify-center items-center pointer-events-none transition-transform duration-200"
