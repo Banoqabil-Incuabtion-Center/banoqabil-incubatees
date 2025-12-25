@@ -297,9 +297,12 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
             // Encrypt message if encryption is ready
             console.log('🔐 E2E: Checking encryption', { isEncryptionReady, hasKeyPair: !!myKeyPair });
+            // Encrypt message if encryption is ready
+            console.log('🔐 E2E: Checking encryption', { isEncryptionReady, hasKeyPair: !!myKeyPair });
             if (isEncryptionReady && myKeyPair) {
                 const theirPublicKey = await get().fetchUserPublicKey(receiverId);
                 console.log('🔐 E2E: Fetched their public key', { hasKey: !!theirPublicKey, keyLength: theirPublicKey?.length });
+
                 if (theirPublicKey) {
                     try {
                         const sharedKey = await getOrDeriveSharedKey(
@@ -316,10 +319,14 @@ export const useChatStore = create<ChatState>((set, get) => ({
                         };
                         console.log('🔐 E2E: Message encrypted successfully', { ciphertextLength: ciphertext.length });
                     } catch (encErr) {
-                        console.warn('❌ E2E: Encryption failed, sending plain text:', encErr);
+                        console.error('❌ E2E: Encryption failed:', encErr);
+                        // Strict mode: Fail if encryption fails
+                        throw new Error("Encryption failed. Please check your keys.");
                     }
                 } else {
-                    console.log('⚠️ E2E: Receiver has no public key, sending plain text');
+                    console.warn('⚠️ E2E: Receiver has no public key.');
+                    // Strict mode: Fail if receiver has no key
+                    throw new Error("Recipient has not set up secure chat yet. Cannot send encrypted message.");
                 }
             }
 
@@ -372,9 +379,13 @@ export const useChatStore = create<ChatState>((set, get) => ({
                 return { conversations };
             });
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error sending message:', error);
             set({ isSendingMessage: false });
+            // Show toast for error
+            import('sonner').then(({ toast }) => {
+                toast.error(error.message || "Failed to send message");
+            });
         }
     },
 
