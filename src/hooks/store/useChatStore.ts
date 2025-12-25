@@ -647,7 +647,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
             await axios.put(
                 `${SERVER_URL}/api/messages/public-key`,
-                { publicKey: publicKeyBase64, backup: backupPayload },
+                { publicKey: publicKeyBase64, backup: backupPayload, pin: password },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
 
