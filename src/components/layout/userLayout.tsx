@@ -17,13 +17,47 @@ import { ProfileReminder } from '../ProfileReminder'
 const UserLayout = () => {
     const location = useLocation();
     const isDirectPage = location.pathname.startsWith('/direct');
-    const isEditProfilePage = location.pathname === '/profile/edit';
 
     const { activeUserId } = useChatStore();
     const isMobile = useIsMobile();
 
-    // Hide Header and Footer only when in an active chat on mobile OR editing profile on mobile
-    const hideUI = (isDirectPage && !!activeUserId && isMobile) || (isEditProfilePage && isMobile);
+    // List of paths or checks where the UI (Header/BottomNav) should be hidden on mobile
+    const MOBILE_HIDDEN_PATHS: (string | ((path: string) => boolean))[] = [
+        '/profile/edit',
+        '/profile/customize',
+        // Direct uses state-based navigation (activeUserId), so path doesn't change. 
+        // We check for /direct AND active user presense.
+        (path) => path.startsWith('/direct/') && !!activeUserId,
+    ];
+
+    console.log('DEBUG: Current pathname:', location.pathname);
+    console.log('DEBUG: isMobile:', isMobile);
+    console.log('DEBUG: activeUserId:', activeUserId);
+
+    const shouldHideOnMobile = MOBILE_HIDDEN_PATHS.some(matcher => {
+        let result = false;
+        if (typeof matcher === 'string') {
+            // Check for wildcard specifically for strict subpath matching
+            if (matcher.endsWith('/*')) {
+                const basePath = matcher.slice(0, -2); // Remove /*
+                result = location.pathname.startsWith(`${basePath}/`);
+            } else {
+                // Default: Exact match or subpath match
+                result = location.pathname === matcher || location.pathname.startsWith(`${matcher}/`);
+            }
+            console.log('DEBUG: String matcher:', matcher, 'Result:', result);
+        } else {
+            result = matcher(location.pathname);
+            console.log('DEBUG: Function matcher result:', result);
+        }
+        return result;
+    });
+
+    console.log('DEBUG: shouldHideOnMobile:', shouldHideOnMobile);
+    console.log('DEBUG: hideUI will be:', shouldHideOnMobile && isMobile);
+
+    // Hide Header and Footer only when matching hidden logic on mobile
+    const hideUI = shouldHideOnMobile && isMobile;
 
     const { addNotification, fetchNotifications } = useNotificationStore();
     const { fetchUnreadCount, addMessage } = useChatStore();
