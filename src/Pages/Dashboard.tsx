@@ -255,7 +255,7 @@ const Dashboard = () => {
       <div className="fixed bottom-0 left-[-100px] w-[600px] h-[600px] bg-blue-500/10 blur-[150px] rounded-full pointer-events-none -z-10" />
 
       {/* Header Section */}
-      <div className="relative overflow-hidden rounded-[2.5rem] p-8 sm:p-12 border border-border/50 bg-card/50 backdrop-blur-xl shadow-sm">
+      <div className="relative overflow-hidden rounded-2xl p-8 sm:p-12 border border-border/100 bg-card/50 backdrop-blur-xl ">
         <div className="absolute top-0 right-0 w-[400px] h-full bg-gradient-to-l from-primary/5 to-transparent" />
 
         <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
@@ -278,7 +278,7 @@ const Dashboard = () => {
                 <span className="text-sm font-medium text-foreground">{todayAttendance.shift}</span>
               </div>
             )}
-            <div className="bg-background/80 border border-border rounded-full p-1 backdrop-blur-md shadow-sm">
+            <div>
               <MarkAttendance userId={user?._id} />
             </div>
           </div>
