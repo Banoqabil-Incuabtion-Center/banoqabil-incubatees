@@ -24,6 +24,8 @@ const Logout = () => {
       // Clear token used for socket auth
       localStorage.removeItem('token')
       sessionStorage.removeItem('token')
+      localStorage.removeItem('e2e_private_key')
+      localStorage.removeItem('e2e_public_key')
       logout() // Clear zustand store
       toast.success("Logout successful")
       navigate("/login")
