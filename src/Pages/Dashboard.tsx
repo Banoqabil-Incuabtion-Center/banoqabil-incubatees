@@ -446,7 +446,7 @@ const Dashboard = () => {
               )}
             </div>
 
-            <div className="grid grid-cols-2 gap-4 w-full mt-6">
+            <div className="grid grid-cols-3 gap-4 w-full mt-6">
               <div className="flex items-center gap-2 bg-secondary/50 p-2 rounded-lg border border-border">
                 <div className="w-2 h-2 rounded-full bg-emerald-500" />
                 <span className="text-xs text-muted-foreground">On Time</span>
@@ -456,6 +456,11 @@ const Dashboard = () => {
                 <div className="w-2 h-2 rounded-full bg-amber-500" />
                 <span className="text-xs text-muted-foreground">Late</span>
                 <span className="ml-auto text-xs font-bold text-foreground">{attendanceStats.late}</span>
+              </div>
+              <div className="flex items-center gap-2 bg-secondary/50 p-2 rounded-lg border border-border">
+                <div className="w-2 h-2 rounded-full bg-red-500" />
+                <span className="text-xs text-muted-foreground">Absent</span>
+                <span className="ml-auto text-xs font-bold text-foreground">{attendanceStats.absent}</span>
               </div>
             </div>
           </CardContent>

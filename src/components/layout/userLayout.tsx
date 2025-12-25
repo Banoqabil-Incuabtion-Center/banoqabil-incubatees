@@ -17,12 +17,13 @@ import { ProfileReminder } from '../ProfileReminder'
 const UserLayout = () => {
     const location = useLocation();
     const isDirectPage = location.pathname.startsWith('/direct');
+    const isEditProfilePage = location.pathname === '/profile/edit';
 
     const { activeUserId } = useChatStore();
     const isMobile = useIsMobile();
 
-    // Hide Header and Footer only when in an active chat on mobile
-    const hideUI = isDirectPage && !!activeUserId && isMobile;
+    // Hide Header and Footer only when in an active chat on mobile OR editing profile on mobile
+    const hideUI = (isDirectPage && !!activeUserId && isMobile) || (isEditProfilePage && isMobile);
 
     const { addNotification, fetchNotifications } = useNotificationStore();
     const { fetchUnreadCount, addMessage } = useChatStore();

@@ -382,24 +382,7 @@ export default function EditProfilePage() {
                             </div>
                         </div>
 
-                        <div className="space-y-2 md:col-span-2">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Preferred Location</Label>
-                            <Select
-                                value={formData.location}
-                                onValueChange={(value) => setFormData(prev => ({ ...prev, location: value }))}
-                            >
-                                <SelectTrigger className="h-12 rounded-xl border-muted/50 bg-muted/5 focus:ring-primary/20 font-medium">
-                                    <SelectValue placeholder="Select Location" />
-                                </SelectTrigger>
-                                <SelectContent className="rounded-xl border-muted/20">
-                                    {locations.map((l) => (
-                                        <SelectItem key={l} value={l} className="rounded-lg font-medium">
-                                            {l}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
+
                     </div>
 
                     {/* Mobile Action Buttons */}
