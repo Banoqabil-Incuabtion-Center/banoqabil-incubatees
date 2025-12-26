@@ -14,7 +14,8 @@ import {
     Clock,
     ArrowLeft,
     Maximize2,
-    AlertCircle
+    AlertCircle,
+    ExternalLink
 } from "lucide-react";
 import { likeRepo } from "@/repositories/likeRepo";
 import { useAuthStore } from "@/hooks/store/authStore";
@@ -170,7 +171,23 @@ export const PostDetail = () => {
                                     {post.description}
                                 </h2>
                                 <div className="mt-8 w-16 h-1.5 bg-white/40 mx-auto rounded-full shadow-inner" />
+
+                                {post.link && (
+                                    <div className="mt-8 animate-in fade-in slide-in-from-bottom-2 duration-1000 delay-300">
+                                        <a
+                                            href={post.link.startsWith('http') ? post.link : `https://${post.link}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white/20 transition-all font-bold text-sm"
+                                        >
+                                            <ExternalLink className="w-4 h-4" />
+                                            Visit Link
+                                        </a>
+                                    </div>
+                                )}
                             </div>
+
+
                         </div>
                     )}
                 </div>
@@ -207,6 +224,22 @@ export const PostDetail = () => {
                                 <div className="text-sm sm:text-base text-muted-foreground leading-relaxed font-medium whitespace-pre-wrap break-all">
                                     {renderDescription(post.description)}
                                 </div>
+
+                                {post.link && (
+                                    <div className="pt-2">
+                                        <a
+                                            href={post.link.startsWith('http') ? post.link : `https://${post.link}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="inline-flex items-center gap-2 text-sm text-primary hover:underline font-bold transition-colors group/link"
+                                        >
+                                            <div className="w-9 h-9 rounded-xl bg-primary/5 flex items-center justify-center group-hover/link:bg-primary/10 transition-colors">
+                                                <ExternalLink className="w-4 h-4" />
+                                            </div>
+                                            <span className="truncate max-w-[250px] sm:max-w-md">{post.link}</span>
+                                        </a>
+                                    </div>
+                                )}
                             </div>
 
                             {/* Interaction Stats */}

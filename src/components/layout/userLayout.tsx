@@ -23,11 +23,11 @@ const UserLayout = () => {
 
     // List of paths or checks where the UI (Header/BottomNav) should be hidden on mobile
     const MOBILE_HIDDEN_PATHS: (string | ((path: string) => boolean))[] = [
-        '/profile/edit',
-        '/profile/customize',
+        '/profile/*',
+        '/posts/*',
         // Direct uses state-based navigation (activeUserId), so path doesn't change. 
         // We check for /direct AND active user presense.
-        (path) => path.startsWith('/direct/') && !!activeUserId,
+        (path) => path.startsWith('/direct') && !!activeUserId,
     ];
 
     console.log('DEBUG: Current pathname:', location.pathname);
