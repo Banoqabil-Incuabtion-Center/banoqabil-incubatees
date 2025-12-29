@@ -91,6 +91,7 @@ const CreatePostDialog = memo(({
   onSuccess: () => void;
 }) => {
   const [isCreating, setIsCreating] = useState(false);
+  const { user } = useAuthStore();
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -100,6 +101,7 @@ const CreatePostDialog = memo(({
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [errors, setErrors] = useState<any>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showLinkInput, setShowLinkInput] = useState(false);
 
   const resetForm = () => {
     setFormData({ title: "", description: "", link: "" });
@@ -183,173 +185,192 @@ const CreatePostDialog = memo(({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-[580px] overflow-hidden">
-        <DialogHeader>
-          <DialogTitle className="text-xl break-words">Create New Post</DialogTitle>
+      <DialogContent className="sm:max-w-[580px] p-0 gap-0 overflow-hidden bg-background border-none shadow-2xl">
+        <DialogHeader className="p-4 border-b">
+          <DialogTitle className="text-center text-lg font-bold">Create Post</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-5 py-4 min-w-0">
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <Label htmlFor="title" className="text-sm font-medium">
-                Title <span className="text-destructive">*</span>
-              </Label>
-              <span className={cn(
-                "text-[10px] font-bold px-2 py-0.5 rounded-full",
-                formData.title.length >= 50 ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"
-              )}>
-                {formData.title.length}/50
-              </span>
-            </div>
-            <Input
-              id="title"
-              name="title"
-              value={formData.title}
-              onChange={handleChange}
-              disabled={isCreating}
-              maxLength={50}
-              placeholder="Enter an engaging title..."
-              className={errors.title ? "border-destructive" : ""}
+        <div className="flex flex-col max-h-[70vh] overflow-y-auto custom-scrollbar">
+          {/* User Header */}
+          <div className="px-4 py-3 flex items-center gap-3">
+            <UserAvatar
+              src={user?.avatar}
+              name={user?.name}
+              className="h-10 w-10 border-2 border-primary/10"
+              fallbackColor="bg-primary"
             />
-            {errors.title && (
-              <p className="text-xs text-destructive font-medium">{errors.title}</p>
-            )}
+            <div className="flex flex-col">
+              <span className="text-sm font-semibold">{user?.name}</span>
+              <Badge variant="secondary" className="w-fit text-[10px] px-1.5 h-5 bg-muted/50 text-muted-foreground flex items-center gap-1">
+                <Users className="w-3 h-3" />
+                Public
+              </Badge>
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <Label htmlFor="description" className="text-sm font-medium">
-                Description <span className="text-destructive">*</span>
-              </Label>
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] text-muted-foreground font-medium">
-                  Use **text** for <b>bold</b>
-                </span>
+          <div className="px-4 pb-4 space-y-4">
+            {/* Title Input */}
+            <div className="space-y-1">
+              <Input
+                id="title"
+                name="title"
+                value={formData.title}
+                onChange={handleChange}
+                disabled={isCreating}
+                maxLength={50}
+                placeholder="Post Title (Optional)"
+                className={cn(
+                  "border-none px-0 text-lg font-semibold focus-visible:ring-0 placeholder:text-muted-foreground/50",
+                  errors.title ? "text-destructive" : ""
+                )}
+              />
+              <div className="h-[1px] bg-primary/5 w-full" />
+            </div>
+
+            {/* Description Area */}
+            <div className="space-y-2">
+              <Textarea
+                id="description"
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                disabled={isCreating}
+                maxLength={5000}
+                placeholder={`What's on your mind, ${user?.name?.split(' ')[0]}?`}
+                className={cn(
+                  "min-h-[120px] max-h-[300px] border-none px-0 text-lg focus-visible:ring-0 resize-none custom-scrollbar placeholder:text-muted-foreground/50 transition-all",
+                  formData.description.length > 100 ? "text-base" : "text-xl font-medium",
+                  errors.description ? "text-destructive" : ""
+                )}
+              />
+              <div className="flex justify-end">
                 <span className={cn(
-                  "text-[10px] font-bold px-2 py-0.5 rounded-full",
-                  formData.description.length >= 5000 ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"
+                  "text-[10px] font-medium px-2 py-0.5 rounded-full",
+                  formData.description.length >= 5000 ? "bg-destructive/10 text-destructive" : "bg-muted text-muted-foreground"
                 )}>
                   {formData.description.length}/5000
                 </span>
               </div>
             </div>
-            <Textarea
-              id="description"
-              name="description"
-              rows={5}
-              value={formData.description}
-              onChange={handleChange}
-              disabled={isCreating}
-              maxLength={5000}
-              placeholder="Share your thoughts, ideas, or updates..."
-              className={`resize-none ${errors.description ? "border-destructive" : ""}`}
-            />
-            {errors.description && (
-              <p className="text-xs text-destructive font-medium">{errors.description}</p>
-            )}
-          </div>
 
-          {/* Image/Video Upload Section */}
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">
-              Media <span className="text-muted-foreground">(Optional)</span>
-            </Label>
-
-            {imagePreview ? (
-              <div className="relative rounded-lg overflow-hidden border aspect-[4/3]">
+            {/* Image/Video Preview */}
+            {imagePreview && (
+              <div className="relative rounded-xl overflow-hidden border bg-black/5 aspect-video w-full group">
                 {imageFile?.type.startsWith('video/') ? (
                   <video
                     src={imagePreview}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-contain bg-black"
                     controls
                   />
                 ) : (
                   <img
                     src={imagePreview}
                     alt="Preview"
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-contain"
                   />
                 )}
                 <Button
                   type="button"
                   variant="destructive"
                   size="icon"
-                  className="absolute top-2 right-2 h-8 w-8"
+                  className="absolute top-2 right-2 h-7 w-7 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
                   onClick={removeImage}
                   disabled={isCreating}
                 >
-                  <X className="h-4 w-4" />
+                  <X className="h-3.5 w-3.5" />
                 </Button>
-              </div>
-            ) : (
-              <div
-                className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer hover:border-primary/50 transition-colors"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <ImagePlus className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
-                <p className="text-sm text-muted-foreground">
-                  Click to upload media
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Images or Videos up to 50MB
-                </p>
               </div>
             )}
 
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*,video/*"
-              onChange={handleImageChange}
-              className="hidden"
-              disabled={isCreating}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="link" className="text-sm font-medium">
-              Link <span className="text-muted-foreground">(Optional)</span>
-            </Label>
-            <Input
-              id="link"
-              name="link"
-              value={formData.link}
-              onChange={handleChange}
-              disabled={isCreating}
-              placeholder="https://example.com"
-              className={errors.link ? "border-destructive" : ""}
-            />
-            {errors.link && (
-              <p className="text-xs text-destructive">{errors.link}</p>
+            {/* Link Input (Conditional) */}
+            {showLinkInput && (
+              <div className="relative animate-in slide-in-from-top-2">
+                <Input
+                  id="link"
+                  name="link"
+                  value={formData.link}
+                  onChange={handleChange}
+                  disabled={isCreating}
+                  placeholder="https://example.com"
+                  className={cn(
+                    "bg-muted/50 border-primary/10 h-9 text-sm pr-8 focus:ring-1 ring-primary/20",
+                    errors.link ? "border-destructive" : ""
+                  )}
+                />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-1 top-1 h-7 w-7"
+                  onClick={() => setShowLinkInput(false)}
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              </div>
             )}
           </div>
         </div>
 
-        <DialogFooter>
+        {/* Action Bar (Add to post) */}
+        <div className="mx-4 mb-4 p-3 border rounded-lg flex items-center justify-between shadow-sm bg-card/50">
+          <span className="text-sm font-semibold text-muted-foreground whitespace-nowrap">Add to your post</span>
+          <div className="flex items-center gap-1">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 text-green-500 hover:bg-green-50 hover:text-green-600 rounded-full"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isCreating}
+            >
+              <ImageIcon className="h-5 w-5" />
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 text-blue-500 hover:bg-blue-50 hover:text-blue-600 rounded-full"
+              onClick={() => setShowLinkInput(!showLinkInput)}
+              disabled={isCreating}
+            >
+              <Sparkles className="h-5 w-5" />
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 text-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 rounded-full"
+              disabled={isCreating}
+            >
+              <Smile className="h-5 w-5" />
+            </Button>
+          </div>
+        </div>
+
+        <div className="px-4 pb-4 mt-2">
           <Button
-            variant="outline"
-            onClick={() => {
-              onClose();
-              resetForm();
-            }}
-            disabled={isCreating}
+            onClick={handleCreate}
+            disabled={isCreating || (!formData.description && !imageFile)}
+            className="w-full h-10 font-bold text-base shadow-lg shadow-primary/20"
           >
-            Cancel
-          </Button>
-          <Button onClick={handleCreate} disabled={isCreating} className="gap-2">
             {isCreating ? (
               <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Creating...
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Posting...
               </>
             ) : (
-              <>
-                <Send className="w-4 h-4" />
-                Create Post
-              </>
+              "Post"
             )}
           </Button>
-        </DialogFooter>
+        </div>
+
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*,video/*"
+          onChange={handleImageChange}
+          className="hidden"
+          disabled={isCreating}
+        />
       </DialogContent>
     </Dialog>
   );
