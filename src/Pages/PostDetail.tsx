@@ -231,12 +231,12 @@ export const PostDetail = () => {
                                             href={post.link.startsWith('http') ? post.link : `https://${post.link}`}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="inline-flex items-center gap-2 text-sm text-primary hover:underline font-bold transition-colors group/link"
+                                            className="flex items-start gap-2 text-sm text-primary hover:underline font-bold transition-colors group/link overflow-hidden max-w-full"
                                         >
-                                            <div className="w-9 h-9 rounded-xl bg-primary/5 flex items-center justify-center group-hover/link:bg-primary/10 transition-colors">
+                                            <div className="shrink-0 w-9 h-9 rounded-xl bg-primary/5 flex items-center justify-center group-hover/link:bg-primary/10 transition-colors">
                                                 <ExternalLink className="w-4 h-4" />
                                             </div>
-                                            <span className="truncate max-w-[250px] sm:max-w-md">{post.link}</span>
+                                            <span className="break-all pt-1.5 min-w-0 flex-1">{post.link}</span>
                                         </a>
                                     </div>
                                 )}
