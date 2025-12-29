@@ -103,7 +103,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                                 {user?._id === comment.user?._id && (
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
-                                            <Button variant="ghost" size="icon" className="h-5 w-5 sm:h-6 sm:w-6 -mr-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <Button variant="ghost" size="icon" className="h-5 w-5 sm:h-6 sm:w-6 -mr-2 transition-opacity">
                                                 <MoreVertical className="h-3 w-3 text-muted-foreground" />
                                             </Button>
                                         </DropdownMenuTrigger>

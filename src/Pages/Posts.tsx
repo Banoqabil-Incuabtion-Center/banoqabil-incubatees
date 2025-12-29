@@ -27,6 +27,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Users,
+  Link,
 } from "lucide-react";
 import { useAuthStore } from "@/hooks/store/authStore";
 import { UserAvatar } from "@/components/UserAvatar";
@@ -203,7 +204,7 @@ const CreatePostDialog = memo(({
               <span className="text-sm font-semibold">{user?.name}</span>
               <Badge variant="secondary" className="w-fit text-[10px] px-1.5 h-5 bg-muted/50 text-muted-foreground flex items-center gap-1">
                 <Users className="w-3 h-3" />
-                Public
+                Community
               </Badge>
             </div>
           </div>
@@ -332,9 +333,9 @@ const CreatePostDialog = memo(({
               onClick={() => setShowLinkInput(!showLinkInput)}
               disabled={isCreating}
             >
-              <Sparkles className="h-5 w-5" />
+              <Link className="h-5 w-5" />
             </Button>
-            <Button
+            {/* <Button
               type="button"
               variant="ghost"
               size="icon"
@@ -342,7 +343,7 @@ const CreatePostDialog = memo(({
               disabled={isCreating}
             >
               <Smile className="h-5 w-5" />
-            </Button>
+            </Button> */}
           </div>
         </div>
 
