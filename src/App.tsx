@@ -15,12 +15,14 @@ import Activities from "./Pages/Activities"
 import Notifications from "./Pages/Notifications"
 import { PostDetail } from "./Pages/PostDetail"
 import CustomizeCard from "./Pages/CustomizeCard"
+import { ThemeColorManager } from "./components/ThemeColorManager"
 
 import { Toaster } from "@/components/ui/sonner"
 
 const App = () => {
   return (
     <Router>
+      <ThemeColorManager />
       <Toaster />
       <Routes>
         {/* Public routes */}
