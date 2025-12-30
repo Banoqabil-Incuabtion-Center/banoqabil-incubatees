@@ -20,7 +20,7 @@ export function BottomNav() {
     const unreadCount = useChatStore(state => state.unreadCount)
 
     return (
-        <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-sidebar-border bg-white md:hidden safe-area-bottom shadow-[0_-1px_10px_rgba(0,0,0,0.02)]">
+        <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-sidebar-border bg-background/95 backdrop-blur-sm md:hidden safe-area-bottom shadow-[0_-1px_10px_rgba(0,0,0,0.02)]">
             <div className="flex items-center justify-around h-12 max-w-lg mx-auto px-4">
                 {navItems.map((item) => {
                     const isActive = location.pathname === item.url
@@ -42,7 +42,7 @@ export function BottomNav() {
                                     isActive ? "stroke-[2.5px]" : "stroke-[2px]"
                                 )} />
                                 {showBadge && (
-                                    <Badge variant="destructive" className="absolute -top-2 -right-3 h-4 min-w-4 px-1 text-[10px] font-bold border-2 border-white animate-in zoom-in-0 duration-300">
+                                    <Badge variant="destructive" className="absolute -top-2 -right-3 h-4 min-w-4 px-1 text-[10px] font-bold border-2 border-background animate-in zoom-in-0 duration-300">
                                         {unreadCount > 9 ? '9+' : unreadCount}
                                     </Badge>
                                 )}

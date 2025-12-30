@@ -222,7 +222,7 @@ export function ChatArea({ activeUserId, userName = "Select a User", userAvatar,
             <EncryptionRecovery />
 
             {/* Header */}
-            <div className="h-16 border-b border-primary/5 flex items-center justify-between px-6 shadow-soft bg-white/80 backdrop-blur-md sticky top-0 z-10 transition-all duration-300">
+            <div className="h-16 border-b border-primary/5 flex items-center justify-between px-6 shadow-soft bg-background/80 backdrop-blur-md sticky top-0 z-10 transition-all duration-300">
                 <div className="flex items-center gap-4">
                     {/* Back Button for Mobile */}
                     <Button variant="ghost" size="icon" className="md:hidden -ml-2 h-10 w-10 rounded-xl hover:bg-primary/5" onClick={onBack}>
