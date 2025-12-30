@@ -11,14 +11,37 @@ import { useSocket } from "@/hooks/useSocket";
 import { useSearchParams } from "react-router-dom";
 
 import { cn } from "@/lib/utils";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import axios from "axios";
+import { SOCKET_URL as SERVER_URL } from "@/lib/constant";
 
 export default function Direct() {
     // const [activeId, setActiveId] = useState<string | undefined>(undefined); // Removed local state
     const isMobile = useIsMobile();
     const [sheetOpen, setSheetOpen] = useState(false); // Control sheet open/close
-    const { conversations, addMessage, searchResults, activeUserId, setActiveUser } = useChatStore(); // Added activeUserId, setActiveUser
+    const { addMessage, searchResults, activeUserId, setActiveUser } = useChatStore(); // Removed conversations from store
     const { on } = useSocket();
     const [searchParams] = useSearchParams();
+
+    // Sync with same query as sidebar to get metadata for header
+    const { data } = useInfiniteQuery({
+        queryKey: ['conversations'],
+        queryFn: async ({ pageParam = 1 }) => {
+            const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+            const response = await axios.get(`${SERVER_URL}/api/messages/conversations?page=${pageParam}&limit=10`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            return response.data;
+        },
+        getNextPageParam: (lastPage, allPages) => {
+            return lastPage.length === 10 ? allPages.length + 1 : undefined;
+        },
+        initialPageParam: 1,
+        // Don't refetch here if already fetching in sidebar, but keep it available
+        staleTime: 5 * 60 * 1000,
+    });
+
+    const conversations = data?.pages.flat() || [];
 
     // Handle user selection - close sheet on mobile
     const handleUserSelect = (id: string) => {

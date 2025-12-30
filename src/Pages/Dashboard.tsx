@@ -62,25 +62,108 @@ interface AdminAnnouncement {
   createdAt: string
 }
 
+import { useQuery } from "@tanstack/react-query"
+
 const Dashboard = () => {
   const { user, setUser, isLoading, setLoading } = useAuthStore()
 
-  // States
-  const [todayAttendance, setTodayAttendance] = useState<any>(null)
-  const [attendanceHistory, setAttendanceHistory] = useState<AttendanceRecord[]>([])
-  const [myPosts, setMyPosts] = useState<PostStat[]>([])
-  const [announcements, setAnnouncements] = useState<AdminAnnouncement[]>([])
-  const [dashboardLoading, setDashboardLoading] = useState(true)
-
-  // Stats
-  const [totalHours, setTotalHours] = useState(0)
-  const [totalAnnouncements, setTotalAnnouncements] = useState(0)
-  const [totalPosts, setTotalPosts] = useState(0)
-  const [attendanceStats, setAttendanceStats] = useState({
-    present: 0,
-    absent: 0,
-    late: 0
+  // Queries
+  const { data: todayAttendance, isLoading: todayLoading } = useQuery({
+    queryKey: ['attendance', 'today', user?._id],
+    queryFn: () => attRepo.getTodayStatus(user?._id!),
+    enabled: !!user?._id,
   })
+
+  const { data: attendanceData, isLoading: historyLoading } = useQuery({
+    queryKey: ['attendance', 'history', user?._id],
+    queryFn: async () => {
+      let allHistory: any[] = []
+      let currentPage = 1
+      let hasMoreData = true
+      let fetchedTotalHours = 0
+      const MAX_PAGES = 50
+
+      let safetyCounter = 0
+      while (hasMoreData && safetyCounter < MAX_PAGES) {
+        safetyCounter++
+        const historyRes = await attRepo.getUserHistory(user?._id!, currentPage, 100)
+        const pageHistory = historyRes.history || []
+
+        if (pageHistory.length === 0) {
+          hasMoreData = false
+        } else {
+          if (currentPage === 1 && historyRes.totalHours !== undefined) {
+            fetchedTotalHours = historyRes.totalHours
+          }
+          allHistory = [...allHistory, ...pageHistory]
+          const totalPages = historyRes.pagination?.totalPages || 1
+          if (currentPage >= totalPages) {
+            hasMoreData = false
+          } else {
+            currentPage++
+          }
+        }
+      }
+
+      const presentCount = allHistory.filter((h: any) => h.status === 'Present').length
+      const absentCount = allHistory.filter((h: any) => h.status === 'Absent').length
+      const lateCount = allHistory.filter((h: any) => h.status?.includes('Late')).length
+
+      return {
+        history: allHistory,
+        totalHours: fetchedTotalHours,
+        stats: {
+          present: presentCount,
+          absent: absentCount,
+          late: lateCount
+        }
+      }
+    },
+    enabled: !!user?._id,
+  })
+
+  const { data: postsData, isLoading: postsLoading } = useQuery({
+    queryKey: ['posts', 'user-stats', user?._id],
+    queryFn: async () => {
+      const postsRes = await postRepo.getUserPostsWithStats(1, 100, user?._id!);
+      const userPosts = postsRes.data || [];
+      const postsWithStats: PostStat[] = userPosts.slice(0, 10).map((post: any) => ({
+        _id: post._id,
+        title: post.title || 'Untitled',
+        likeCount: post.likeCount || 0,
+        commentCount: post.commentCount || 0,
+        createdAt: post.createdAt
+      }));
+      return {
+        posts: postsWithStats,
+        totalPosts: userPosts.length
+      }
+    },
+    enabled: !!user?._id,
+  })
+
+  const { data: announcementsData, isLoading: announcementsLoading } = useQuery({
+    queryKey: ['posts', 'announcements'],
+    queryFn: async () => {
+      const announcementsRes = await postRepo.getAllPosts(1, 5)
+      return {
+        list: announcementsRes.data || [],
+        total: announcementsRes?.pagination?.totalItems || announcementsRes?.data?.length || 0
+      }
+    },
+    enabled: !!user?._id,
+  })
+
+  // Derived Values
+  const attendanceHistory = attendanceData?.history || []
+  const myPosts = postsData?.posts || []
+  const announcements = announcementsData?.list || []
+  const totalHours = attendanceData?.totalHours || 0
+  const totalAnnouncements = announcementsData?.total || 0
+  const totalPosts = postsData?.totalPosts || 0
+  const attendanceStats = attendanceData?.stats || { present: 0, absent: 0, late: 0 }
+
+  const dashboardLoading = todayLoading || historyLoading || postsLoading || announcementsLoading
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -98,100 +181,6 @@ const Dashboard = () => {
     }
     fetchUser()
   }, [user, setUser, setLoading])
-
-  // Fetch dashboard data
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      if (!user?._id) {
-        setDashboardLoading(false);
-        return;
-      }
-
-      setDashboardLoading(true)
-
-      try {
-        // Fetch today's attendance
-        const todayRes = await attRepo.getTodayStatus(user._id)
-        setTodayAttendance(todayRes)
-
-        // Fetch ALL attendance history using pagination
-        let allHistory: any[] = []
-        let currentPage = 1
-        let hasMoreData = true
-        let fetchedTotalHours = 0
-
-        let safetyCounter = 0;
-        const MAX_PAGES = 50;
-
-        while (hasMoreData && safetyCounter < MAX_PAGES) {
-          safetyCounter++;
-          const historyRes = await attRepo.getUserHistory(user._id, currentPage, 100)
-          const pageHistory = historyRes.history || []
-
-          if (pageHistory.length === 0) {
-            hasMoreData = false
-          } else {
-            // Capture total hours from the first page response
-            if (currentPage === 1 && historyRes.totalHours !== undefined) {
-              fetchedTotalHours = historyRes.totalHours
-            }
-
-            allHistory = [...allHistory, ...pageHistory]
-
-            // Check if there are more pages
-            const totalPages = historyRes.pagination?.totalPages || 1
-            if (currentPage >= totalPages) {
-              hasMoreData = false
-            } else {
-              currentPage++
-            }
-          }
-        }
-
-        setAttendanceHistory(allHistory)
-
-        const presentCount = allHistory.filter((h: any) => h.status === 'Present').length
-        const absentCount = allHistory.filter((h: any) => h.status === 'Absent').length
-        const lateCount = allHistory.filter((h: any) => h.status?.includes('Late')).length
-
-        setAttendanceStats({
-          present: presentCount,
-          absent: absentCount,
-          late: lateCount
-        })
-
-        // Fetch user's posts with stats in single query
-        const postsRes = await postRepo.getUserPostsWithStats(1, 100, user._id);
-        const userPosts = postsRes.data || [];
-
-        const postsWithStats: PostStat[] = userPosts.slice(0, 10).map((post: any) => {
-          return {
-            _id: post._id,
-            title: post.title || 'Untitled',
-            likeCount: post.likeCount || 0,
-            commentCount: post.commentCount || 0,
-            createdAt: post.createdAt
-          };
-        });
-
-        setMyPosts(postsWithStats);
-        setTotalHours(fetchedTotalHours || 0);
-        setTotalPosts(userPosts.length);
-
-        // Fetch admin announcements
-        const announcementsRes = await postRepo.getAllPosts(1, 5)
-        setAnnouncements(announcementsRes.data || [])
-        setTotalAnnouncements(announcementsRes?.pagination?.totalItems || announcementsRes?.data?.length || 0)
-
-      } catch (err) {
-        console.error("Error fetching dashboard data:", err)
-      } finally {
-        setDashboardLoading(false)
-      }
-    }
-
-    fetchDashboardData()
-  }, [user?._id])
 
   if (!user) {
     return null

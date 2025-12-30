@@ -42,6 +42,12 @@ import { usePostSocket } from "@/hooks/usePostSocket";
 import { UserCard } from "@/components/UserCard";
 import { userRepo } from "@/repositories/userRepo";
 import {
+  useQuery,
+  useInfiniteQuery,
+  useMutation,
+  useQueryClient
+} from "@tanstack/react-query";
+import {
   Carousel,
   CarouselContent,
   CarouselItem,
@@ -380,70 +386,103 @@ const CreatePostDialog = memo(({
 CreatePostDialog.displayName = 'CreatePostDialog';
 
 const Posts = () => {
-  // const [activeTab, setActiveTab] = useState("admin"); // Removed activeTab
+  const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { user } = useAuthStore();
-  const [suggestedUsers, setSuggestedUsers] = useState<any[]>([]);
-  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
 
   // Fetch suggested/active users
-  useEffect(() => {
-    const fetchSuggestions = async () => {
-      try {
-        setLoadingSuggestions(true);
-        const res = await userRepo.getActiveUsers();
-        // Filter out current user from suggestions
-        const filtered = (res.activeUsers || []).filter((u: any) => u.user?._id !== user?._id);
-        setSuggestedUsers(filtered.map((item: any) => item.user));
-      } catch (error) {
-        console.error("Failed to fetch suggestions:", error);
-      } finally {
-        setLoadingSuggestions(false);
-      }
-    };
-    fetchSuggestions();
-  }, [user?._id]);
+  const { data: suggestedUsers = [], isLoading: loadingSuggestions } = useQuery({
+    queryKey: ['users', 'suggestions'],
+    queryFn: async () => {
+      const res = await userRepo.getActiveUsers();
+      const filtered = (res.activeUsers || []).filter((u: any) => u.user?._id !== user?._id);
+      return filtered.map((item: any) => item.user);
+    },
+    enabled: !!user?._id,
+  });
+
+  // Infinite Query for Posts
+  const {
+    data: infinitePosts,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    status,
+  } = useInfiniteQuery({
+    queryKey: ['posts', 'community'],
+    queryFn: ({ pageParam = 1 }) => postRepo.getAllUsersPosts(pageParam as number, 10),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      const pagination = lastPage.pagination;
+      return pagination && pagination.hasMore ? pagination.currentPage + 1 : undefined;
+    },
+    enabled: !!user?._id,
+  });
+
+  // Mutations
+  const createMutation = useMutation({
+    mutationFn: (data: any) => postRepo.createUserPost(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['posts', 'community'] });
+      toast.success("Post created successfully");
+      setIsModalOpen(false);
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Failed to create post");
+    }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (postId: string) => postRepo.deleteUserPost(postId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['posts', 'community'] });
+      toast.success("Post deleted successfully");
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Failed to delete post");
+    }
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ postId, data }: { postId: string, data: any }) => postRepo.updateUserPost(postId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['posts', 'community'] });
+      toast.success("Post updated successfully");
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Failed to update post");
+    }
+  });
 
   // Connect to socket events
   usePostSocket();
 
-  const {
-    adminPosts,
-    userPosts,
-    loading,
-    hasMoreAdmin,
-    hasMoreUser,
-    pageAdmin,
-    pageUser,
-    fetchPosts,
-    deletePost,
-    updatePost
-  } = usePostStore();
-
   const observerRef = useRef<IntersectionObserver | null>(null);
 
   const lastPostRef = useCallback((node: HTMLDivElement) => {
-    if (loading) return;
+    if (status === 'pending' || isFetchingNextPage) return;
 
     if (observerRef.current) observerRef.current.disconnect();
 
     observerRef.current = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting) {
-        if (hasMoreUser && !loading) {
-          fetchPosts(pageUser + 1, 10, 'user');
-        }
+      if (entries[0].isIntersecting && hasNextPage) {
+        fetchNextPage();
       }
     }, { rootMargin: '400px', threshold: 0.1 });
 
     if (node) observerRef.current.observe(node);
-  }, [loading, hasMoreUser, pageUser, fetchPosts]);
+  }, [status, isFetchingNextPage, hasNextPage, fetchNextPage]);
 
-  // Initial fetch
-  useEffect(() => {
-    if (userPosts.length === 0) {
-      fetchPosts(1, 10, 'user');
-    }
-  }, [fetchPosts, userPosts.length]);
+  const handleDelete = useCallback(async (postId: string) => {
+    deleteMutation.mutate(postId);
+  }, [deleteMutation]);
+
+  const handleEdit = useCallback(async (postId: string, updatedData: any) => {
+    updateMutation.mutate({ postId, data: updatedData });
+  }, [updateMutation]);
+
+  const allPosts = infinitePosts?.pages.flatMap(page => page.posts || page.data || []) || [];
+  const loading = status === 'pending';
 
   const handleCloseModal = useCallback(() => {
     setIsModalOpen(false);
@@ -452,27 +491,7 @@ const Posts = () => {
   const handlePostCreated = useCallback(() => {
   }, []);
 
-  const handleDelete = useCallback(async (postId: string) => {
-    try {
-      await postRepo.deleteUserPost(postId);
-      toast.success("Post deleted successfully");
-      deletePost(postId);
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || "Failed to delete post");
-    }
-  }, [deletePost]);
-
-  const handleEdit = useCallback(async (postId: string, updatedData: any) => {
-    try {
-      const res = await postRepo.updateUserPost(postId, updatedData);
-      toast.success("Post updated successfully");
-      updatePost(res.post || res.data);
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || "Failed to update post");
-    }
-  }, [updatePost]);
-
-  const postsToRender = userPosts;
+  const postsToRender = allPosts;
 
   return (
     <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
@@ -579,7 +598,7 @@ const Posts = () => {
         })}
 
         {/* Loading more */}
-        {loading && postsToRender.length > 0 && (
+        {isFetchingNextPage && (
           <div className="flex justify-center p-4">
             <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
           </div>

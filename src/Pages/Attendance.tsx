@@ -11,74 +11,43 @@ import { Sun, Moon, Clock, AlertCircle, CheckCircle2, XCircle, Info, CalendarDay
 import AttendanceCalendar from "@/components/AttendanceCalendar";
 import MarkAttendance from "@/components/MarkAttendance";
 import { cn } from "@/lib/utils";
+import { useQuery } from "@tanstack/react-query";
 
 const Attendance: React.FC = () => {
   const { user } = useAuthStore();
-  const [attendance, setAttendance] = useState<AttendanceStatus | null>(null);
-  const [history, setHistory] = useState<HistoryRecord[]>([]);
-  const [shiftInfo, setShiftInfo] = useState<AttendanceSettings | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isHistoryLoading, setIsHistoryLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(10);
 
-  // Pagination & Total Hours State
-  const [pagination, setPagination] = useState({
-    current: 1,
-    pageSize: 10,
-    total: 0
+  // Queries
+  const { data: attendance, isLoading: isTodayLoading } = useQuery({
+    queryKey: ['attendance', 'today', user?._id],
+    queryFn: () => attRepo.getTodayStatus(user?._id!),
+    enabled: !!user?._id,
   });
-  const [totalHours, setTotalHours] = useState<number>(0);
 
-  // Fetch today's status and shift info
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!user?._id) {
-        setIsLoading(false);
-        return;
-      }
-      try {
-        const [statusRes, shiftRes] = await Promise.all([
-          attRepo.getTodayStatus(user._id),
-          attRepo.getShiftInfo()
-        ]);
-        setAttendance(statusRes);
-        setShiftInfo(shiftRes);
-      } catch (err) {
-        console.error("Error fetching attendance:", err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchData();
-  }, [user?._id]);
+  const { data: shiftInfo, isLoading: isShiftLoading } = useQuery({
+    queryKey: ['attendance', 'shift-info'],
+    queryFn: () => attRepo.getShiftInfo(),
+    enabled: !!user?._id,
+  });
 
-  // Fetch history with pagination
-  const fetchHistory = async (page = 1, pageSize = 10) => {
-    if (!user?._id) return;
-    setIsHistoryLoading(true);
-    try {
-      const res = await attRepo.getUserHistory(user._id, page, pageSize);
-      setHistory(res.history || []);
-      setPagination({
-        current: res.pagination.currentPage,
-        pageSize: res.pagination.limit,
-        total: res.pagination.total
-      });
-      if (res.totalHours !== undefined) {
-        setTotalHours(res.totalHours);
-      }
-    } catch (err) {
-      console.error("Error fetching history:", err);
-    } finally {
-      setIsHistoryLoading(false);
-    }
+  const { data: historyData, isLoading: isHistoryLoading } = useQuery({
+    queryKey: ['attendance', 'history', user?._id, currentPage, pageSize],
+    queryFn: () => attRepo.getUserHistory(user?._id!, currentPage, pageSize),
+    enabled: !!user?._id,
+  });
+
+  const isLoading = isTodayLoading || isShiftLoading;
+  const history = historyData?.history || [];
+  const totalHours = historyData?.totalHours || 0;
+  const pagination = {
+    current: historyData?.pagination?.currentPage || currentPage,
+    pageSize: historyData?.pagination?.limit || pageSize,
+    total: historyData?.pagination?.total || 0
   };
 
-  useEffect(() => {
-    fetchHistory();
-  }, [user?._id]);
-
   const handleTableChange = (newPagination: TablePaginationConfig) => {
-    fetchHistory(newPagination.current || 1, newPagination.pageSize || 10);
+    setCurrentPage(newPagination.current || 1);
   };
 
   const getStatusColor = (status: string) => {

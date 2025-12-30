@@ -27,6 +27,9 @@ if ('serviceWorker' in navigator) {
 }
 
 
+import { QueryProvider } from "./components/QueryProvider"
+
+
 const updateSW = registerSW({
   onNeedRefresh() {
     if (confirm('New content available. Reload?')) {
@@ -37,9 +40,11 @@ const updateSW = registerSW({
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      <App />
-    </ThemeProvider>
+    <QueryProvider>
+      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <App />
+      </ThemeProvider>
+    </QueryProvider>
   </StrictMode>,
 )
 

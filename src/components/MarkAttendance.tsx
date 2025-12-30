@@ -18,69 +18,53 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+
 interface Props {
   userId: string
 }
 
 const MarkAttendance: React.FC<Props> = ({ userId }) => {
-  const [attendance, setAttendance] = useState<AttendanceStatus | null>(null)
-  const [shiftInfo, setShiftInfo] = useState<AttendanceSettings | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
-  const [isFetching, setIsFetching] = useState(true)
+  const queryClient = useQueryClient()
 
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!userId) return
+  const { data: attendance, isLoading: isFetching } = useQuery({
+    queryKey: ['attendance', 'today', userId],
+    queryFn: () => attRepo.getTodayStatus(userId),
+    enabled: !!userId,
+  })
 
-      try {
-        setIsFetching(true)
-        const [statusRes, shiftRes] = await Promise.all([
-          attRepo.getTodayStatus(userId),
-          attRepo.getShiftInfo()
-        ])
-        setAttendance(statusRes)
-        setShiftInfo(shiftRes)
-      } catch (err) {
-        console.error("Error fetching attendance:", err)
-      } finally {
-        setIsFetching(false)
-      }
-    }
-    fetchData()
-  }, [userId])
+  const { data: shiftInfo } = useQuery({
+    queryKey: ['attendance', 'shift-info'],
+    queryFn: () => attRepo.getShiftInfo(),
+    enabled: !!userId,
+  })
 
-  const handleCheckIn = async () => {
-    setIsLoading(true)
-    try {
-      const res = await attRepo.checkIn(userId)
-      setAttendance(prev => ({
-        ...prev,
-        ...res.att,
-        canCheckIn: false
-      }))
+  const checkInMutation = useMutation({
+    mutationFn: (uid: string) => attRepo.checkIn(uid),
+    onSuccess: (res) => {
+      queryClient.invalidateQueries({ queryKey: ['attendance'] })
       toast.success(res.message || "Checked in successfully!")
-    } catch (err: any) {
+    },
+    onError: (err: any) => {
       toast.error(err.response?.data?.error || "Check-in failed")
-    } finally {
-      setIsLoading(false)
     }
-  }
+  })
 
-  const handleCheckOut = async () => {
-    setIsLoading(true)
-    try {
-      const res = await attRepo.checkOut(userId)
-      setAttendance(prev => ({
-        ...prev,
-        ...res.att
-      }))
+  const checkOutMutation = useMutation({
+    mutationFn: (uid: string) => attRepo.checkOut(uid),
+    onSuccess: (res) => {
+      queryClient.invalidateQueries({ queryKey: ['attendance'] })
       toast.success(res.message || "Checked out successfully!")
-    } catch (err: any) {
+    },
+    onError: (err: any) => {
       toast.error(err.response?.data?.error || "Check-out failed")
-    } finally {
-      setIsLoading(false)
     }
-  }
+  })
+
+  const handleCheckIn = () => checkInMutation.mutate(userId)
+  const handleCheckOut = () => checkOutMutation.mutate(userId)
+
+  const isLoading = checkInMutation.isPending || checkOutMutation.isPending
 
   const isCheckedIn = Boolean(attendance?.checkInTime)
   const isCheckedOut = Boolean(attendance?.checkOutTime)

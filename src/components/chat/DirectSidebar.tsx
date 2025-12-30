@@ -9,6 +9,9 @@ import { useChatStore, Message } from "@/hooks/store/useChatStore";
 import { useAuthStore } from "@/hooks/store/authStore";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useSocket } from "@/hooks/useSocket";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import axios from "axios";
+import { SOCKET_URL as SERVER_URL } from "@/lib/constant";
 
 // Component to decrypt last message for sidebar preview
 function DecryptedLastMessage({ message, otherUserId }: { message: Message & { _decryptedText?: string }; otherUserId: string }) {
@@ -76,17 +79,36 @@ const MOCK_GROUPS = [
 ];
 
 export function DirectSidebar({ className, activeUserId, onUserSelect }: DirectSidebarProps) {
+    const queryClient = useQueryClient();
     const {
-        conversations,
-        fetchConversations,
-        isLoadingConversations,
         searchUsers,
         searchResults,
         isSearching,
-        loadMoreConversations,
-        hasMoreConversations,
-        isLoadingMoreConversations
     } = useChatStore();
+
+    // Use TanStack Query for conversations
+    const {
+        data,
+        fetchNextPage,
+        hasNextPage,
+        isFetchingNextPage,
+        isLoading: isLoadingConversations
+    } = useInfiniteQuery({
+        queryKey: ['conversations'],
+        queryFn: async ({ pageParam = 1 }) => {
+            const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+            const response = await axios.get(`${SERVER_URL}/api/messages/conversations?page=${pageParam}&limit=10`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            return response.data;
+        },
+        getNextPageParam: (lastPage, allPages) => {
+            return lastPage.length === 10 ? allPages.length + 1 : undefined;
+        },
+        initialPageParam: 1,
+    });
+
+    const conversations = data?.pages.flat() || [];
 
     const { user: currentUser } = useAuthStore();
     const [searchQuery, setSearchQuery] = useState("");
@@ -107,6 +129,11 @@ export function DirectSidebar({ className, activeUserId, onUserSelect }: DirectS
             setOnlineUsers(users);
         });
 
+        // Register new message listener to invalidate conversations
+        const quietNewMessage = on('newMessage', () => {
+            queryClient.invalidateQueries({ queryKey: ['conversations'] });
+        });
+
         // Request initial list in case we missed the connection event
         emit('getOnlineUsers');
 
@@ -114,21 +141,18 @@ export function DirectSidebar({ className, activeUserId, onUserSelect }: DirectS
             quietOffline();
             quietOnline();
             quietGetOnline();
+            quietNewMessage();
         };
-    }, [on, emit, addOnlineUser, removeOnlineUser, setOnlineUsers]);
-
-    useEffect(() => {
-        fetchConversations();
-    }, [fetchConversations]);
+    }, [on, emit, addOnlineUser, removeOnlineUser, setOnlineUsers, queryClient]);
 
     const observerTarget = useRef<HTMLDivElement>(null);
 
     const handleObserver = useCallback((entries: IntersectionObserverEntry[]) => {
         const [target] = entries;
-        if (target.isIntersecting && hasMoreConversations && !isLoadingMoreConversations && !isLoadingConversations) {
-            loadMoreConversations();
+        if (target.isIntersecting && hasNextPage && !isFetchingNextPage) {
+            fetchNextPage();
         }
-    }, [hasMoreConversations, isLoadingMoreConversations, isLoadingConversations, loadMoreConversations]);
+    }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
     useEffect(() => {
         const element = observerTarget.current;
@@ -349,7 +373,7 @@ export function DirectSidebar({ className, activeUserId, onUserSelect }: DirectS
                                     {/* Sentinel for infinite scroll */}
                                     {conversations.length > 0 && (
                                         <div ref={observerTarget} className="h-10 flex items-center justify-center w-full">
-                                            {isLoadingMoreConversations && (
+                                            {isFetchingNextPage && (
                                                 <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary/40 animate-pulse">
                                                     <div className="h-1 w-1 bg-primary/40 rounded-full animate-bounce" />
                                                     <div className="h-1 w-1 bg-primary/40 rounded-full animate-bounce [animation-delay:0.2s]" />

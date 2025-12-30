@@ -15,45 +15,27 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
+import { useQuery } from "@tanstack/react-query"
 
 interface Props {
     userId: string
 }
 
 const AttendanceCalendar: React.FC<Props> = ({ userId }) => {
-    const [records, setRecords] = useState<HistoryRecord[]>([])
-    const [stats, setStats] = useState<CalendarStats | null>(null)
-    const [startDate, setStartDate] = useState<Date | null>(null)
-    const [isLoading, setIsLoading] = useState(true)
     const [currentMonth, setCurrentMonth] = useState(new Date())
     const [selectedRecord, setSelectedRecord] = useState<HistoryRecord | null>(null)
     const [dialogOpen, setDialogOpen] = useState(false)
 
-    const [workingDays, setWorkingDays] = useState<number[]>([1, 2, 3, 4, 5]) // Default Mon-Fri
+    const { data, isLoading } = useQuery({
+        queryKey: ['attendance', 'calendar', userId, currentMonth.getMonth() + 1, currentMonth.getFullYear()],
+        queryFn: () => attRepo.getCalendarHistory(userId, currentMonth.getMonth() + 1, currentMonth.getFullYear()),
+        enabled: !!userId,
+    })
 
-    const fetchCalendarData = async (month?: number, year?: number) => {
-        if (!userId) return
-        setIsLoading(true)
-        try {
-            const res = await attRepo.getCalendarHistory(userId, month, year)
-            setRecords(res.records)
-            setStats(res.stats)
-            if (res.user?.workingDays) {
-                setWorkingDays(res.user.workingDays)
-            }
-            if (res.startDate) {
-                setStartDate(new Date(res.startDate))
-            }
-        } catch (err) {
-            console.error("Error fetching calendar data:", err)
-        } finally {
-            setIsLoading(false)
-        }
-    }
-
-    useEffect(() => {
-        fetchCalendarData(currentMonth.getMonth() + 1, currentMonth.getFullYear())
-    }, [userId, currentMonth])
+    const records = data?.records || []
+    const stats = data?.stats || null
+    const workingDays = data?.user?.workingDays || [1, 2, 3, 4, 5]
+    const startDate = data?.startDate ? new Date(data.startDate) : null
 
     // Create a map of date -> record for quick lookup
     const recordMap = useMemo(() => {
