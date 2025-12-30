@@ -13,6 +13,9 @@ import { useAuthStore } from '@/hooks/store/authStore'
 import { useNotificationStore } from '@/hooks/useNotificationStore'
 import { useSocket } from '@/hooks/useSocket'
 import { ProfileReminder } from '../ProfileReminder'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import axios from 'axios'
+import { SOCKET_URL as SERVER_URL } from '@/lib/constant'
 
 const UserLayout = () => {
     const location = useLocation();
@@ -60,13 +63,34 @@ const UserLayout = () => {
     const hideUI = shouldHideOnMobile && isMobile;
 
     const { addNotification, fetchNotifications } = useNotificationStore();
-    const { fetchUnreadCount, addMessage } = useChatStore();
+    const { addMessage } = useChatStore();
     const { user } = useAuthStore();
     const { on } = useSocket();
+    const queryClient = useQueryClient();
+
+    // Use TanStack Query for unread count
+    const { data: unreadData } = useQuery({
+        queryKey: ['unreadCount'],
+        queryFn: async () => {
+            const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+            const response = await axios.get(`${SERVER_URL}/api/messages/unread-count`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            return response.data;
+        },
+        enabled: !!user,
+        refetchInterval: 60000, // Fallback poll every minute
+    });
+
+    // Update store for shared access (compatibility)
+    useEffect(() => {
+        if (unreadData) {
+            useChatStore.setState({ unreadCount: unreadData.unreadCount });
+        }
+    }, [unreadData]);
 
     useEffect(() => {
         fetchNotifications();
-        fetchUnreadCount();
 
         const unsubNotif = on('new_notification', (notification) => {
             addNotification(notification);
@@ -74,13 +98,21 @@ const UserLayout = () => {
 
         const unsubMsg = on('newMessage', (message) => {
             addMessage(message, user?._id);
+            // Invalidate unread count on new message
+            queryClient.invalidateQueries({ queryKey: ['unreadCount'] });
+        });
+
+        const unsubRead = on('messageRead', () => {
+            // Invalidate unread count when message is read
+            queryClient.invalidateQueries({ queryKey: ['unreadCount'] });
         });
 
         return () => {
             unsubNotif();
             unsubMsg();
+            unsubRead();
         };
-    }, [on, addNotification, fetchNotifications, fetchUnreadCount, addMessage, user?._id]);
+    }, [on, addNotification, fetchNotifications, addMessage, user?._id, queryClient]);
 
     return (
         <SidebarProvider

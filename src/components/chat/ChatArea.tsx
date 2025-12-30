@@ -9,12 +9,13 @@ import { useChatStore, Message } from "@/hooks/store/useChatStore";
 import { useSocket } from "@/hooks/useSocket";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
-import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { SOCKET_URL as SERVER_URL } from "@/lib/constant";
+import { useUserPublicKey } from "@/hooks/useUserPublicKey";
 
 // Component to handle async decryption of a single message
-function DecryptedMessageText({ msg, otherUserId }: { msg: Message & { _decryptedText?: string }; otherUserId: string }) {
+function DecryptedMessageText({ msg, otherUserId, publicKey }: { msg: Message & { _decryptedText?: string }; otherUserId: string; publicKey?: string }) {
     const { decryptMessageText, isEncryptionReady } = useChatStore();
 
     // For encrypted messages without decrypted text, start with empty string
@@ -50,7 +51,7 @@ function DecryptedMessageText({ msg, otherUserId }: { msg: Message & { _decrypte
         // Decrypt the message
         if (isEncryptionReady) {
             setIsDecrypting(true);
-            decryptMessageText(msg, otherUserId)
+            decryptMessageText(msg, otherUserId, publicKey)
                 .then(decrypted => {
                     setText(decrypted);
                     setIsDecrypting(false);
@@ -60,7 +61,7 @@ function DecryptedMessageText({ msg, otherUserId }: { msg: Message & { _decrypte
                     setIsDecrypting(false);
                 });
         }
-    }, [msg, otherUserId, isEncryptionReady, decryptMessageText]);
+    }, [msg, otherUserId, isEncryptionReady, decryptMessageText, publicKey]);
 
     // Show truncated text with Read More
     const shouldTruncate = text.length > MAX_LENGTH && !isExpanded;
@@ -111,6 +112,8 @@ export function ChatArea({ activeUserId, userName = "Select a User", userAvatar,
         initEncryption,
         isEncryptionReady,
     } = useChatStore();
+
+    const { data: theirPublicKey } = useUserPublicKey(activeUserId);
 
     // TanStack Query for messages
     const {
@@ -223,7 +226,7 @@ export function ChatArea({ activeUserId, userName = "Select a User", userAvatar,
         if (!inputValue.trim() || !activeUserId) return;
         const text = inputValue;
         setInputValue("");
-        await sendMessage(activeUserId, text);
+        await sendMessage(activeUserId, text, theirPublicKey || undefined);
         // Invalidate to show our message if it's not optimistically added correctly
         queryClient.invalidateQueries({ queryKey: ['messages', activeUserId] });
         queryClient.invalidateQueries({ queryKey: ['conversations'] });
@@ -351,7 +354,7 @@ export function ChatArea({ activeUserId, userName = "Select a User", userAvatar,
                                             }`}
                                             style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
                                             <p className="text-[14.5px] leading-relaxed font-medium">
-                                                <DecryptedMessageText msg={msg} otherUserId={activeUserId || ''} />
+                                                <DecryptedMessageText msg={msg} otherUserId={activeUserId || ''} publicKey={theirPublicKey || undefined} />
                                             </p>
                                         </div>
 

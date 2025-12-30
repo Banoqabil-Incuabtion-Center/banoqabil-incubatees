@@ -9,13 +9,15 @@ import { useChatStore, Message } from "@/hooks/store/useChatStore";
 import { useAuthStore } from "@/hooks/store/authStore";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useSocket } from "@/hooks/useSocket";
-import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { SOCKET_URL as SERVER_URL } from "@/lib/constant";
+import { useUserPublicKey } from "@/hooks/useUserPublicKey";
 
 // Component to decrypt last message for sidebar preview
 function DecryptedLastMessage({ message, otherUserId }: { message: Message & { _decryptedText?: string }; otherUserId: string }) {
     const { decryptMessageText, isEncryptionReady } = useChatStore();
+    const { data: publicKey } = useUserPublicKey(otherUserId);
     const [text, setText] = useState<string>('');
     const [isLoading, setIsLoading] = useState(true);
 
@@ -36,7 +38,7 @@ function DecryptedLastMessage({ message, otherUserId }: { message: Message & { _
 
         // Decrypt the message
         if (isEncryptionReady) {
-            decryptMessageText(message, otherUserId)
+            decryptMessageText(message, otherUserId, publicKey || undefined)
                 .then(decrypted => {
                     setText(decrypted);
                     setIsLoading(false);
@@ -49,7 +51,7 @@ function DecryptedLastMessage({ message, otherUserId }: { message: Message & { _
             setText('Encrypted');
             setIsLoading(false);
         }
-    }, [message, otherUserId, isEncryptionReady, decryptMessageText]);
+    }, [message, otherUserId, isEncryptionReady, decryptMessageText, publicKey]);
 
     if (isLoading) {
         return <span className="animate-pulse">...</span>;
@@ -81,9 +83,10 @@ const MOCK_GROUPS = [
 export function DirectSidebar({ className, activeUserId, onUserSelect }: DirectSidebarProps) {
     const queryClient = useQueryClient();
     const {
-        searchUsers,
-        searchResults,
-        isSearching,
+        onlineUsers,
+        setOnlineUsers,
+        addOnlineUser,
+        removeOnlineUser
     } = useChatStore();
 
     // Use TanStack Query for conversations
@@ -113,7 +116,30 @@ export function DirectSidebar({ className, activeUserId, onUserSelect }: DirectS
     const { user: currentUser } = useAuthStore();
     const [searchQuery, setSearchQuery] = useState("");
     const { on, emit } = useSocket();
-    const { onlineUsers, setOnlineUsers, addOnlineUser, removeOnlineUser } = useChatStore();
+
+    const [debouncedQuery, setDebouncedQuery] = useState("");
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            setDebouncedQuery(searchQuery);
+        }, 300);
+        return () => clearTimeout(timeoutId);
+    }, [searchQuery]);
+
+    // Use TanStack Query for user search
+    const { data: searchResultsData, isLoading: isSearching } = useQuery({
+        queryKey: ['userSearch', debouncedQuery],
+        queryFn: async () => {
+            const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+            const response = await axios.get(`${SERVER_URL}/api/messages/search?query=${debouncedQuery}`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            return response.data;
+        },
+        enabled: debouncedQuery.length >= 2,
+        staleTime: 60000, // Search results can stay fresh for 1 min
+    });
+
+    const searchResults = searchResultsData || [];
 
     // Socket listeners for online status
     useEffect(() => {
@@ -164,17 +190,7 @@ export function DirectSidebar({ className, activeUserId, onUserSelect }: DirectS
         observer.observe(element);
 
         return () => observer.unobserve(element);
-    }, [handleObserver, isLoadingConversations]); // Re-attach if loading state changes (though ref shouldn't change, consistency good)
-
-    // Debounce search
-    useEffect(() => {
-        const timeoutId = setTimeout(() => {
-            if (searchQuery) {
-                searchUsers(searchQuery);
-            }
-        }, 500);
-        return () => clearTimeout(timeoutId);
-    }, [searchQuery, searchUsers]);
+    }, [handleObserver, isLoadingConversations]);
 
     const getOtherParticipant = (participants: any[]) => {
         if (!currentUser) return participants[0]; // Fallback

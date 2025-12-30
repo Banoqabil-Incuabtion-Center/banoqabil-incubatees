@@ -89,7 +89,7 @@ interface ChatState {
     fetchConversations: () => Promise<void>;
     loadMoreConversations: () => Promise<void>;
     fetchMessages: (receiverId: string, before?: string) => Promise<void>;
-    sendMessage: (receiverId: string, text: string) => Promise<void>;
+    sendMessage: (receiverId: string, text: string, publicKey?: string) => Promise<void>;
     searchUsers: (query: string) => Promise<void>;
     fetchUnreadCount: () => Promise<void>;
     setActiveUser: (userId: string | null) => void;
@@ -104,7 +104,7 @@ interface ChatState {
     // E2E Encryption methods
     initEncryption: () => Promise<void>;
     fetchUserPublicKey: (userId: string) => Promise<string | null>;
-    decryptMessageText: (msg: Message, otherUserId: string) => Promise<string>;
+    decryptMessageText: (msg: Message, otherUserId: string, publicKey?: string) => Promise<string>;
     recoverKeys: (password: string) => Promise<boolean>;
     setupRecovery: (password: string) => Promise<void>;
 }
@@ -284,7 +284,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
         }
     },
 
-    sendMessage: async (receiverId: string, text: string) => {
+    sendMessage: async (receiverId: string, text: string, publicKey?: string) => {
         set({ isSendingMessage: true });
         try {
             const { myKeyPair, isEncryptionReady } = get();
@@ -300,7 +300,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
             // Encrypt message if encryption is ready
             console.log('🔐 E2E: Checking encryption', { isEncryptionReady, hasKeyPair: !!myKeyPair });
             if (isEncryptionReady && myKeyPair) {
-                const theirPublicKey = await get().fetchUserPublicKey(receiverId);
+                const theirPublicKey = publicKey || await get().fetchUserPublicKey(receiverId);
                 console.log('🔐 E2E: Fetched their public key', { hasKey: !!theirPublicKey, keyLength: theirPublicKey?.length });
 
                 if (theirPublicKey) {
@@ -701,7 +701,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     },
 
     // E2E Encryption: Decrypt a message
-    decryptMessageText: async (msg: Message, otherUserId: string) => {
+    decryptMessageText: async (msg: Message, otherUserId: string, publicKey?: string) => {
         const { myKeyPair, isEncryptionReady } = get();
 
         // If not encrypted, return plain text
@@ -715,7 +715,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
         }
 
         try {
-            const theirPublicKey = await get().fetchUserPublicKey(otherUserId);
+            const theirPublicKey = publicKey || await get().fetchUserPublicKey(otherUserId);
             if (!theirPublicKey) {
                 return '[Encrypted message - key not available]';
             }
