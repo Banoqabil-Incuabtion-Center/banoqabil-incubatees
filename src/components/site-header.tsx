@@ -23,8 +23,7 @@ export function SiteHeader() {
   const location = useLocation()
 
   return (
-    <header className="sticky top-0 z-50 flex h-auto md:h-(--header-height) min-h-16 shrink-0 items-center border-b border-primary/5 bg-background transition-all ease-in-out group-has-data-[collapsible=icon]/sidebar-wrapper:h-16 pt-[env(safe-area-inset-top)]">
-
+    <header className="sticky top-0 z-50 flex h-16 md:h-(--header-height) shrink-0 items-center border-b border-primary/5 bg-background transition-all ease-in-out group-has-data-[collapsible=icon]/sidebar-wrapper:h-16">
       <div className="flex w-full items-center justify-between px-4 sm:px-8 max-w-[1600px] mx-auto">
         <div className="flex items-center gap-3">
           {/* Sidebar Trigger - Refined for desktop */}

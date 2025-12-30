@@ -18,23 +18,23 @@ export default defineConfig({
         name: 'Incubation Management System',
         short_name: 'IMS',
         description: 'Incubation Management System User Frontend',
-        theme_color: '#0f7142',
+        theme_color: '#ffffff',
         icons: [
           {
             src: 'bq-image.png',
             sizes: '192x192',
             type: 'image/png',
-            purpose: 'any'
+            purpose: 'any maskable'
           },
           {
             src: 'bq-image.png',
             sizes: '512x512',
             type: 'image/png',
-            purpose: 'any'
+            purpose: 'any maskable'
           }
         ],
         display: 'standalone',
-        background_color: '#f7f8fd',
+        background_color: '#ffffff',
         orientation: 'portrait'
       },
       devOptions: {
