@@ -39,7 +39,7 @@ api.interceptors.response.use(
 
         try {
           // Attempt to refresh token
-          const res = await api.post("/refresh-token");
+          const res = await api.post("/api/user/refresh-token");
 
           if (res.status === 200 && res.data.accessToken) {
             const newToken = res.data.accessToken;

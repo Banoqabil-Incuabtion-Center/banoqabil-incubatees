@@ -20,7 +20,6 @@ import { cn } from "@/lib/utils"
 const loginSchema = z.object({
   email: z.string().email({ message: "Invalid email address" }),
   password: z.string().min(6, "Password must be at least 6 characters"),
-  rememberMe: z.boolean(),
 })
 
 type LoginFormValues = z.infer<typeof loginSchema>
@@ -42,7 +41,6 @@ const Login: React.FC = () => {
     defaultValues: {
       email: "",
       password: "",
-      rememberMe: true,
     },
   })
 
@@ -53,18 +51,13 @@ const Login: React.FC = () => {
       const response = await userRepo.loginUser({
         email: data.email,
         password: data.password,
-        remember: data.rememberMe,
+        remember: true, // Always true
       })
 
       // Store token for socket.io auth (cookies dont work cross-origin on Vercel)
       if (response.token) {
-        if (data.rememberMe) {
-          localStorage.setItem('token', response.token)
-          sessionStorage.removeItem('token')
-        } else {
-          sessionStorage.setItem('token', response.token)
-          localStorage.removeItem('token')
-        }
+        localStorage.setItem('token', response.token)
+        sessionStorage.removeItem('token')
       }
       setUser(response.user)
       clearAttendance()
@@ -152,20 +145,6 @@ const Login: React.FC = () => {
               {errors.password && <p className="text-red-500 text-[10px] font-bold mt-1 ml-1">{errors.password.message}</p>}
             </div>
 
-            {/* Remember Me Hidden but Default True */}
-            <div className="hidden">
-              <Controller
-                name="rememberMe"
-                control={control}
-                render={({ field }) => (
-                  <Checkbox
-                    id="remember"
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                )}
-              />
-            </div>
 
             <Button className="w-full h-12 rounded-xl font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-primary/20 hover:shadow-primary/30 transition-all active:scale-95 mt-2" type="submit" disabled={isLoading}>
               {isLoading ? "Signing in..." : "Login"}
