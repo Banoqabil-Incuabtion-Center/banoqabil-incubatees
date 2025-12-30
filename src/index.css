@@ -124,8 +124,83 @@
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
+
   .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+}
+
+/* Ant Design Table Dark Mode Styles */
+.dark .ant-table {
+  background: transparent;
+  color: var(--foreground);
+}
+
+.dark .ant-table-thead>tr>th {
+  background: oklch(0.25 0.02 240) !important;
+  color: var(--foreground) !important;
+  border-bottom: 1px solid oklch(0.3 0.02 240) !important;
+}
+
+.dark .ant-table-tbody>tr>td {
+  background: oklch(0.22 0.02 240) !important;
+  color: var(--foreground) !important;
+  border-bottom: 1px solid oklch(0.3 0.02 240) !important;
+}
+
+.dark .ant-table-tbody>tr:hover>td {
+  background: oklch(0.28 0.02 240) !important;
+}
+
+.dark .ant-table-tbody>tr.ant-table-row-selected>td {
+  background: oklch(0.28 0.02 240) !important;
+}
+
+.dark .ant-table-wrapper .ant-table-container {
+  border: 1px solid oklch(0.3 0.02 240);
+  border-radius: 1rem;
+}
+
+.dark .ant-table-cell {
+  border-color: oklch(0.3 0.02 240) !important;
+}
+
+.dark .ant-table-placeholder .ant-table-cell {
+  background: oklch(0.22 0.02 240) !important;
+}
+
+/* Ant Design Pagination Dark Mode */
+.dark .ant-pagination .ant-pagination-item {
+  background: oklch(0.25 0.02 240);
+  border-color: oklch(0.3 0.02 240);
+}
+
+.dark .ant-pagination .ant-pagination-item a {
+  color: var(--foreground);
+}
+
+.dark .ant-pagination .ant-pagination-item-active {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+.dark .ant-pagination .ant-pagination-item-active a {
+  color: var(--primary-foreground);
+}
+
+.dark .ant-pagination .ant-pagination-prev button,
+.dark .ant-pagination .ant-pagination-next button {
+  background: oklch(0.25 0.02 240) !important;
+  border-color: oklch(0.3 0.02 240) !important;
+  color: var(--foreground) !important;
+}
+
+.dark .ant-pagination .ant-pagination-disabled button {
+  background: oklch(0.22 0.02 240) !important;
+  color: oklch(0.5 0.02 240) !important;
+}
+
+.dark .ant-table-empty .ant-empty-description {
+  color: var(--muted-foreground);
 }

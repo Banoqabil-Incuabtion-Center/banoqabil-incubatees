@@ -172,7 +172,7 @@ const SignUp: React.FC = () => {
   };
 
   return (
-    <div className="w-full h-screen lg:grid lg:grid-cols-2 bg-white">
+    <div className="w-full h-screen lg:grid lg:grid-cols-2 bg-background">
       {/* Left Side - Image */}
       <div className="hidden lg:block h-full relative overflow-hidden">
         <img
@@ -189,7 +189,7 @@ const SignUp: React.FC = () => {
       </div>
 
       {/* Right Side - Form */}
-      <div className="h-full overflow-y-auto bg-white p-8 lg:p-16">
+      <div className="h-full overflow-y-auto bg-background p-8 lg:p-16">
         <div className="flex min-h-full items-center justify-center">
           <div className="w-full max-w-xl space-y-8 animate-in fade-in slide-in-from-right-8 duration-1000 py-10">
             <div className="space-y-2">

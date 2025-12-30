@@ -278,6 +278,7 @@ export default function ProfilePage() {
                       authorId={authUser?._id}
                       likeCount={post.likeCount}
                       commentCount={post.commentCount}
+                      userLiked={post.userLiked}
                       onDelete={(id) => setMyPosts(prev => prev.filter(p => p._id !== id))}
                       onEdit={(id, data) => setMyPosts(prev => prev.map(p => p._id === id ? { ...p, ...data } : p))}
                     />

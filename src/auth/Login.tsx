@@ -81,7 +81,7 @@ const Login: React.FC = () => {
   }
 
   return (
-    <div className="w-full h-screen lg:grid lg:grid-cols-2 bg-white">
+    <div className="w-full h-screen lg:grid lg:grid-cols-2 bg-background">
       {/* Left Side - Image */}
       <div className="hidden lg:block h-full relative overflow-hidden">
         <img

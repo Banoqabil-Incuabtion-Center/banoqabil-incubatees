@@ -84,7 +84,7 @@ const Notifications = () => {
                 "group relative flex items-start gap-4 p-5 rounded-[1.5rem] border transition-all duration-300 hover:border-primary/30 hover:shadow-soft cursor-pointer",
                 notification.isRead
                     ? "bg-background/50 border-muted/20"
-                    : "bg-white border-primary/20 shadow-sm"
+                    : "bg-card border-primary/20 shadow-sm"
             )}
         >
             <div className="relative flex-shrink-0">

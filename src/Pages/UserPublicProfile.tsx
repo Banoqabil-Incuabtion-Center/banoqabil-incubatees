@@ -177,6 +177,7 @@ export default function UserPublicProfile() {
                                             authorId={post.user?._id}
                                             likeCount={post.likeCount}
                                             commentCount={post.commentCount}
+                                            userLiked={post.userLiked}
                                         />
                                     ))}
                                 </div>
