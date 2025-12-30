@@ -7,6 +7,11 @@
   padding-bottom: env(safe-area-inset-bottom, 0);
 }
 
+.safe-area-top {
+  padding-top: env(safe-area-inset-top, 0);
+}
+
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
