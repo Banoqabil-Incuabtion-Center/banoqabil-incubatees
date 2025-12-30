@@ -20,8 +20,8 @@ export function MobilePageTitle({ className }: { className?: string }) {
 
     return (
         <div className={cn(
-            "font-black text-2xl md:hidden tracking-tighter animate-in fade-in slide-in-from-left-4 duration-500",
-            "bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent",
+            "font-black text-xl md:hidden tracking-tight animate-in fade-in slide-in-from-left-4 duration-500",
+            "text-foreground",
             className
         )}>
             {title}

@@ -23,7 +23,7 @@ export function SiteHeader() {
   const location = useLocation()
 
   return (
-    <header className="sticky top-0 z-50 flex h-(--header-height) shrink-0 items-center border-b border-sidebar-border bg-background/95 backdrop-blur-sm transition-all ease-in-out group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height)">
+    <header className="sticky top-0 z-50 flex h-16 md:h-(--header-height) shrink-0 items-center border-b border-primary/5 bg-background/80 backdrop-blur-xl transition-all ease-in-out group-has-data-[collapsible=icon]/sidebar-wrapper:h-16">
       <div className="flex w-full items-center justify-between px-4 sm:px-8 max-w-[1600px] mx-auto">
         <div className="flex items-center gap-3">
           {/* Sidebar Trigger - Refined for desktop */}
@@ -38,14 +38,14 @@ export function SiteHeader() {
           <MobilePageTitle />
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           {/* Install App Button - Mobile Only - Premium styling */}
           {isInstallable && (
             <Button
               variant="outline"
               size="sm"
               onClick={installPwa}
-              className="md:hidden gap-2 h-9 px-4 rounded-2xl border-primary/20 text-primary hover:bg-primary/5 font-black text-[10px] tracking-widest shadow-sm shadow-primary/5 transition-all active:scale-95 uppercase"
+              className="md:hidden gap-2 h-9 px-4 rounded-2xl border-primary/10 text-primary hover:bg-primary/5 font-black text-[10px] tracking-widest transition-all active:scale-95 uppercase bg-primary/5"
             >
               <Download className="w-3.5 h-3.5" />
               Install
@@ -56,25 +56,23 @@ export function SiteHeader() {
           <Button
             variant="ghost"
             size="icon"
-            className="group relative h-9 w-9 rounded-xl hover:bg-primary/5 transition-colors"
+            className="group relative h-10 w-10 rounded-2xl hover:bg-primary/5 transition-all active:scale-95"
             asChild
           >
             <Link to="/notifications">
               <Bell className={cn(
-                "h-5 w-5 transition-all duration-300",
+                "h-6 w-6 transition-all duration-300",
                 location.pathname === "/notifications"
                   ? "text-primary scale-110 stroke-[2.5px]"
                   : "text-muted-foreground/60 group-hover:text-primary"
               )} />
               {unreadCount > 0 && (
-                <Badge variant="destructive" className="absolute -top-1 -right-1 h-4 min-w-4 px-1 text-[10px] font-bold border-2 border-background animate-in zoom-in-0 duration-300">
+                <Badge variant="destructive" className="absolute top-1 right-1 h-4 min-w-4 px-1 text-[10px] font-black border-2 border-background shadow-sm">
                   {unreadCount > 9 ? '9+' : unreadCount}
                 </Badge>
               )}
             </Link>
           </Button>
-
-          {/* Profile Link Removed - moved to BottomNav */}
         </div>
       </div>
     </header>
