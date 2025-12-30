@@ -21,6 +21,7 @@ import { likeRepo } from "@/repositories/likeRepo";
 import { useAuthStore } from "@/hooks/store/authStore";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PostActions } from "@/components/PostActions";
+import { LikesModal } from "@/components/LikesModal";
 
 export const PostDetail = () => {
     const { id } = useParams<{ id: string }>();
@@ -30,6 +31,7 @@ export const PostDetail = () => {
     const [post, setPost] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [isLikesModalOpen, setIsLikesModalOpen] = useState(false);
 
     const [imgLoaded, setImgLoaded] = useState(false);
 
@@ -251,8 +253,25 @@ export const PostDetail = () => {
                                         initialCommentCount={post.commentsCount || 0}
                                         initialUserLiked={post.userLiked ?? post.liked ?? post.isLiked ?? false}
                                         showCommentCount={true}
+                                        onLikeCountClick={() => setIsLikesModalOpen(true)}
                                     />
                                 </div>
+                                {/* Liked By Display */}
+                                {(post.likesCount ?? post.likeCount ?? 0) > 0 && (
+                                    <div
+                                        className="cursor-pointer hover:underline"
+                                        onClick={() => setIsLikesModalOpen(true)}
+                                    >
+                                        <p className="text-xs font-medium text-muted-foreground">
+                                            Liked by <span className="font-bold text-foreground">
+                                                {post.userLiked ? "You" : (post.user?.name || "Someone")}
+                                            </span>
+                                            {(post.likesCount ?? post.likeCount ?? 0) > 1 && (
+                                                <> and <span className="font-bold text-foreground">{(post.likesCount ?? post.likeCount ?? 0) - 1} others</span></>
+                                            )}
+                                        </p>
+                                    </div>
+                                )}
                                 {/* <button className="text-muted-foreground hover:text-primary transition-all active:rotate-12">
                                     <Share2 className="w-5 h-5" />
                                 </button> */}
@@ -266,6 +285,12 @@ export const PostDetail = () => {
                     </ScrollArea>
                 </div>
             </div>
+            {/* Likes Modal */}
+            <LikesModal
+                postId={post._id}
+                isOpen={isLikesModalOpen}
+                onClose={() => setIsLikesModalOpen(false)}
+            />
         </div>
     );
 };

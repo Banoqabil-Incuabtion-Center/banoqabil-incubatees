@@ -53,6 +53,7 @@ import { Clock, Edit, ExternalLink, Heart, ImagePlus, Maximize2, MessageSquare, 
 import { CommentsSection } from "./CommentsSection";
 import { useAuthStore } from "@/hooks/store/authStore";
 import { likeRepo } from "@/repositories/likeRepo";
+import { LikesModal } from "./LikesModal";
 import { commentRepo } from "@/repositories/commentRepo";
 import { useSocket } from "@/hooks/useSocket";
 import { toast } from "sonner";
@@ -106,6 +107,7 @@ export const PostCard = ({
 
   const [isLiking, setIsLiking] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isLikesModalOpen, setIsLikesModalOpen] = useState(false);
 
   const [editForm, setEditForm] = useState({
     title,
@@ -512,9 +514,27 @@ export const PostCard = ({
                 initialCommentCount={initialCommentCount}
                 initialUserLiked={initialUserLiked}
                 onCommentClick={() => setShowComments(!showComments)}
+                onLikeCountClick={() => setIsLikesModalOpen(true)}
                 compact
               />
             </div>
+
+            {/* Liked By Display */}
+            {initialLikeCount > 0 && (
+              <div
+                className="px-1 -mt-2 mb-2 pb-1 cursor-pointer hover:underline"
+                onClick={() => setIsLikesModalOpen(true)}
+              >
+                <p className="text-[11px] font-medium text-muted-foreground">
+                  Liked by <span className="font-bold text-foreground">
+                    {initialUserLiked ? "You" : (authorName || "Someone")}
+                  </span>
+                  {initialLikeCount > 1 && (
+                    <> and <span className="font-bold text-foreground">{initialLikeCount - 1} others</span></>
+                  )}
+                </p>
+              </div>
+            )}
 
             {/* Comments Section */}
             {showComments && postId && (
@@ -562,6 +582,12 @@ export const PostCard = ({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      {/* Likes Modal */}
+      <LikesModal
+        postId={postId}
+        isOpen={isLikesModalOpen}
+        onClose={() => setIsLikesModalOpen(false)}
+      />
     </>
   );
 };

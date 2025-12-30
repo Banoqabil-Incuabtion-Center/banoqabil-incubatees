@@ -141,12 +141,12 @@ const PaginatedList = forwardRef(<T extends { _id?: string }>(
 
       {/* No more items message */}
       {!hasMore && items.length > 0 && (
-        <p className="text-gray-500 text-center text-sm">No more posts to load</p>
+        <p className="text-gray-500 text-center text-sm"></p>
       )}
 
       {/* Empty state */}
       {items.length === 0 && !loading && !error && (
-        <p className="text-gray-500 text-center">No posts found</p>
+        <p className="text-gray-500 text-center">Nothing found</p>
       )}
     </div>
   );

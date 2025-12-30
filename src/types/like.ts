@@ -6,6 +6,7 @@ export interface Like {
         _id: string;
         name: string;
         email: string;
+        avatar?: string;
     };
     post: string;
     createdAt: string;
@@ -22,10 +23,13 @@ export interface LikesListResponse {
     pagination: {
         currentPage: number;
         totalPages: number;
-        totalItems: number;
-        itemsPerPage: number;
-        hasNextPage: boolean;
-        hasPrevPage: boolean;
+        totalItems?: number;
+        itemsPerPage?: number;
+        hasNextPage?: boolean;
+        hasPrevPage?: boolean;
+        total?: number;
+        limit?: number;
+        hasMore?: boolean;
     };
     userLiked: boolean;
 }

@@ -12,6 +12,7 @@ interface PostActionsProps {
     initialCommentCount: number;
     initialUserLiked: boolean;
     onCommentClick?: () => void;
+    onLikeCountClick?: () => void;
     showCommentCount?: boolean;
     className?: string;
     compact?: boolean; // For tighter layouts like PostCard
@@ -23,6 +24,7 @@ export const PostActions = ({
     initialCommentCount,
     initialUserLiked,
     onCommentClick,
+    onLikeCountClick,
     showCommentCount = true,
     className,
     compact = false
@@ -72,29 +74,39 @@ export const PostActions = ({
         }
     };
 
+    const handleLikeCountClick = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        onLikeCountClick?.();
+    };
+
     return (
         <div className={cn("flex items-center", compact ? "gap-6" : "gap-6", className)}>
-            <button
-                onClick={handleLike}
-                className={cn(
-                    "flex items-center gap-1.5 transition-all hover:scale-110 active:scale-95 group",
-                    liked ? "text-red-500" : "text-muted-foreground hover:text-red-500"
-                )}
-                aria-label={liked ? "Unlike" : "Like"}
-            >
-                <Heart
+            <div className="flex items-center gap-1.5">
+                <button
+                    onClick={handleLike}
                     className={cn(
-                        "w-5 h-5 transition-transform duration-300",
-                        liked && "fill-current"
+                        "flex items-center transition-all hover:scale-110 active:scale-95 group",
+                        liked ? "text-red-500" : "text-muted-foreground hover:text-red-500"
                     )}
-                />
-                <span className={cn(
-                    "text-sm font-bold pt-0.5",
-                    compact ? "" : "uppercase tracking-tighter text-[10px] sm:text-xs"
-                )}>
+                    aria-label={liked ? "Unlike" : "Like"}
+                >
+                    <Heart
+                        className={cn(
+                            "w-5 h-5 transition-transform duration-300",
+                            liked && "fill-current"
+                        )}
+                    />
+                </button>
+                <button
+                    onClick={handleLikeCountClick}
+                    className={cn(
+                        "text-sm font-bold pt-0.5 hover:text-primary transition-colors",
+                        compact ? "" : "uppercase tracking-tighter text-[10px] sm:text-xs"
+                    )}
+                >
                     {likeCount} {(!compact && "Likes")}
-                </span>
-            </button>
+                </button>
+            </div>
 
             <button
                 onClick={(e) => {
