@@ -40,10 +40,13 @@ import { UserCard } from "../components/UserCard"
 import Logout from "@/auth/Logout"
 import { Link, useNavigate } from "react-router-dom"
 import { PostCard } from "../components/PostCard"
-import { Palette } from "lucide-react"
+import { Palette, Moon, Sun } from "lucide-react"
+import { useTheme } from "next-themes"
+import { Switch } from "@/components/ui/switch"
 
 export default function ProfilePage() {
   const navigate = useNavigate()
+  const { setTheme, theme } = useTheme()
   const { user: authUser, setUser: setAuthUser, setLogoutDialogOpen } = useAuthStore()
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -135,6 +138,25 @@ export default function ProfilePage() {
             <Palette className="w-4 h-4 text-primary" />
             Customize Profile Card
           </Button>
+
+          <Card className="border-dashed border-2 shadow-none bg-transparent">
+            <CardContent className="p-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-primary/10 text-primary">
+                  <Sun className="w-4 h-4 dark:hidden" />
+                  <Moon className="w-4 h-4 hidden dark:block" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="font-semibold text-sm">Dark Mode</span>
+                  <span className="text-xs text-muted-foreground">Adjust the appearance</span>
+                </div>
+              </div>
+              <Switch
+                checked={theme === 'dark'}
+                onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
+              />
+            </CardContent>
+          </Card>
 
           {/* Account Actions (Edit, Public, Logout) */}
           <div className="space-y-3 animate-in fade-in slide-in-from-left-6 duration-700 delay-200">
@@ -304,8 +326,8 @@ export default function ProfilePage() {
                         return (
                           <div key={activity._id || idx} className="flex items-center gap-4 p-4 sm:p-5 hover:bg-muted/10 transition-colors group">
                             <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-sm border ${isLogin
-                              ? "bg-green-50 text-green-600 border-green-100"
-                              : "bg-red-50 text-red-600 border-red-100"
+                              ? "bg-green-50 text-green-600 border-green-100 dark:bg-green-900/20 dark:text-green-400 dark:border-green-900/50"
+                              : "bg-red-50 text-red-600 border-red-100 dark:bg-red-900/20 dark:text-red-400 dark:border-red-900/50"
                               }`}>
                               {isLogin ? <LogIn className="w-5 h-5" /> : <LogOut className="w-5 h-5" />}
                             </div>
