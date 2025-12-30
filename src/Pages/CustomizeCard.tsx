@@ -59,18 +59,18 @@ const RADIUS = [
 ]
 
 const GRADIENTS = [
-    { id: "brand", name: "Linear: Brand", color: "bg-gradient-to-br from-primary to-primary/60" },
-    { id: "sunset", name: "Linear: Sunset", color: "bg-gradient-to-br from-orange-500 to-rose-500" },
-    { id: "ocean", name: "Linear: Ocean", color: "bg-gradient-to-br from-blue-500 to-teal-500" },
-    { id: "midnight", name: "Linear: Night", color: "bg-gradient-to-br from-indigo-500 to-purple-500" },
-    { id: "aurora", name: "Radial: Aurora", color: "bg-[radial-gradient(circle,at_top_right,theme(colors.emerald.400),transparent),radial-gradient(circle,at_bottom_left,theme(colors.blue.400),transparent)]" },
-    { id: "nebula", name: "Radial: Nebula", color: "bg-[radial-gradient(circle,theme(colors.purple.500),transparent)]" },
-    { id: "flare", name: "Radial: Sun", color: "bg-[radial-gradient(circle,at_top_left,theme(colors.amber.400),transparent)]" },
-    { id: "soft", name: "Radial: Glow", color: "bg-[radial-gradient(circle,at_bottom_right,theme(colors.pink.400),transparent)]" },
-    { id: "cyber", name: "Multi: Cyber", color: "bg-gradient-to-tr from-cyan-400 via-purple-500 to-pink-400" },
-    { id: "tropical", name: "Multi: Tropic", color: "bg-gradient-to-br from-yellow-400 via-orange-500 to-emerald-500" },
-    { id: "cosmic", name: "Multi: Cosmic", color: "bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-400" },
-    { id: "hyper", name: "Multi: Hyper", color: "bg-gradient-to-br from-fuchsia-600 via-blue-600 to-cyan-400" },
+    { id: "brand", name: "Linear: Brand", color: "bg-gradient-to-br from-primary/20 via-white to-primary/10" },
+    { id: "sunset", name: "Linear: Sunset", color: "bg-gradient-to-br from-orange-500/20 via-white to-rose-500/20" },
+    { id: "ocean", name: "Linear: Ocean", color: "bg-gradient-to-br from-blue-500/20 via-white to-teal-500/20" },
+    { id: "midnight", name: "Linear: Night", color: "bg-gradient-to-br from-indigo-500/20 via-white to-purple-500/20" },
+    { id: "aurora", name: "Radial: Aurora", color: "bg-[radial-gradient(circle,at_top_right,theme(colors.emerald.400),transparent),radial-gradient(circle,at_bottom_left,theme(colors.blue.400),transparent)] bg-white" },
+    { id: "nebula", name: "Radial: Nebula", color: "bg-[radial-gradient(circle,theme(colors.purple.500),transparent)] bg-white" },
+    { id: "flare", name: "Radial: Sun", color: "bg-[radial-gradient(circle,at_top_left,theme(colors.amber.400),transparent)] bg-white" },
+    { id: "soft", name: "Radial: Glow", color: "bg-[radial-gradient(circle,at_bottom_right,theme(colors.pink.400),transparent)] bg-white" },
+    { id: "cyber", name: "Multi: Cyber", color: "bg-gradient-to-tr from-cyan-500/20 via-purple-500/10 to-pink-500/20 bg-white" },
+    { id: "tropical", name: "Multi: Tropic", color: "bg-gradient-to-br from-yellow-400/20 via-orange-500/10 to-emerald-500/20 bg-white" },
+    { id: "cosmic", name: "Multi: Cosmic", color: "bg-gradient-to-r from-indigo-500/20 via-purple-500/10 to-pink-500/20 bg-white" },
+    { id: "hyper", name: "Multi: Hyper", color: "bg-gradient-to-br from-fuchsia-600/20 via-blue-600/10 to-cyan-400/20 bg-white" },
 ]
 
 const BG_PRESETS = [

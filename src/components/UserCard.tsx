@@ -31,22 +31,22 @@ export const UserCard: React.FC<UserCardProps> = ({ user, authUser, isPublic = f
 
     const GRADIENTS: Record<string, string> = {
         // Linear Blends
-        sunset: "bg-gradient-to-br from-orange-500/20 via-background to-rose-500/20",
-        ocean: "bg-gradient-to-br from-blue-500/20 via-background to-teal-500/20",
-        midnight: "bg-gradient-to-br from-indigo-500/20 via-background to-purple-500/20",
-        brand: "bg-gradient-to-br from-primary/20 via-background to-primary/10",
+        sunset: "bg-gradient-to-br from-orange-500/20 via-white to-rose-500/20",
+        ocean: "bg-gradient-to-br from-blue-500/20 via-white to-teal-500/20",
+        midnight: "bg-gradient-to-br from-indigo-500/20 via-white to-purple-500/20",
+        brand: "bg-gradient-to-br from-primary/20 via-white to-primary/10",
 
         // Radial / Glow Styles ("Radient")
-        aurora: "bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-from)_0%,_transparent_50%),_radial-gradient(circle_at_bottom_left,_var(--tw-gradient-to)_0%,_transparent_50%)] from-emerald-500/10 to-blue-500/10",
-        nebula: "bg-[radial-gradient(circle_at_center,_var(--tw-gradient-from)_0%,_transparent_70%)] from-purple-500/20 to-zinc-950",
-        flare: "bg-[radial-gradient(circle_at_top_left,_var(--tw-gradient-from)_0%,_transparent_60%)] from-amber-400/20 to-background",
-        soft: "bg-[radial-gradient(circle_at_bottom_right,_var(--tw-gradient-from)_0%,_transparent_60%)] from-pink-500/10 to-background",
+        aurora: "bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-from)_0%,_transparent_50%),_radial-gradient(circle_at_bottom_left,_var(--tw-gradient-to)_0%,_transparent_50%)] from-emerald-500/10 to-blue-500/10 bg-white",
+        nebula: "bg-[radial-gradient(circle_at_center,_var(--tw-gradient-from)_0%,_transparent_70%)] from-purple-500/20 to-zinc-950 bg-white",
+        flare: "bg-[radial-gradient(circle_at_top_left,_var(--tw-gradient-from)_0%,_transparent_60%)] from-amber-400/20 to-white",
+        soft: "bg-[radial-gradient(circle_at_bottom_right,_var(--tw-gradient-from)_0%,_transparent_60%)] from-pink-500/10 to-white",
 
         // Multi-Color / Vibrant
-        cyber: "bg-gradient-to-tr from-cyan-500/20 via-purple-500/10 to-pink-500/20",
-        tropical: "bg-gradient-to-br from-yellow-400/20 via-orange-500/10 to-emerald-500/20",
-        cosmic: "bg-gradient-to-r from-indigo-500/20 via-purple-500/10 to-pink-500/20",
-        hyper: "bg-gradient-to-br from-fuchsia-600/20 via-blue-600/10 to-cyan-400/20",
+        cyber: "bg-gradient-to-tr from-cyan-500/20 via-purple-500/10 to-pink-500/20 bg-white",
+        tropical: "bg-gradient-to-br from-yellow-400/20 via-orange-500/10 to-emerald-500/20 bg-white",
+        cosmic: "bg-gradient-to-r from-indigo-500/20 via-purple-500/10 to-pink-500/20 bg-white",
+        hyper: "bg-gradient-to-br from-fuchsia-600/20 via-blue-600/10 to-cyan-400/20 bg-white",
     };
 
     const currentTheme = (settings.theme as keyof typeof themeClasses) || "default";
@@ -54,8 +54,8 @@ export const UserCard: React.FC<UserCardProps> = ({ user, authUser, isPublic = f
     const selectedGradient = settings.gradient && GRADIENTS[settings.gradient] ? GRADIENTS[settings.gradient] : GRADIENTS.brand;
 
     const themeClasses = {
-        default: "bg-background border-none shadow-premium transition-colors duration-700",
-        glass: "bg-background/40 backdrop-blur-xl border border-white/20 shadow-premium transition-colors duration-700",
+        default: "bg-white text-zinc-950 border-none shadow-premium transition-colors duration-700",
+        glass: "bg-white/90 backdrop-blur-xl border border-white/20 shadow-premium transition-colors duration-700",
         gradient: cn(selectedGradient, "border-none shadow-premium transition-all duration-700"),
         dark: "bg-zinc-950 text-zinc-100 border-none shadow-2xl transition-colors duration-700",
     };
@@ -112,7 +112,7 @@ export const UserCard: React.FC<UserCardProps> = ({ user, authUser, isPublic = f
             )}>
                 <div className="relative">
                     <div className={cn(
-                        "w-24 h-24 sm:w-32 sm:h-32 overflow-hidden border-4 border-background bg-muted relative z-10 transition-all duration-700",
+                        "w-24 h-24 sm:w-32 sm:h-32 overflow-hidden border-4 border-white bg-muted relative z-10 transition-all duration-700",
                         settings.borderRadius || "rounded-3xl"
                     )}>
                         <UserAvatar
@@ -147,7 +147,7 @@ export const UserCard: React.FC<UserCardProps> = ({ user, authUser, isPublic = f
                     <h1
                         className={cn(
                             "text-2xl sm:text-3xl font-black tracking-tight leading-none transition-all duration-500",
-                            !settings.textColor && (currentTheme === 'dark' ? "text-white" : "text-foreground")
+                            !settings.textColor && (currentTheme === 'dark' ? "text-white" : "text-zinc-950")
                         )}
                         style={settings.textColor ? { color: settings.textColor } : {}}
                     >
@@ -158,7 +158,7 @@ export const UserCard: React.FC<UserCardProps> = ({ user, authUser, isPublic = f
                         <p
                             className={cn(
                                 "text-sm max-w-[280px] leading-relaxed font-medium mx-auto line-clamp-2 transition-all duration-500 opacity-90",
-                                !settings.textColor && (currentTheme === 'dark' ? "text-zinc-400" : "text-muted-foreground")
+                                !settings.textColor && (currentTheme === 'dark' ? "text-zinc-400" : "text-zinc-500")
                             )}
                             style={settings.textColor ? { color: settings.textColor } : {}}
                         >
