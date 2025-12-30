@@ -20,7 +20,7 @@ export function BottomNav() {
     const unreadCount = useChatStore(state => state.unreadCount)
 
     return (
-        <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-t border-primary/5 md:hidden safe-area-bottom">
+        <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-primary/5 md:hidden safe-area-bottom">
             <div className="flex items-center justify-around h-20 max-w-lg mx-auto px-2">
                 {navItems.map((item) => {
                     const isActive = location.pathname === item.url

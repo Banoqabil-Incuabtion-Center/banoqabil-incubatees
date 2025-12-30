@@ -23,7 +23,7 @@ export function SiteHeader() {
   const location = useLocation()
 
   return (
-    <header className="sticky top-0 z-50 flex h-16 md:h-(--header-height) shrink-0 items-center border-b border-primary/5 bg-background/80 backdrop-blur-xl transition-all ease-in-out group-has-data-[collapsible=icon]/sidebar-wrapper:h-16">
+    <header className="sticky top-0 z-50 flex h-16 md:h-(--header-height) shrink-0 items-center border-b border-primary/5 bg-background transition-all ease-in-out group-has-data-[collapsible=icon]/sidebar-wrapper:h-16">
       <div className="flex w-full items-center justify-between px-4 sm:px-8 max-w-[1600px] mx-auto">
         <div className="flex items-center gap-3">
           {/* Sidebar Trigger - Refined for desktop */}
@@ -56,18 +56,22 @@ export function SiteHeader() {
           <Button
             variant="ghost"
             size="icon"
-            className="group relative h-10 w-10 rounded-2xl hover:bg-primary/5 transition-all active:scale-95"
+            className="group relative h-10 w-10 min-w-10 rounded-full hover:bg-primary/5 transition-all active:scale-95 flex items-center justify-center p-0"
             asChild
           >
             <Link to="/notifications">
+              <div className={cn(
+                "absolute inset-0 rounded-full bg-primary/5 opacity-0 transition-opacity group-hover:opacity-100",
+                location.pathname === "/notifications" && "opacity-100 bg-primary/10"
+              )} />
               <Bell className={cn(
-                "h-6 w-6 transition-all duration-300",
+                "h-6 w-6 relative z-10 transition-all duration-300",
                 location.pathname === "/notifications"
                   ? "text-primary scale-110 stroke-[2.5px]"
                   : "text-muted-foreground/60 group-hover:text-primary"
               )} />
               {unreadCount > 0 && (
-                <Badge variant="destructive" className="absolute top-1 right-1 h-4 min-w-4 px-1 text-[10px] font-black border-2 border-background shadow-sm">
+                <Badge variant="destructive" className="absolute top-1 right-1 h-4 min-w-4 px-1 text-[10px] font-black border-2 border-background shadow-sm z-20">
                   {unreadCount > 9 ? '9+' : unreadCount}
                 </Badge>
               )}
