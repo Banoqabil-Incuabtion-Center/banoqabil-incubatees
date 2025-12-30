@@ -2,10 +2,10 @@
 
 import { QueryClient } from "@tanstack/react-query"
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client'
-import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister'
+import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister'
 import { useState } from "react"
 
-const persister = createSyncStoragePersister({
+const persister = createAsyncStoragePersister({
     storage: typeof window !== 'undefined' ? window.localStorage : undefined,
     key: 'ims-query-cache',
 })
