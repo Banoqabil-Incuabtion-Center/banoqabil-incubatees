@@ -309,15 +309,7 @@ export function ChatArea({ activeUserId, userName = "Select a User", userAvatar,
                             const isLastInGroup = senderId !== nextSenderId;
 
                             return (
-                                <div key={msg._id} className={`flex gap-3 group px-1 ${isMe ? 'flex-row-reverse' : ''}`}>
-                                    <div className={`shrink-0 ${isLastInGroup ? 'opacity-100' : 'opacity-0'} transition-opacity self-end`}>
-                                        <UserAvatar
-                                            src={isMe ? user?.avatar : userAvatar}
-                                            name={isMe ? user?.name : userName}
-                                            className="h-8 w-8 border border-primary/5 shadow-soft"
-                                        />
-                                    </div>
-
+                                <div key={msg._id} className={`flex group px-1 ${isMe ? 'justify-end' : 'justify-start'}`}>
                                     <div className={`max-w-[80%] sm:max-w-[70%] min-w-0 flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
                                         <div className={`px-4 py-3 shadow-soft transition-all duration-300
                                             ${isMe
