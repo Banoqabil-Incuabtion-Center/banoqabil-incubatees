@@ -527,9 +527,9 @@ export const PostCard = ({
               >
                 <p className="text-[11px] font-medium text-muted-foreground">
                   Liked by <span className="font-bold text-foreground">
-                    {initialUserLiked ? "You" : (authorName || "Someone")}
+                    {initialUserLiked ? "You" : `${initialLikeCount} ${initialLikeCount === 1 ? "person" : "people"}`}
                   </span>
-                  {initialLikeCount > 1 && (
+                  {initialUserLiked && initialLikeCount > 1 && (
                     <> and <span className="font-bold text-foreground">{initialLikeCount - 1} others</span></>
                   )}
                 </p>
