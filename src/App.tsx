@@ -2,6 +2,8 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"
 import SignUp from "./auth/SignUp"
 import Login from "./auth/Login"
+import ForgotPassword from "./auth/ForgotPassword"
+import ResetPassword from "./auth/ResetPassword"
 import PrivateRoute from "./auth/PrivateRoute"
 import Dashboard from "./Pages/Dashboard"
 import UserLayout from "./components/layout/userLayout"
@@ -28,6 +30,8 @@ const App = () => {
         {/* Public routes */}
         <Route path="/signup" element={<SignUp />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
 
         {/* Protected routes with layout */}
         <Route path="/" element={<PrivateRoute> <UserLayout /> </PrivateRoute>}>

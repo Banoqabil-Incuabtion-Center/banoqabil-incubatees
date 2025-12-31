@@ -120,7 +120,7 @@ const Login: React.FC = () => {
             <div className="space-y-2">
               <div className="flex items-center justify-between ml-1">
                 <Label htmlFor="password" university-id="password" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Password</Label>
-                <Link to="#" className="text-[10px] font-black uppercase tracking-widest text-primary hover:opacity-70">Forgot?</Link>
+                <Link to="/forgot-password" className="text-[10px] font-black uppercase tracking-widest text-primary hover:opacity-70">Forgot?</Link>
               </div>
               <div className="relative">
                 <Input
