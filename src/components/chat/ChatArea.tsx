@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, useMemo } from "react";
 import { UserAvatar } from "@/components/UserAvatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,9 +9,7 @@ import { useChatStore, Message } from "@/hooks/store/useChatStore";
 import { useSocket } from "@/hooks/useSocket";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
-import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
-import { SOCKET_URL as SERVER_URL } from "@/lib/constant";
+import { useQueryClient } from "@tanstack/react-query";
 import { useUserPublicKey } from "@/hooks/useUserPublicKey";
 
 // Component to handle async decryption of a single message
@@ -105,7 +103,12 @@ export function ChatArea({ activeUserId, userName = "Select a User", userAvatar,
     const queryClient = useQueryClient();
     const { user } = useAuthStore();
     const {
+        messages,
+        isLoadingMessages,
+        hasMoreMessages,
         sendMessage,
+        fetchMessages,
+        addMessage,
         markMessageAsRead,
         isSendingMessage,
         onlineUsers,
@@ -113,42 +116,14 @@ export function ChatArea({ activeUserId, userName = "Select a User", userAvatar,
         isEncryptionReady,
     } = useChatStore();
 
+
     const { data: theirPublicKey } = useUserPublicKey(activeUserId);
 
-    // TanStack Query for messages
-    const {
-        data: messagePages,
-        fetchNextPage: fetchOlderMessages,
-        hasNextPage: hasMoreMessages,
-        isFetchingNextPage: isLoadingMore,
-        isLoading: isLoadingMessages
-    } = useInfiniteQuery({
-        queryKey: ['messages', activeUserId],
-        queryFn: async ({ pageParam = undefined }) => {
-            const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-            let url = `${SERVER_URL}/api/messages/${activeUserId}?limit=15`;
-            if (pageParam) {
-                url += `&before=${pageParam}`;
-            }
-            const response = await axios.get(url, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
-            // Reverse to [newest...oldest] for flex-col-reverse
-            return [...response.data].reverse();
-        },
-        getNextPageParam: (lastPage) => {
-            // lastPage is [newest...oldest] due to our queryFn modification
-            return lastPage.length === 15 ? lastPage[lastPage.length - 1]?.createdAt : undefined;
-        },
-        enabled: !!activeUserId && activeUserId !== 'announcements',
-        initialPageParam: undefined,
-    });
+    // State for loading more messages
+    const [isLoadingMore, setIsLoadingMore] = useState(false);
 
-    const messages = messagePages?.pages.flat() || [];
-    // Currently API returns [oldest...newest] or [newest...oldest]?
-    // Let's assume Backend returns [newest...oldest] if we use before.
-    // Actually, based on previous logic, it seemed to be [oldest...newest].
-    // To use flex-col-reverse effectively, we want [newest...oldest].
+    // Reverse messages for flex-col-reverse display (newest first for proper rendering)
+    const displayMessages = useMemo(() => [...messages].reverse(), [messages]);
 
     const [inputValue, setInputValue] = useState("");
     const { on, emit } = useSocket();
@@ -158,17 +133,23 @@ export function ChatArea({ activeUserId, userName = "Select a User", userAvatar,
         initEncryption();
     }, [initEncryption]);
 
-    // Listen for read receipts and new messages
+    // Fetch messages when activeUserId changes
+    useEffect(() => {
+        if (activeUserId && activeUserId !== 'announcements') {
+            fetchMessages(activeUserId);
+        }
+    }, [activeUserId, fetchMessages]);
+
+    // Listen for read receipts and new messages - real-time via socket
     useEffect(() => {
         const removeReadListener = on('messageRead', ({ conversationId, readerId }) => {
             markMessageAsRead(conversationId, readerId);
-            // Also invalidate query to update checks
-            queryClient.invalidateQueries({ queryKey: ['messages', activeUserId] });
         });
 
         const removeMsgListener = on('newMessage', (msg) => {
+            // Add message directly to store for instant real-time update
             if (msg.sender === activeUserId || (typeof msg.sender === 'object' && msg.sender._id === activeUserId)) {
-                queryClient.invalidateQueries({ queryKey: ['messages', activeUserId] });
+                addMessage(msg, user?._id);
             }
         });
 
@@ -176,12 +157,12 @@ export function ChatArea({ activeUserId, userName = "Select a User", userAvatar,
             removeReadListener();
             removeMsgListener();
         };
-    }, [on, markMessageAsRead, queryClient, activeUserId]);
+    }, [on, markMessageAsRead, addMessage, activeUserId, user?._id]);
 
     // Mark messages as read when viewing them
     useEffect(() => {
         if (activeUserId && messages.length > 0 && user) {
-            const lastMessage = messages[0]; // Newest message is at index 0
+            const lastMessage = messages[messages.length - 1]; // Newest message is at the end (array is oldest to newest)
             const senderId = typeof lastMessage.sender === 'object' ? lastMessage.sender._id : lastMessage.sender;
             const isFromMe = senderId === user._id;
             const hasSeen = lastMessage.seenBy?.includes(user._id);
@@ -199,20 +180,22 @@ export function ChatArea({ activeUserId, userName = "Select a User", userAvatar,
 
     // Scroll listener for pagination (upward)
     const handleScroll = async () => {
-        if (!scrollRef.current) return;
+        if (!scrollRef.current || !activeUserId) return;
 
         const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
 
         // In flex-col-reverse, scrollTop is 0 at the bottom and negative as you scroll up.
-        // Or sometimes it's positive but increases as you scroll up.
-        // Let's use a browser-agnostic check: if we are near the very top (furthest from start).
         // For column-reverse, reaching the "top" of history means scrollTop + clientHeight >= scrollHeight - threshold
         if (Math.abs(scrollTop) + clientHeight >= scrollHeight - 20 && !isLoadingMessages && !isLoadingMore && hasMoreMessages) {
-            await fetchOlderMessages();
+            // Get the oldest message timestamp to fetch older messages (messages array is oldest to newest)
+            const oldestMessage = messages[0];
+            if (oldestMessage) {
+                setIsLoadingMore(true);
+                await fetchMessages(activeUserId, oldestMessage.createdAt);
+                setIsLoadingMore(false);
+            }
         }
     };
-
-    // Removed manual fetch useEffect as useInfiniteQuery handles it
 
     // Auto-scroll to bottom - Not strictly needed with flex-col-reverse as browser anchors to start
     useEffect(() => {
@@ -227,8 +210,7 @@ export function ChatArea({ activeUserId, userName = "Select a User", userAvatar,
         const text = inputValue;
         setInputValue("");
         await sendMessage(activeUserId, text, theirPublicKey || undefined);
-        // Invalidate to show our message if it's not optimistically added correctly
-        queryClient.invalidateQueries({ queryKey: ['messages', activeUserId] });
+        // Invalidate conversations to update sidebar
         queryClient.invalidateQueries({ queryKey: ['conversations'] });
     };
 
@@ -336,11 +318,11 @@ export function ChatArea({ activeUserId, userName = "Select a User", userAvatar,
                             <p className="text-xs font-black uppercase tracking-[0.2em] opacity-40">Loading history</p>
                         </div>
                     ) : (
-                        messages.map((msg, index) => {
+                        displayMessages.map((msg, index) => {
                             const senderId = typeof msg.sender === 'object' ? msg.sender._id : msg.sender;
                             const isMe = senderId === user?._id;
                             // In reversed array, msg[index-1] is NEWER
-                            const newerMsg = index > 0 ? messages[index - 1] : null;
+                            const newerMsg = index > 0 ? displayMessages[index - 1] : null;
                             const newerSenderId = newerMsg ? (typeof newerMsg.sender === 'object' ? newerMsg.sender._id : newerMsg.sender) : null;
                             const isLastInGroup = senderId !== newerSenderId;
 
