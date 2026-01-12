@@ -59,6 +59,9 @@ import { useSocket } from "@/hooks/useSocket";
 import { toast } from "sonner";
 import { VideoPlayer } from "./VideoPlayer";
 import { PostActions } from "./PostActions";
+import { ImageCarousel } from "./ImageCarousel";
+import { AspectRatio } from "./AspectRatioSelector";
+import { MultiImagePicker, ImagePreview } from "./MultiImagePicker";
 
 interface PostCardProps {
   postId: string;
@@ -66,6 +69,8 @@ interface PostCardProps {
   description: string;
   link?: string;
   image?: string;
+  images?: string[];  // New: Array of image URLs
+  aspectRatio?: AspectRatio;  // New: Aspect ratio for carousel
   createdAt: string;
   authorName?: string;
   authorId?: string;
@@ -84,6 +89,8 @@ export const PostCard = ({
   description,
   link,
   image,
+  images = [],
+  aspectRatio = "4:5",
   createdAt,
   authorName,
   authorId = "",
@@ -98,6 +105,9 @@ export const PostCard = ({
   const { user, isAuthenticated } = useAuthStore();
   const { isConnected, on } = useSocket(postId);
   const navigate = useNavigate();
+
+  // Compute all images for backward compatibility
+  const allImages = images.length > 0 ? images : (image ? [image] : []);
 
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -114,9 +124,27 @@ export const PostCard = ({
     description,
     link: link || "",
   });
-  const [editImageFile, setEditImageFile] = useState<File | null>(null);
-  const [editImagePreview, setEditImagePreview] = useState<string | null>(image || null);
-  const editFileInputRef = useRef<HTMLInputElement>(null);
+  // Multi-image edit state
+  const [editImages, setEditImages] = useState<ImagePreview[]>([]);
+  const [editAspectRatio, setEditAspectRatio] = useState<AspectRatio>(aspectRatio || "4:5");
+
+  useEffect(() => {
+    if (isEditModalOpen) {
+      setEditForm({
+        title,
+        description,
+        link: link || "",
+      });
+      // Initialize images from props
+      const existingPreviews: ImagePreview[] = allImages.map((url, index) => ({
+        id: url || `existing-${index}`,
+        preview: url, // URL as preview
+        // file is undefined so MultiImagePicker treats as existing
+      }));
+      setEditImages(existingPreviews);
+      setEditAspectRatio(aspectRatio || "4:5");
+    }
+  }, [isEditModalOpen, title, description, link, allImages, aspectRatio]);
 
   const isOwner = isAuthenticated && user?._id && user?._id === authorId;
   const displayName = isAdmin ? "Admin" : authorName || "User";
@@ -178,39 +206,31 @@ export const PostCard = ({
     setIsDeleteDialogOpen(false);
   };
 
-  const handleEditImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
-        toast.error('Please select an image or video file');
-        return;
-      }
-      if (file.size > 50 * 1024 * 1024) {
-        toast.error('File size must be less than 50MB');
-        return;
-      }
-      setEditImageFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setEditImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
 
-  const removeEditImage = () => {
-    setEditImageFile(null);
-    setEditImagePreview(null);
-    if (editFileInputRef.current) {
-      editFileInputRef.current.value = '';
-    }
-  };
 
   const handleEditSubmit = () => {
     if (postId && onEdit) {
+      // Process images into new files and order array
+      const newFiles: File[] = [];
+      const mediaOrder: string[] = [];
+
+      editImages.forEach((img) => {
+        if (img.file) {
+          // New file
+          newFiles.push(img.file);
+          // Placeholder for order: new-0, new-1, etc.
+          mediaOrder.push(`new-${newFiles.length - 1}`);
+        } else {
+          // Existing image URL
+          mediaOrder.push(img.preview);
+        }
+      });
+
       onEdit(postId, {
         ...editForm,
-        image: editImageFile || undefined,
+        images: newFiles,
+        mediaOrder: mediaOrder,
+        aspectRatio: editAspectRatio,
       });
       setIsEditModalOpen(false);
     }
@@ -272,48 +292,12 @@ export const PostCard = ({
       {/* Edit Media Section */}
       <div className="space-y-2">
         <Label>Media</Label>
-        {editImagePreview ? (
-          <div className="relative rounded-lg overflow-hidden border aspect-[16/9]">
-            {editImageFile?.type.startsWith('video/') || (typeof editImagePreview === 'string' && isVideo(editImagePreview)) ? (
-              <video
-                src={editImagePreview}
-                controls
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <img
-                src={editImagePreview}
-                alt="Preview"
-                className="w-full h-full object-cover"
-              />
-            )}
-            <Button
-              type="button"
-              variant="destructive"
-              size="icon"
-              className="absolute top-2 right-2 h-7 w-7"
-              onClick={removeEditImage}
-            >
-              <X className="h-3 w-3" />
-            </Button>
-          </div>
-        ) : (
-          <div
-            className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:border-primary/50 transition-colors"
-            onClick={() => editFileInputRef.current?.click()}
-          >
-            <ImagePlus className="h-6 w-6 mx-auto text-muted-foreground mb-1" />
-            <p className="text-xs text-muted-foreground">
-              Click to upload media
-            </p>
-          </div>
-        )}
-        <input
-          ref={editFileInputRef}
-          type="file"
-          accept="image/*,video/*"
-          onChange={handleEditImageChange}
-          className="hidden"
+        <MultiImagePicker
+          images={editImages}
+          onImagesChange={setEditImages}
+          aspectRatio={editAspectRatio}
+          onAspectRatioChange={setEditAspectRatio}
+          maxImages={9}
         />
       </div>
 
@@ -462,28 +446,29 @@ export const PostCard = ({
                   </div>
                 </div>
 
-                {/* Post Media (Image or Video) */}
-                {image && (
-                  <div className="rounded-2xl sm:rounded-3xl overflow-hidden bg-black/5 aspect-[16/9] border border-primary/5 shadow-premium-soft relative group/media">
-                    {isVideo(image) ? (
-                      <VideoPlayer
-                        src={image}
-                        className="w-full h-full object-cover"
-                        playOnView
-                      />
+                {/* Post Media (Image Carousel or Video) */}
+                {allImages.length > 0 && (
+                  <div
+                    className="overflow-hidden border border-primary/5 shadow-premium-soft relative group/media"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {/* Check if it's a single video */}
+                    {allImages.length === 1 && isVideo(allImages[0]) ? (
+                      <div className="aspect-[16/9] bg-black/5">
+                        <VideoPlayer
+                          src={allImages[0]}
+                          className="w-full h-full object-cover"
+                          playOnView
+                        />
+                      </div>
                     ) : (
-                      <img
-                        src={getOptimizedImageUrl(image)}
-                        alt={title}
-                        className="w-full h-full object-cover group-hover/media:scale-105 transition-transform duration-700"
-                        loading="lazy"
+                      /* Use ImageCarousel for images (single or multiple) */
+                      <ImageCarousel
+                        images={allImages.map(getOptimizedImageUrl)}
+                        aspectRatio={aspectRatio}
+                        onImageClick={() => navigate(`/posts/${postId}`)}
                       />
                     )}
-                    <div className="absolute inset-0 bg-black/0 group-hover/media:bg-black/10 transition-colors duration-300 flex items-center justify-center opacity-0 group-hover/media:opacity-100 pointer-events-none">
-                      <div className="p-3 rounded-full bg-white/20 backdrop-blur-md text-white border border-white/30 shadow-2xl scale-90 group-hover/media:scale-100 transition-all duration-500">
-                        <Maximize2 className="w-5 h-5" />
-                      </div>
-                    </div>
                   </div>
                 )}
               </div>

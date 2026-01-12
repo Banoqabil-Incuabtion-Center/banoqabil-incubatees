@@ -54,6 +54,8 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
+import { MultiImagePicker, ImagePreview } from "@/components/MultiImagePicker";
+import { AspectRatio } from "@/components/AspectRatioSelector";
 
 const PostSkeleton = () => {
   return (
@@ -104,16 +106,18 @@ const CreatePostDialog = memo(({
     description: "",
     link: "",
   });
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  // Multi-image state
+  const [images, setImages] = useState<ImagePreview[]>([]);
+  const [aspectRatio, setAspectRatio] = useState<AspectRatio>("4:5");
   const [errors, setErrors] = useState<any>({});
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [showLinkInput, setShowLinkInput] = useState(false);
 
   const resetForm = () => {
     setFormData({ title: "", description: "", link: "" });
-    setImageFile(null);
-    setImagePreview(null);
+    // Clean up image previews
+    images.forEach((img) => URL.revokeObjectURL(img.preview));
+    setImages([]);
+    setAspectRatio("4:5");
     setErrors({});
   };
 
@@ -130,42 +134,13 @@ const CreatePostDialog = memo(({
     }
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      // Validate file type (image or video)
-      if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
-        toast.error('Please select an image or video file');
-        return;
-      }
-      // Validate file size (50MB limit)
-      if (file.size > 50 * 1024 * 1024) {
-        toast.error('File size must be less than 50MB');
-        return;
-      }
-      setImageFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const removeImage = () => {
-    setImageFile(null);
-    setImagePreview(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-
   const handleCreate = async () => {
     try {
       setIsCreating(true);
       await postRepo.createUserPost({
         ...formData,
-        image: imageFile || undefined,
+        images: images.map((img) => img.file),
+        aspectRatio,
       });
       // Success handled by socket/store or we can just close
       toast.success("Post created successfully");
@@ -260,34 +235,15 @@ const CreatePostDialog = memo(({
               </div>
             </div>
 
-            {/* Image/Video Preview */}
-            {imagePreview && (
-              <div className="relative rounded-xl overflow-hidden border bg-black/5 aspect-video w-full group">
-                {imageFile?.type.startsWith('video/') ? (
-                  <video
-                    src={imagePreview}
-                    className="w-full h-full object-contain bg-black"
-                    controls
-                  />
-                ) : (
-                  <img
-                    src={imagePreview}
-                    alt="Preview"
-                    className="w-full h-full object-contain"
-                  />
-                )}
-                <Button
-                  type="button"
-                  variant="destructive"
-                  size="icon"
-                  className="absolute top-2 right-2 h-7 w-7 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
-                  onClick={removeImage}
-                  disabled={isCreating}
-                >
-                  <X className="h-3.5 w-3.5" />
-                </Button>
-              </div>
-            )}
+            {/* Multi-Image Picker */}
+            <MultiImagePicker
+              images={images}
+              onImagesChange={setImages}
+              aspectRatio={aspectRatio}
+              onAspectRatioChange={setAspectRatio}
+              maxImages={9}
+              disabled={isCreating}
+            />
 
             {/* Link Input (Conditional) */}
             {showLinkInput && (
@@ -317,20 +273,10 @@ const CreatePostDialog = memo(({
           </div>
         </div>
 
-        {/* Action Bar (Add to post) */}
+        {/* Action Bar (Add link) */}
         <div className="mx-4 mb-4 p-3 border rounded-lg flex items-center justify-between shadow-sm bg-card/50">
           <span className="text-sm font-semibold text-muted-foreground whitespace-nowrap">Add to your post</span>
           <div className="flex items-center gap-1">
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="h-9 w-9 text-green-500 hover:bg-green-50 hover:text-green-600 rounded-full"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isCreating}
-            >
-              <ImageIcon className="h-5 w-5" />
-            </Button>
             <Button
               type="button"
               variant="ghost"
@@ -341,22 +287,13 @@ const CreatePostDialog = memo(({
             >
               <Link className="h-5 w-5" />
             </Button>
-            {/* <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="h-9 w-9 text-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 rounded-full"
-              disabled={isCreating}
-            >
-              <Smile className="h-5 w-5" />
-            </Button> */}
           </div>
         </div>
 
         <div className="px-4 pb-4 mt-2">
           <Button
             onClick={handleCreate}
-            disabled={isCreating || (!formData.description && !imageFile)}
+            disabled={isCreating || (!formData.description && images.length === 0)}
             className="w-full h-10 font-bold text-base shadow-lg shadow-primary/20"
           >
             {isCreating ? (
@@ -369,15 +306,6 @@ const CreatePostDialog = memo(({
             )}
           </Button>
         </div>
-
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*,video/*"
-          onChange={handleImageChange}
-          className="hidden"
-          disabled={isCreating}
-        />
       </DialogContent>
     </Dialog>
   );
@@ -583,6 +511,8 @@ const Posts = () => {
                 description={post.description}
                 link={post.link}
                 image={post.image}
+                images={post.allImages || post.images}
+                aspectRatio={post.aspectRatio}
                 createdAt={post.createdAt}
                 authorName={post.user?.name}
                 authorId={post.user?._id}

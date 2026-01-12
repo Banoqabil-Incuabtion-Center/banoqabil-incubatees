@@ -43,16 +43,27 @@ export class PostRepo {
     return response.data;
   }
 
-  // Create user post with optional image
-  async createUserPost(postData: { title: string; description: string; link?: string; image?: File }) {
+  // Create user post with optional images (supports multiple)
+  async createUserPost(postData: {
+    title: string;
+    description: string;
+    link?: string;
+    images?: File[];
+    aspectRatio?: '1:1' | '4:5' | '16:9' | 'original';
+  }) {
     const formData = new FormData();
     formData.append('title', postData.title);
     formData.append('description', postData.description);
     if (postData.link) {
       formData.append('link', postData.link);
     }
-    if (postData.image) {
-      formData.append('image', postData.image);
+    if (postData.images && postData.images.length > 0) {
+      postData.images.forEach((img) => {
+        formData.append('images', img);
+      });
+    }
+    if (postData.aspectRatio) {
+      formData.append('aspectRatio', postData.aspectRatio);
     }
 
     const response = await api.post("/api/user/createpost", formData, {
@@ -72,8 +83,15 @@ export class PostRepo {
     return response.data;
   }
 
-  // Update user post with optional image
-  async updateUserPost(postId: string, postData: { title?: string; description?: string; link?: string; image?: File }) {
+  // Update user post with optional images (supports multiple)
+  async updateUserPost(postId: string, postData: {
+    title?: string;
+    description?: string;
+    link?: string;
+    images?: File[];
+    aspectRatio?: '1:1' | '4:5' | '16:9' | 'original';
+    mediaOrder?: string[];
+  }) {
     const formData = new FormData();
     formData.append('id', postId);
     if (postData.title) {
@@ -85,8 +103,16 @@ export class PostRepo {
     if (postData.link !== undefined) {
       formData.append('link', postData.link);
     }
-    if (postData.image) {
-      formData.append('image', postData.image);
+    if (postData.images && postData.images.length > 0) {
+      postData.images.forEach((img) => {
+        formData.append('images', img);
+      });
+    }
+    if (postData.aspectRatio) {
+      formData.append('aspectRatio', postData.aspectRatio);
+    }
+    if (postData.mediaOrder) {
+      formData.append('mediaOrder', JSON.stringify(postData.mediaOrder));
     }
 
     const response = await api.put("/api/user/updateuserpost", formData, {

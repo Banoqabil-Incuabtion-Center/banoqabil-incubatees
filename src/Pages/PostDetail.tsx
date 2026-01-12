@@ -169,7 +169,7 @@ export const PostDetail = () => {
                             </div>
 
                             <div className="relative z-10 max-w-2xl animate-in fade-in zoom-in slide-in-from-bottom-4 duration-1000 px-4">
-                                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tighter leading-tight drop-shadow-[0_10px_10px_rgba(0,0,0,0.3)] break-all uppercase">
+                                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tighter leading-tight drop-shadow-[0_10px_10px_rgba(0,0,0,0.3)] break-words uppercase">
                                     {post.description}
                                 </h2>
                                 <div className="mt-8 w-16 h-1.5 bg-white/40 mx-auto rounded-full shadow-inner" />
@@ -220,10 +220,10 @@ export const PostDetail = () => {
                         <div className="p-4 sm:p-6 space-y-6">
                             {/* Post Typography */}
                             <div className="space-y-4 min-w-0 max-w-full">
-                                <h1 className="text-2xl sm:text-3xl font-black tracking-tight leading-[1.1] break-all text-foreground uppercase">
+                                <h1 className="text-2xl sm:text-3xl font-black tracking-tight leading-[1.1] break-words text-foreground uppercase">
                                     {post.title}
                                 </h1>
-                                <div className="text-sm sm:text-base text-muted-foreground leading-relaxed font-medium whitespace-pre-wrap break-all">
+                                <div className="text-sm sm:text-base text-muted-foreground leading-relaxed font-medium whitespace-pre-wrap break-words">
                                     {renderDescription(post.description)}
                                 </div>
 

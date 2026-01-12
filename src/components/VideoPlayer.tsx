@@ -173,7 +173,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
         <div
             ref={containerRef}
             className={cn(
-                "relative group bg-black rounded-xl overflow-hidden shadow-2xl transition-all duration-500",
+                "relative group bg-black overflow-hidden shadow-2xl transition-all duration-500",
                 isFullscreen ? "w-screen h-screen rounded-none" : "w-full h-full",
                 className
             )}

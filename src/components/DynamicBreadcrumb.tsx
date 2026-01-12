@@ -11,7 +11,7 @@ import React from "react";
 
 const routeNameMap: Record<string, string> = {
     posts: "Community",
-    direct: "Messages",
+    direct: "Direct",
     attendance: "Attendance",
     profile: "Profile",
     notifications: "Notifications",

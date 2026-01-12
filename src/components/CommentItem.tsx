@@ -155,7 +155,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                                     </div>
                                 </div>
                             ) : (
-                                <div className="text-xs sm:text-sm leading-relaxed text-foreground/90 break-all sm:break-words font-medium overflow-hidden">
+                                <div className="text-xs sm:text-sm leading-relaxed text-foreground/90 break-words whitespace-pre-wrap font-medium overflow-hidden">
                                     {comment.content.length > 300 && !isExpanded
                                         ? comment.content.slice(0, 300) + "..."
                                         : comment.content
