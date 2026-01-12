@@ -131,12 +131,7 @@ const UserCalendar: React.FC = () => {
 
     return (
         <div className="p-6 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500 pb-20"> {/* pb-20 for bottom nav */}
-            <div className="flex justify-between items-center">
-                <div>
-                    <h1 className="text-2xl font-bold tracking-tight">Calendar</h1>
-                    <p className="text-muted-foreground mt-1">View holidays, events, and working days.</p>
-                </div>
-            </div>
+
 
             <Card className="border-none shadow-none bg-transparent">
                 <CardHeader className="px-0 pb-3 pt-0">

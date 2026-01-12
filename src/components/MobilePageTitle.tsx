@@ -1,14 +1,20 @@
 import { useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
-const PAGE_TITLES: Record<string, string> = {
-    "/": "Home",
-    "/direct": "Direct",
-    "/posts": "Community",
-    "/attendance": "Attendance",
-    "/profile": "Profile",
-    "/notifications": "Notifications",
-    "/activities": "Activity"
+interface PageMeta {
+    title: string;
+    description?: string;
+}
+
+const PAGE_META: Record<string, PageMeta> = {
+    "/": { title: "Home" },
+    "/direct": { title: "Direct" },
+    "/posts": { title: "Community" },
+    "/attendance": { title: "Attendance" },
+    "/profile": { title: "Profile"  },
+    "/notifications": { title: "Notifications" },
+    "/activities": { title: "Activity" },
+    "/calendar": { title: "Calendar" }
 };
 
 export function MobilePageTitle({ className }: { className?: string }) {
@@ -16,15 +22,21 @@ export function MobilePageTitle({ className }: { className?: string }) {
     const pathname = location.pathname;
 
     // Helper to find best matching title (handles sub-routes if needed, though exact match is fine for now)
-    const title = PAGE_TITLES[pathname] || "IMS";
+    const meta = PAGE_META[pathname] || { title: "IMS" };
 
     return (
         <div className={cn(
-            "font-black text-xl md:hidden tracking-tight animate-in fade-in slide-in-from-left-4 duration-500",
-            "text-foreground",
+            "md:hidden animate-in fade-in slide-in-from-left-4 duration-500",
             className
         )}>
-            {title}
+            <span className="font-black text-xl tracking-tight text-foreground">
+                {meta.title}
+            </span>
+            {meta.description && (
+                <p className="text-[11px] text-muted-foreground leading-tight mt-0.5">
+                    {meta.description}
+                </p>
+            )}
         </div>
     );
 }
