@@ -13,6 +13,7 @@ import Profile from "./Pages/Profile"
 import EditProfile from "./Pages/EditProfile"
 import UserPublicProfile from "./Pages/UserPublicProfile"
 import Direct from "./Pages/Direct"
+import Calendar from "./Pages/Calendar"
 import Activities from "./Pages/Activities"
 import Notifications from "./Pages/Notifications"
 import { PostDetail } from "./Pages/PostDetail"
@@ -41,6 +42,7 @@ const App = () => {
           <Route path="/attendance" element={<Attendance />} />
           <Route path="/posts" element={<Posts />} />
           <Route path="/direct" element={<Direct />} />
+          <Route path="/calendar" element={<Calendar />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/profile/edit" element={<EditProfile />} />
           <Route path="/profile/customize" element={<CustomizeCard />} />

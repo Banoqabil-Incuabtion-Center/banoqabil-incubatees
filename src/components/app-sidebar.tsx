@@ -32,7 +32,8 @@ const data = {
     { title: "Home", url: "/", icon: Home },
     { title: "Direct", url: "/direct", icon: Send },
     { title: "Community", url: "/posts", icon: Users },
-    { title: "Attendance", url: "/attendance", icon: CalendarCheck },
+    { title: "Calendar", url: "/calendar", icon: CalendarCheck },
+    { title: "Attendance", url: "/attendance", icon: Check },
   ],
 }
 
