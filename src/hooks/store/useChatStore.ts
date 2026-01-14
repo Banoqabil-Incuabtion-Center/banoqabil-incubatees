@@ -107,6 +107,8 @@ interface ChatState {
     decryptMessageText: (msg: Message, otherUserId: string, publicKey?: string) => Promise<string>;
     recoverKeys: (password: string) => Promise<boolean>;
     setupRecovery: (password: string) => Promise<void>;
+    resetEncryptionKeys: () => Promise<void>;
+    changePIN: (oldPIN: string, newPIN: string) => Promise<boolean>;
 }
 
 // Helper selector to get unread conversations count
@@ -702,22 +704,27 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
     // E2E Encryption: Decrypt a message
     decryptMessageText: async (msg: Message, otherUserId: string, publicKey?: string) => {
-        const { myKeyPair, isEncryptionReady } = get();
+        const { myKeyPair, isEncryptionReady, needsRecovery } = get();
 
         // If not encrypted, return plain text
         if (!msg.isEncrypted || !msg.iv) {
             return msg.text;
         }
 
+        // If recovery is needed, inform user
+        if (needsRecovery) {
+            return '🔐 Recovery required';
+        }
+
         // If encryption not ready, return placeholder
         if (!isEncryptionReady || !myKeyPair) {
-            return '[Encrypted message - loading...]';
+            return '🔐 Loading...';
         }
 
         try {
             const theirPublicKey = publicKey || await get().fetchUserPublicKey(otherUserId);
             if (!theirPublicKey) {
-                return '[Encrypted message - key not available]';
+                return '🔐 Key not available';
             }
 
             const sharedKey = await getOrDeriveSharedKey(
@@ -728,9 +735,107 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
             const decrypted = await decryptMessage(sharedKey, msg.text, msg.iv);
             return decrypted;
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error decrypting message:', error);
-            return '[Decryption failed]';
+
+            // OperationError usually means key mismatch - message was encrypted with different keys
+            if (error.name === 'OperationError') {
+                console.warn('🔐 Decryption failed: Key mismatch. Message may have been encrypted with old/different keys.');
+                return '🔐 Cannot decrypt (key changed)';
+            }
+
+            return '🔐 Decryption failed';
+        }
+    },
+
+    // Reset encryption keys (used when PIN is forgotten)
+    resetEncryptionKeys: async () => {
+        try {
+            console.log('🔐 E2E: Resetting encryption keys...');
+
+            // 1. Clear local keys from localStorage
+            localStorage.removeItem('e2e_private_key');
+            localStorage.removeItem('e2e_public_key');
+
+            // 2. Clear shared key cache
+            clearSharedKeyCache();
+
+            // 3. Generate new key pair
+            const newKeyPair = await generateKeyPair();
+            await storeKeyPair(newKeyPair);
+
+            // 4. Get new public key and sync to server
+            const publicKeyBase64 = await exportPublicKey(newKeyPair.publicKey);
+            const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+
+            // Clear backup on server and set new public key
+            await axios.put(
+                `${SERVER_URL}/api/messages/public-key`,
+                { publicKey: publicKeyBase64, backup: null },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+
+            // 5. Update state - user needs to setup new PIN
+            set({
+                myKeyPair: newKeyPair,
+                isEncryptionReady: true,
+                needsRecovery: false,
+                backupData: null, // No backup = will trigger PIN setup
+                userPublicKeys: new Map() // Clear cached public keys
+            });
+
+            console.log('✅ E2E: Keys reset successfully. User needs to setup new PIN.');
+        } catch (error) {
+            console.error('❌ E2E: Failed to reset keys:', error);
+            throw error;
+        }
+    },
+
+    // Change recovery PIN
+    changePIN: async (oldPIN: string, newPIN: string) => {
+        const { myKeyPair, backupData } = get();
+
+        if (!myKeyPair || !backupData) {
+            console.error('🔐 E2E: Cannot change PIN - no key pair or backup');
+            return false;
+        }
+
+        try {
+            console.log('🔐 E2E: Changing PIN...');
+
+            // 1. Verify old PIN by attempting to decrypt (restore) the private key
+            const { encryptedPrivateKey, iv, salt } = backupData;
+            await restorePrivateKey(encryptedPrivateKey, oldPIN, iv, salt);
+
+            // If we get here, oldPIN is correct
+            console.log('🔐 E2E: Old PIN verified');
+
+            // 2. Create new backup with new PIN
+            const newBackup = await backupPrivateKey(myKeyPair.privateKey, newPIN);
+            const publicKeyBase64 = await exportPublicKey(myKeyPair.publicKey);
+
+            // 3. Upload new backup to server
+            const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+            const backupPayload = {
+                encryptedPrivateKey: newBackup.ciphertext,
+                iv: newBackup.iv,
+                salt: newBackup.salt
+            };
+
+            await axios.put(
+                `${SERVER_URL}/api/messages/public-key`,
+                { publicKey: publicKeyBase64, backup: backupPayload, pin: newPIN },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+
+            // 4. Update local state
+            set({ backupData: backupPayload });
+
+            console.log('✅ E2E: PIN changed successfully');
+            return true;
+        } catch (error) {
+            console.error('❌ E2E: Failed to change PIN:', error);
+            return false;
         }
     }
 }));

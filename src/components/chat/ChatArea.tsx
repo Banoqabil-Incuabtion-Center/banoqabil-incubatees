@@ -114,6 +114,7 @@ export function ChatArea({ activeUserId, userName = "Select a User", userAvatar,
         onlineUsers,
         initEncryption,
         isEncryptionReady,
+        needsRecovery,
     } = useChatStore();
 
 
@@ -259,6 +260,28 @@ export function ChatArea({ activeUserId, userName = "Select a User", userAvatar,
                         <div className="flex flex-col">
                             <span className="font-black text-sm tracking-tight leading-none flex items-center gap-1.5">
                                 {userName}
+                                {/* Encryption Status Indicator */}
+                                {activeUserId && activeUserId !== 'announcements' && (
+                                    <span
+                                        className={cn(
+                                            "inline-flex items-center justify-center ml-1 transition-colors",
+                                            needsRecovery
+                                                ? "text-amber-500"
+                                                : isEncryptionReady
+                                                    ? "text-green-500"
+                                                    : "text-muted-foreground/40"
+                                        )}
+                                        title={
+                                            needsRecovery
+                                                ? "Recovery needed"
+                                                : isEncryptionReady
+                                                    ? "End-to-end encrypted"
+                                                    : "Encryption loading..."
+                                        }
+                                    >
+                                        <Lock className="w-3 h-3" />
+                                    </span>
+                                )}
                             </span>
                             {activeUserId && activeUserId !== 'announcements' && (
                                 <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mt-1 flex items-center gap-1.5">
