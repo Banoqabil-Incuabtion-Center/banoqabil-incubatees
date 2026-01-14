@@ -62,6 +62,10 @@ const Login: React.FC = () => {
       setUser(response.user)
       clearAttendance()
 
+      // Initialize E2E encryption with password for auto-recovery/backup
+      const { useChatStore } = await import('@/hooks/store/useChatStore')
+      useChatStore.getState().initEncryption(data.password)
+
       toast.success("Login successful")
 
       navigate("/")

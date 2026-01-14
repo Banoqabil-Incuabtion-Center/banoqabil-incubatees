@@ -102,13 +102,10 @@ interface ChatState {
     removeOnlineUser: (userId: string) => void;
 
     // E2E Encryption methods
-    initEncryption: () => Promise<void>;
+    initEncryption: (password?: string) => Promise<void>;
     fetchUserPublicKey: (userId: string) => Promise<string | null>;
     decryptMessageText: (msg: Message, otherUserId: string, publicKey?: string) => Promise<string>;
-    recoverKeys: (password: string) => Promise<boolean>;
-    setupRecovery: (password: string) => Promise<void>;
     resetEncryptionKeys: () => Promise<void>;
-    changePIN: (oldPIN: string, newPIN: string) => Promise<boolean>;
 }
 
 // Helper selector to get unread conversations count
@@ -519,8 +516,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
         }
     },
 
-    // E2E Encryption: Initialize encryption on app start
-    initEncryption: async () => {
+    // E2E Encryption: Initialize encryption on app start or login
+    // If password is provided (during login), auto-recover or auto-setup backup
+    initEncryption: async (password?: string) => {
         try {
             const token = localStorage.getItem('token') || sessionStorage.getItem('token');
             if (!token) return;
@@ -535,6 +533,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
             console.log('🔐 E2E: Initializing for user', myUserId);
             let currentUserBackupData = null;
+            let serverPublicKey = null;
             try {
                 // We use the public-key endpoint with own ID to get backup info
                 const response = await axios.get(`${SERVER_URL}/api/messages/public-key/${myUserId}`, {
@@ -544,6 +543,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
                 if (response.data.backup?.encryptedPrivateKey) {
                     currentUserBackupData = response.data.backup;
                 }
+                serverPublicKey = response.data.publicKey;
             } catch (err) {
                 console.warn('⚠️ E2E: Failed to fetch own backup info:', err);
             }
@@ -552,9 +552,35 @@ export const useChatStore = create<ChatState>((set, get) => ({
             let keyPair = await getStoredKeyPair();
 
             if (!keyPair) {
-                // No local key. If we have a backup, we need recovery.
-                if (currentUserBackupData) {
-                    console.log('🔐 E2E: Local key missing but backup found. Recovery needed.');
+                // No local key. 
+                if (currentUserBackupData && password) {
+                    // We have backup AND password (from login) -> Auto-recover
+                    console.log('🔐 E2E: Auto-recovering keys using password...');
+                    try {
+                        const { encryptedPrivateKey, iv, salt } = currentUserBackupData;
+                        const privateKey = await restorePrivateKey(encryptedPrivateKey, password, iv, salt);
+
+                        if (serverPublicKey) {
+                            const publicKey = await importPublicKey(serverPublicKey);
+                            keyPair = { privateKey, publicKey };
+                            await storeKeyPair(keyPair);
+                            clearSharedKeyCache();
+                            console.log('✅ E2E: Keys recovered successfully from password');
+                        } else {
+                            throw new Error('Public key not found on server');
+                        }
+                    } catch (recoveryError) {
+                        console.error('❌ E2E: Auto-recovery failed:', recoveryError);
+                        // Recovery failed - generate new keys
+                        console.log('🔐 E2E: Generating new keys after failed recovery...');
+                        keyPair = await generateKeyPair();
+                        await storeKeyPair(keyPair);
+                        clearSharedKeyCache();
+                        currentUserBackupData = null; // Will trigger new backup
+                    }
+                } else if (currentUserBackupData && !password) {
+                    // We have backup but no password - need recovery prompt
+                    console.log('🔐 E2E: Local key missing, backup found but no password. Setting needsRecovery.');
                     set({
                         needsRecovery: true,
                         backupData: currentUserBackupData,
@@ -566,21 +592,43 @@ export const useChatStore = create<ChatState>((set, get) => ({
                     console.log('🔐 E2E: No local key or backup found. Generating new pair.');
                     keyPair = await generateKeyPair();
                     await storeKeyPair(keyPair);
-                    clearSharedKeyCache(); // Clear cache for the new local key
+                    clearSharedKeyCache();
                 }
             }
 
-            // 3. Sync public key ONLY if no backup exists OR we just generated a new one
-            // This prevents overwriting a valid public key on the server before recovery
-            if (!currentUserBackupData) {
-                const publicKeyBase64 = await exportPublicKey(keyPair.publicKey);
+            // 3. Sync public key and create/update backup if we have password
+            const publicKeyBase64 = await exportPublicKey(keyPair.publicKey);
+
+            if (password) {
+                // We have password - create/update backup
+                console.log('🔐 E2E: Creating/updating backup with password...');
+                try {
+                    const backup = await backupPrivateKey(keyPair.privateKey, password);
+                    const backupPayload = {
+                        encryptedPrivateKey: backup.ciphertext,
+                        iv: backup.iv,
+                        salt: backup.salt
+                    };
+
+                    await axios.put(
+                        `${SERVER_URL}/api/messages/public-key`,
+                        { publicKey: publicKeyBase64, backup: backupPayload },
+                        { headers: { Authorization: `Bearer ${token}` } }
+                    );
+                    console.log('✅ E2E: Public key and backup synced to server');
+                    currentUserBackupData = backupPayload;
+                } catch (err) {
+                    console.error('❌ E2E: Backup sync failed:', err);
+                }
+            } else if (!currentUserBackupData) {
+                // No password and no backup - just sync public key
                 try {
                     await axios.put(
                         `${SERVER_URL}/api/messages/public-key`,
                         { publicKey: publicKeyBase64 },
                         { headers: { Authorization: `Bearer ${token}` } }
                     );
-                    console.log('🔐 E2E: Public key synced to server');
+                    console.log('🔐 E2E: Public key synced to server (no backup)');
                 } catch (err) {
                     console.error('❌ E2E: Public key sync failed:', err);
                 }
@@ -590,85 +638,11 @@ export const useChatStore = create<ChatState>((set, get) => ({
                 myKeyPair: keyPair,
                 isEncryptionReady: true,
                 needsRecovery: false,
-                backupData: currentUserBackupData // Keep backupData reference for UI checks
+                backupData: currentUserBackupData
             });
             console.log('✅ E2E Encryption initialized');
         } catch (error) {
             console.error('❌ Error initializing encryption:', error);
-        }
-    },
-
-    // Recover keys from backup using password
-    recoverKeys: async (password: string) => {
-        const { backupData } = get();
-        if (!backupData) return false;
-
-        try {
-            console.log('🔐 E2E: Attempting recovery with password...');
-            const { encryptedPrivateKey, iv, salt } = backupData;
-            const privateKey = await restorePrivateKey(encryptedPrivateKey, password, iv, salt);
-
-            // We also need the public key. Fetch from server.
-            const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-            const decodedToken = decodeJWTPayload(token!);
-            if (!decodedToken) throw new Error('Failed to decode token during recovery');
-            const myUserId = decodedToken.userId || decodedToken.id;
-
-            console.log('🔐 E2E: Fetching public key for owner', myUserId);
-            const response = await axios.get(`${SERVER_URL}/api/messages/public-key/${myUserId}`, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
-            const publicKeyBase64 = response.data.publicKey;
-
-            if (!publicKeyBase64) {
-                console.error('🔐 E2E: Public key missing on server');
-                throw new Error("Public key not found on server");
-            }
-
-            const publicKey = await importPublicKey(publicKeyBase64);
-            const keyPair = { privateKey, publicKey };
-
-            // Store locally
-            await storeKeyPair(keyPair);
-            clearSharedKeyCache(); // Clear cache to use the recovered private key
-            set({ myKeyPair: keyPair, isEncryptionReady: true, needsRecovery: false });
-
-            console.log('✅ E2E: Keys recovered successfully');
-            return true;
-        } catch (error) {
-            console.error('❌ E2E: Recovery failed:', error);
-            return false;
-        }
-    },
-
-    // Setup backup for the first time
-    setupRecovery: async (password: string) => {
-        const { myKeyPair } = get();
-        if (!myKeyPair) return;
-
-        try {
-            console.log('🔐 E2E: Setting up recovery backup...');
-            const backup = await backupPrivateKey(myKeyPair.privateKey, password);
-            const publicKeyBase64 = await exportPublicKey(myKeyPair.publicKey);
-
-            const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-            const backupPayload = {
-                encryptedPrivateKey: backup.ciphertext,
-                iv: backup.iv,
-                salt: backup.salt
-            };
-
-            await axios.put(
-                `${SERVER_URL}/api/messages/public-key`,
-                { publicKey: publicKeyBase64, backup: backupPayload, pin: password },
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
-
-            console.log('✅ E2E: Recovery backup created');
-            set({ backupData: backupPayload });
-        } catch (error) {
-            console.error('❌ E2E: Setup recovery failed:', error);
-            throw error;
         }
     },
 
@@ -780,62 +754,14 @@ export const useChatStore = create<ChatState>((set, get) => ({
                 myKeyPair: newKeyPair,
                 isEncryptionReady: true,
                 needsRecovery: false,
-                backupData: null, // No backup = will trigger PIN setup
+                backupData: null,
                 userPublicKeys: new Map() // Clear cached public keys
             });
 
-            console.log('✅ E2E: Keys reset successfully. User needs to setup new PIN.');
+            console.log('✅ E2E: Keys reset successfully.');
         } catch (error) {
             console.error('❌ E2E: Failed to reset keys:', error);
             throw error;
-        }
-    },
-
-    // Change recovery PIN
-    changePIN: async (oldPIN: string, newPIN: string) => {
-        const { myKeyPair, backupData } = get();
-
-        if (!myKeyPair || !backupData) {
-            console.error('🔐 E2E: Cannot change PIN - no key pair or backup');
-            return false;
-        }
-
-        try {
-            console.log('🔐 E2E: Changing PIN...');
-
-            // 1. Verify old PIN by attempting to decrypt (restore) the private key
-            const { encryptedPrivateKey, iv, salt } = backupData;
-            await restorePrivateKey(encryptedPrivateKey, oldPIN, iv, salt);
-
-            // If we get here, oldPIN is correct
-            console.log('🔐 E2E: Old PIN verified');
-
-            // 2. Create new backup with new PIN
-            const newBackup = await backupPrivateKey(myKeyPair.privateKey, newPIN);
-            const publicKeyBase64 = await exportPublicKey(myKeyPair.publicKey);
-
-            // 3. Upload new backup to server
-            const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-            const backupPayload = {
-                encryptedPrivateKey: newBackup.ciphertext,
-                iv: newBackup.iv,
-                salt: newBackup.salt
-            };
-
-            await axios.put(
-                `${SERVER_URL}/api/messages/public-key`,
-                { publicKey: publicKeyBase64, backup: backupPayload, pin: newPIN },
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
-
-            // 4. Update local state
-            set({ backupData: backupPayload });
-
-            console.log('✅ E2E: PIN changed successfully');
-            return true;
-        } catch (error) {
-            console.error('❌ E2E: Failed to change PIN:', error);
-            return false;
         }
     }
 }));
