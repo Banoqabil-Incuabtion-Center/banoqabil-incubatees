@@ -57,6 +57,7 @@ export interface Message {
     // E2E Encryption fields
     iv?: string | null;
     isEncrypted?: boolean;
+    senderPublicKey?: string;
 }
 
 interface ChatState {
@@ -696,7 +697,20 @@ export const useChatStore = create<ChatState>((set, get) => ({
         }
 
         try {
-            const theirPublicKey = publicKey || await get().fetchUserPublicKey(otherUserId);
+            const senderId = typeof msg.sender === 'object' ? (msg.sender as any)._id : msg.sender;
+            const isFromOther = senderId === otherUserId;
+
+            let theirPublicKey;
+
+            if (isFromOther) {
+                // Message from them: Use the key attached to message (preferred) or their current key
+                theirPublicKey = msg.senderPublicKey || publicKey || await get().fetchUserPublicKey(otherUserId);
+            } else {
+                // Message from me to them: I need THEIR key (Recipient). 
+                // The attached senderPublicKey is mine, so it's useless for decryption here.
+                theirPublicKey = publicKey || await get().fetchUserPublicKey(otherUserId);
+            }
+
             if (!theirPublicKey) {
                 return '🔐 Key not available';
             }
