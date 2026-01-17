@@ -57,6 +57,7 @@ const AttendanceCalendar: React.FC<Props> = ({ userId }) => {
         if (status.includes('No Checkout')) return 'bg-red-500'
         if (status === 'Incomplete') return 'bg-gray-500'
         if (status === 'Absent') return 'bg-red-500'
+        if (status === 'Holiday') return 'bg-red-500'
         return 'bg-green-500'
     }
 
@@ -261,7 +262,7 @@ const AttendanceCalendar: React.FC<Props> = ({ userId }) => {
                 </div>
                 <div className="flex items-center gap-2 px-3 py-1.5 bg-red-500/5 rounded-full border border-red-500/10">
                     <span className="w-2.5 h-2.5 rounded-full bg-red-500 shadow-sm shadow-red-500/20"></span>
-                    <span className="text-[11px] font-black uppercase tracking-tight text-red-700/70">Absent/Missing</span>
+                    <span className="text-[11px] font-black uppercase tracking-tight text-red-700/70">Absent/Holiday</span>
                 </div>
             </div>
 

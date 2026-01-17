@@ -58,6 +58,7 @@ const Attendance: React.FC = () => {
     if (status.includes('No Checkout')) return 'volcano';
     if (status === 'Incomplete') return 'default';
     if (status === 'Absent') return 'red';
+    if (status === 'Holiday') return 'red';
     return 'blue';
   };
 
@@ -240,7 +241,8 @@ const Attendance: React.FC = () => {
                     attendance?.status?.includes('Late') ? 'bg-yellow-500 hover:bg-yellow-600' :
                       attendance?.status?.includes('Early') ? 'bg-orange-500 hover:bg-orange-600' :
                         attendance?.status?.includes('No Checkout') ? 'bg-red-500 hover:bg-red-600' :
-                          'bg-gray-500 hover:bg-gray-600'
+                          attendance?.status === 'Holiday' ? 'bg-red-500 hover:bg-red-600' :
+                            'bg-gray-500 hover:bg-gray-600'
                 )}>
                   {attendance?.status}
                 </Badge>
