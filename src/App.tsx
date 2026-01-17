@@ -4,6 +4,7 @@ import SignUp from "./auth/SignUp"
 import Login from "./auth/Login"
 import ForgotPassword from "./auth/ForgotPassword"
 import ResetPassword from "./auth/ResetPassword"
+import VerifyEmail from "./pages/VerifyEmail"
 import PrivateRoute from "./auth/PrivateRoute"
 import Dashboard from "./Pages/Dashboard"
 import UserLayout from "./components/layout/userLayout"
@@ -33,6 +34,7 @@ const App = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password/:token" element={<ResetPassword />} />
+        <Route path="/verify-email/:token" element={<VerifyEmail />} />
 
         {/* Protected routes with layout */}
         <Route path="/" element={<PrivateRoute> <UserLayout /> </PrivateRoute>}>

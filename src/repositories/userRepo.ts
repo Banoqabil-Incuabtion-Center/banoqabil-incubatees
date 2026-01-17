@@ -36,6 +36,11 @@ export class UserRepo {
     return response.data
   }
 
+  async resendVerification(email: string) {
+    const response = await api.post("/api/user/resend-verification", { email })
+    return response.data
+  }
+
   async signupUser(data: any) {
     const response = await api.post("/api/user/signup", data)
     return response.data

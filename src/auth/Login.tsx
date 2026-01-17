@@ -1,7 +1,7 @@
 // auth/Login.tsx
 import React, { useState } from "react"
 import { toast } from "sonner"
-import { CiUnread, CiRead } from "react-icons/ci"
+import { CiUnread, CiRead, CiMail } from "react-icons/ci"
 import { userRepo } from "../repositories/userRepo"
 import { Button } from "../components/ui/button"
 import { Input } from "../components/ui/input"
@@ -30,6 +30,9 @@ const Login: React.FC = () => {
   const { clearAttendance } = useAttendanceStore()
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [showResend, setShowResend] = useState(false)
+  const [unverifiedEmail, setUnverifiedEmail] = useState("")
+  const [isResending, setIsResending] = useState(false)
 
   const {
     register,
@@ -46,6 +49,7 @@ const Login: React.FC = () => {
 
   const onSubmit = async (data: LoginFormValues) => {
     setIsLoading(true)
+    setShowResend(false)
 
     try {
       const response = await userRepo.loginUser({
@@ -72,8 +76,27 @@ const Login: React.FC = () => {
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || "Login failed"
       toast.error(errorMessage)
+
+      if (error.response?.status === 403 && errorMessage.toLowerCase().includes("verify")) {
+        setShowResend(true)
+        setUnverifiedEmail(data.email)
+      }
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const handleResendVerification = async () => {
+    if (!unverifiedEmail) return
+    setIsResending(true)
+    try {
+      await userRepo.resendVerification(unverifiedEmail)
+      toast.success("Verification email sent! Please check your inbox.")
+      setShowResend(false)
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to send email")
+    } finally {
+      setIsResending(false)
     }
   }
 
@@ -154,6 +177,24 @@ const Login: React.FC = () => {
               {isLoading ? "Signing in..." : "Login"}
             </Button>
           </form>
+
+          {showResend && (
+            <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4 flex flex-col gap-3 animate-in fade-in slide-in-from-top-2">
+              <div className="flex items-center gap-2 text-yellow-600 dark:text-yellow-400">
+                <CiMail size={20} />
+                <p className="text-xs font-bold">Email not verified?</p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full h-9 text-xs font-bold border-yellow-500/20 hover:bg-yellow-500/10 hover:text-yellow-600"
+                onClick={handleResendVerification}
+                disabled={isResending}
+              >
+                {isResending ? "Sending..." : "Resend Verification Email"}
+              </Button>
+            </div>
+          )}
 
           <div className="pt-4 text-center">
             <p className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">
