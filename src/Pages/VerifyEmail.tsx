@@ -14,6 +14,8 @@ const VerifyEmail = () => {
     const { token } = useParams();
     const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
     const [message, setMessage] = useState("Verifying your email...");
+    const [email, setEmail] = useState(""); // For resending
+    const [isResending, setIsResending] = useState(false);
 
     useEffect(() => {
         if (!token) {
@@ -30,21 +32,44 @@ const VerifyEmail = () => {
                 toast.success("Email verified!");
             } catch (error: any) {
                 setStatus('error');
-                setMessage(error.response?.data?.message || "Failed to verify email. Link may be expired.");
+                const errMsg = error.response?.data?.message || "Failed to verify email. Link may be expired.";
+                setMessage(errMsg);
                 toast.error("Verification failed");
+
+                // If we can extract email from error or if we had it, we could use it
+                // For now, we might need a prompt or just use the login page logic
             }
         };
 
         verify();
     }, [token]);
 
+    const handleResend = async () => {
+        // Since we don't have the email here easily (only the expired token), 
+        // we should ideally ask for it or redirect back to login where they can enter it.
+        // But for a better UX, if verification fails, we can show an input.
+        const inputEmail = prompt("Please enter your email to receive a new verification link:");
+        if (!inputEmail) return;
+
+        setIsResending(true);
+        try {
+            await axios.post(`${API_URL}/api/user/resend-verification`, { email: inputEmail });
+            toast.success("New verification link sent!");
+        } catch (error: any) {
+            toast.error(error.response?.data?.message || "Failed to resend");
+        } finally {
+            setIsResending(false);
+        }
+    };
+
     return (
         <div className="min-h-screen flex items-center justify-center bg-muted/20 p-4">
-            <Card className="w-full max-w-md shadow-premium rounded-[2rem] border-primary/5">
-                <CardHeader className="text-center pb-2">
+            <Card className="w-full max-w-md shadow-premium rounded-[2.5rem] border-primary/5 overflow-hidden">
+                <div className="h-1.5 bg-primary w-full" />
+                <CardHeader className="text-center pb-2 pt-8">
                     <CardTitle className="text-2xl font-black tracking-tight flex flex-col items-center gap-4">
                         {status === 'loading' && (
-                            <div className="p-4 rounded-full bg-primary/10 animate-pulse">
+                            <div className="p-4 rounded-full bg-primary/10">
                                 <Loader2 className="w-8 h-8 text-primary animate-spin" />
                             </div>
                         )}
@@ -61,26 +86,36 @@ const VerifyEmail = () => {
                         Email Verification
                     </CardTitle>
                 </CardHeader>
-                <CardContent className="text-center space-y-6 pt-4">
-                    <p className="text-muted-foreground font-medium">
+                <CardContent className="text-center space-y-6 pt-4 pb-10 px-8">
+                    <p className="text-muted-foreground font-medium text-sm leading-relaxed px-4">
                         {message}
                     </p>
 
-                    <div className="pt-2">
+                    <div className="pt-2 space-y-3">
                         {status === 'loading' && (
-                            <Button disabled className="w-full rounded-xl h-11">
+                            <Button disabled className="w-full rounded-2xl h-12 font-black uppercase text-xs tracking-widest">
                                 Verifying...
                             </Button>
                         )}
                         {status === 'success' && (
-                            <Button asChild className="w-full rounded-xl h-11 font-bold shadow-soft">
+                            <Button asChild className="w-full rounded-2xl h-12 font-black uppercase text-xs tracking-widest shadow-xl shadow-primary/20">
                                 <Link to="/login">Proceed to Login</Link>
                             </Button>
                         )}
                         {status === 'error' && (
-                            <Button asChild variant="secondary" className="w-full rounded-xl h-11 font-bold">
-                                <Link to="/login">Back to Login</Link>
-                            </Button>
+                            <>
+                                <Button
+                                    variant="outline"
+                                    className="w-full rounded-2xl h-12 font-black uppercase text-xs tracking-widest border-primary/20"
+                                    onClick={handleResend}
+                                    disabled={isResending}
+                                >
+                                    {isResending ? "Sending..." : "Request New Link"}
+                                </Button>
+                                <Button asChild variant="ghost" className="w-full rounded-2xl h-12 font-black uppercase text-xs tracking-widest text-muted-foreground">
+                                    <Link to="/login">Back to Login</Link>
+                                </Button>
+                            </>
                         )}
                     </div>
                 </CardContent>

@@ -77,7 +77,8 @@ const Login: React.FC = () => {
       const errorMessage = error.response?.data?.message || "Login failed"
       toast.error(errorMessage)
 
-      if (error.response?.status === 403 && errorMessage.toLowerCase().includes("verify")) {
+      if (error.response?.status === 403 &&
+        (errorMessage.toLowerCase().includes("verify") || errorMessage.toLowerCase().includes("verification"))) {
         setShowResend(true)
         setUnverifiedEmail(data.email)
       }

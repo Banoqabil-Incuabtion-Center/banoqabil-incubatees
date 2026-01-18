@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { CiUnread, CiRead } from "react-icons/ci";
+import { CiUnread, CiRead, CiMail } from "react-icons/ci";
 import { userRepo } from "../repositories/userRepo";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -146,6 +146,10 @@ const SignUp: React.FC = () => {
   }, [cnicValue, setValue]);
 
 
+  const [isRegistered, setIsRegistered] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState("");
+  const [isResending, setIsResending] = useState(false);
+
   const onSubmit = async (data: SignUpFormValues) => {
     try {
       const dataToSend = {
@@ -155,8 +159,10 @@ const SignUp: React.FC = () => {
       };
 
       await userRepo.addUser(dataToSend);
-      toast.success("User registered successfully");
-      navigate("/login");
+      toast.success("Registration successful!");
+      setRegisteredEmail(data.email);
+      setIsRegistered(true);
+      // Removed immediate navigate("/login")
     } catch (error: any) {
       if (error.response?.data?.errors) {
         const backendErrors = error.response.data.errors;
@@ -170,6 +176,61 @@ const SignUp: React.FC = () => {
       }
     }
   };
+
+  const handleResendAfterSignUp = async () => {
+    if (!registeredEmail) return;
+    setIsResending(true);
+    try {
+      await userRepo.resendVerification(registeredEmail);
+      toast.success("Verification email resent!");
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to resend email");
+    } finally {
+      setIsResending(false);
+    }
+  };
+
+  if (isRegistered) {
+    return (
+      <div className="w-full h-screen flex items-center justify-center bg-background p-6">
+        <Card className="w-full max-w-md shadow-premium rounded-[2.5rem] border-primary/10 overflow-hidden animate-in zoom-in-95 duration-500">
+          <div className="h-2 bg-primary w-full" />
+          <CardHeader className="text-center pt-10 pb-2">
+            <div className="mx-auto w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-6 animate-bounce">
+              <CiMail className="w-10 h-10 text-primary" />
+            </div>
+            <CardTitle className="text-3xl font-black tracking-tighter">Check your email</CardTitle>
+            <CardDescription className="text-base font-medium mt-2">
+              We've sent a verification link to <br />
+              <span className="text-foreground font-bold">{registeredEmail}</span>
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6 pt-6 pb-10 px-8">
+            <div className="space-y-4">
+              <p className="text-sm text-center text-muted-foreground font-medium leading-relaxed">
+                Click the link in the email to verify your account. If you don't see it, please check your <strong>Spam</strong> folder.
+              </p>
+
+              <Button
+                variant="outline"
+                className="w-full h-12 rounded-2xl font-black text-xs uppercase tracking-widest border-primary/20 hover:bg-primary/5"
+                onClick={handleResendAfterSignUp}
+                disabled={isResending}
+              >
+                {isResending ? "Resending..." : "Resend Verification Email"}
+              </Button>
+
+              <div className="pt-2">
+                <Button asChild className="w-full h-12 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/20">
+                  <Link to="/login">Back to Login</Link>
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full h-screen lg:grid lg:grid-cols-2 bg-background">
