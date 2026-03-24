@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Edit3, User2, Sun, Moon, IdCard, Sparkles, MapPin } from "lucide-react";
+import { Edit3, User2, Sun, Moon, IdCard, Sparkles, MapPin, CalendarDays } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from '@/hooks/store/authStore';
 import { Card, CardContent } from "@/components/ui/card";
@@ -139,6 +139,12 @@ export const UserCard: React.FC<UserCardProps> = ({ user, authUser, isPublic = f
                         <Badge {...badgeStyle}>
                             <MapPin className="w-3 h-3" />
                             {user?.location}
+                        </Badge>
+                    )}
+                    {(user?.createdAt || user?._id) && (
+                        <Badge {...badgeStyle}>
+                            <CalendarDays className="w-3 h-3" />
+                            Joined {new Date(user?.createdAt || parseInt(user._id.substring(0, 8), 16) * 1000).toLocaleDateString("en-US", { month: "short", year: "numeric" })}
                         </Badge>
                     )}
                 </div>
